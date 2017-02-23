@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<config>
+  <inputDirectory>INPUT\2016\12</inputDirectory>
+  <outputDirectory>OUTPUT\2016\12</outputDirectory>
+  <log>true</log>
+  <extensions>
+    <ext>*.xls</ext>
+    <ext>*.xlsx</ext>
+    <ext>*.xml</ext>
+  </extensions>
+  
+  <Forms>
+    <Form>
+      <Name>Форма 1-18 с ФИО</Name>
+      <Rules>
+        <Equals Y="1" X="11">Форма 1-18</Equals>
+        
+        <Equals Y="11" X="1">№ кв.</Equals>        
+        <Equals Y="11" X="2">ФИО</Equals>
+        <Equals Y="11" X="3">Код плательщика</Equals>
+        <Equals Y="11" X="11">Исходящее сальдо</Equals>
+      </Rules>
+      <Fields>
+        <StartY>11</StartY>
+        <!-- language - необязательный тэг, по умолчанию будет задан ru-ru -->
+        <!-- форматы даты: https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx -->
+        <Static Y="3" X="7" name="DATEOPL" type="date" format="MMMM yyyy" lastday="true" language="ru-ru" />
+        
+        <IF X="1"></IF>
+        <THEN>
+          <SKIP_RECORD />
+        </THEN>
+
+        <IF X="3">ВСЕГО:</IF>
+        <THEN>
+          <STOP_LOOP />
+        </THEN>
+
+        <IF X="3"></IF>
+        <THEN>
+          <Dynamic X="1" name="SMADR" />
+        </THEN>
+        <ELSE>
+          <Dynamic X="1" name="NUMKV" />
+          <Dynamic X="2" name="FIO" />
+          <Dynamic X="2" name="SUMMA" type="numeric"/>
+        </ELSE>
+        
+      </Fields>
+      <DBF>
+        <field name="KP" type="string" length="14"></field>
+        <field name="FIO" type="string" length="40">$FIO</field>
+        <field name="ADRES" type="string" length="40">$SMADR, кв.$NUMKV</field>
+        <field name="SUMMA" type="numeric" length="10,2">$SUMMA</field>
+        <field name="DATEOPL" type="date" length="8">YYYY-MM-dd</field>
+      </DBF>
+    </Form>
+  </Forms>
+</config>   
