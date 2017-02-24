@@ -23,7 +23,7 @@
 		<!--<Equal Y="33" X="3">Несуществующее поле</Equal>-->
       </Rules>
       <Fields>
-        <StartY>11</StartY>
+        <StartY>13</StartY>
         <!-- language - необязательный тэг, по умолчанию будет задан ru-ru -->
         <!-- форматы даты: https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx -->
         <!-- ВНИМАНИЕ: Static внутри THEN/ELSE будет ПРОИГНОРИРОВАН! -->
@@ -36,8 +36,13 @@
         <THEN>
           <SKIP_RECORD />
         </THEN>
+		
+        <IF X="1">ИТОГО:</IF>
+        <THEN>
+          <SKIP_RECORD />
+        </THEN>		
 
-        <IF X="3">ВСЕГО:</IF>
+        <IF X="1">ВСЕГО:</IF>
         <THEN>
           <STOP_LOOP />
         </THEN>
@@ -45,11 +50,12 @@
         <IF X="3"></IF>
         <THEN>
           <Dynamic X="1" name="SMADR" />
+          <SKIP_RECORD />
         </THEN>
         <ELSE>
           <Dynamic X="1" name="NUMKV" />
           <Dynamic X="2" name="FIO" />
-          <Dynamic X="2" name="SUMMA" type="numeric"/>
+          <Dynamic X="10" name="SUMMA" type="numeric"/>
         </ELSE>
         
       </Fields>
@@ -58,7 +64,7 @@
         <field name="FIO" type="string" length="40">$FIO</field>
         <field name="ADRES" type="string" length="40">$SMADR, кв.$NUMKV</field>
         <field name="SUMMA" type="numeric" length="10,2">$SUMMA</field>
-        <field name="DATEOPL" type="date" length="8">YYYY-MM-dd</field>
+        <field name="DATEOPL" type="date" format="yyyy-MM-dd" length="8">$DATEOPL</field>
       </DBF>
     </Form>
   </Forms>

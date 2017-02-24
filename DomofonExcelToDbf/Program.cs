@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
@@ -129,27 +130,79 @@ namespace DomofonExcelToDbf
                 return;
             }
 
+            // Create new stopwatch.
+            var stopwatch = new System.Diagnostics.Stopwatch();
+
+            // Begin timing.
+            stopwatch.Start();
+
+            dbfields = form.Element("DBF").Elements("field");
             eachRecord(sheet, form, debugRecords);
+
+            // Stop timing.
+            stopwatch.Stop();
+  
+            // Write result.
+            Console.WriteLine("Времени потрачено на обработку данных: {0}", stopwatch.Elapsed);
+            Console.WriteLine("Обработано записей: {0}", i);
 
 
             var a = DateTime.ParseExact("Декабря 2017", "MMMM yyyy", CultureInfo.GetCultureInfo("ru-ru"));
-            //var b = DateTime.ParseExact("Декабрь 2017", "MMMM yyyy", CultureInfo.GetCultureInfo("ru-ru"));
-            //Console.WriteLine(a);
-            //Console.WriteLine(b);
-            //createDBF();
-            //readExcel();
-            //readCOMExcel();
-            //WriteResourceToFile("xConfig", "config.xml");
         }
 
         static int i = 0;
+        static IEnumerable<XElement> dbfields;
+
         public void debugRecords(Dictionary<string, object> variables)
         {
-            foreach (var x in variables) Console.WriteLine(x.Key + "=" + x.Value);
+            
+            foreach (XElement field in dbfields)
+            {
+                string input = field.Value;
+                string name = field.Attribute("name").Value;
+                string type = attrOrDefault(field, "type", "string");
+
+
+                var matches = Regex.Matches(input, "\\$([0-9a-zA-Z]+)", RegexOptions.Compiled);
+                foreach (Match m in matches)
+                {
+                    var repvar = m.Groups[1].Value;
+
+                    if (!variables.ContainsKey(repvar)) continue;
+                    object data = variables[repvar];
+                    if (data == null) data = "";
+
+                    if (type == "string" || type == "numeric")
+                    {
+                        input = input.Replace(m.Value, data.ToString());
+                    }
+                    else if (type == "date")
+                    {
+                        string format = field.Attribute("format").Value;
+                        input = input.Replace(m.Value, ((DateTime)data).ToString(format));
+                    }
+                }
+                Console.WriteLine(name + "=" + input);
+            }
+
+            //if (i < 20) foreach (var x in variables) Console.WriteLine(x.Key + "=" + x.Value);
 
             i++;
             if (i % 10 > 0) return;
             Console.WriteLine("Записей обработано: {0}",i);
+        }
+
+        public void finalVariables(XElement form)
+        {
+            foreach (XElement field in dbfields)
+            {
+                Console.WriteLine(field.Value);
+                var matches = Regex.Matches(field.Value, "\\$([0-9a-zA-Z]+)");
+                foreach (Match m in matches)
+                {
+                    Console.WriteLine(m);
+                }
+            }
         }
 
         private static void Benchmark(System.Action act, int iterations)
@@ -209,9 +262,6 @@ namespace DomofonExcelToDbf
                     XElement section = (cell == cond.value) ? cond.then : cond.or;
                     if (section == null) continue;
 
-                    if (section.Element("SKIP_RECORD") != null) goto skip_record;
-                    if (section.Element("STOP_LOOP") != null) goto skip_loop;
-
                     var condvars = section.Elements("Dynamic");
                     foreach (XElement dyvar in condvars)
                     {
@@ -221,6 +271,11 @@ namespace DomofonExcelToDbf
                         cell = worksheet.Cells[y, x].Value;
                         variables[name] = getVar(dyvar, cell);
                     }
+
+                    if (section.Element("SKIP_RECORD") != null)
+                        goto skip_record;
+                    if (section.Element("STOP_LOOP") != null)
+                        goto skip_loop;
                 }
 
                 callback(variables);
@@ -248,7 +303,7 @@ namespace DomofonExcelToDbf
             String type = attrOrDefault(var, "type", "string");
             String cell = obj.ToString();
 
-            if (type == "string")
+            if (type == "string" || type == "numeric")
             {
                 return cell;
             }
