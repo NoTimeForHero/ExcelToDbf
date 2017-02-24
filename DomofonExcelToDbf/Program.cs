@@ -72,14 +72,64 @@ namespace DomofonExcelToDbf
             WriteResourceToFile("xConfig", "config.xml");
             XDocument xdoc = XDocument.Load("config.xml");
 
+            var sheet = getWorksheet(@"C:\Test\work.xml");
+
+            var forms = xdoc.Root.Element("Forms").Elements("Form").ToList();
+
+            var form = findCorrectForm(sheet, forms);
+            if (form == null)
+            {
+                Console.WriteLine("Не найдено подходящих форм для обработки документа work.xml!");
+                return;
+            }
+
+            readRecords(sheet, form);
+
+
             var a = DateTime.ParseExact("Декабря 2017", "MMMM yyyy", CultureInfo.GetCultureInfo("ru-ru"));
-            var b = DateTime.ParseExact("Декабрь 2017", "MMMM yyyy", CultureInfo.GetCultureInfo("ru-ru"));
-            Console.WriteLine(a);
-            Console.WriteLine(b);
+            //var b = DateTime.ParseExact("Декабрь 2017", "MMMM yyyy", CultureInfo.GetCultureInfo("ru-ru"));
+            //Console.WriteLine(a);
+            //Console.WriteLine(b);
             //createDBF();
             //readExcel();
             //readCOMExcel();
             //WriteResourceToFile("xConfig", "config.xml");
+        }
+
+        public void readRecords(Worksheet worksheet, XElement form)
+        {
+        }
+
+        public XElement findCorrectForm(Worksheet worksheet, List<XElement> forms)
+        {
+            foreach (XElement form in forms)
+            {
+                bool correct = true;
+                String name = form.Element("Name").Value;
+                Console.WriteLine(String.Format("Проверяем форму \"{0}\"",name));
+
+                var equals = form.Element("Rules").Elements("Equal");
+                foreach (XElement equal in equals)
+                {
+                    var x = Int32.Parse(equal.Attribute("X").Value);
+                    var y = Int32.Parse(equal.Attribute("Y").Value);
+                    var mustbe = equal.Value;
+
+                    var cell = worksheet.Cells[y, x].Value.ToString();
+
+                    if (mustbe != cell)
+                    {
+                        Console.WriteLine(String.Format("Проверка провалена (Y={0},X={1})",y,x));
+                        Console.WriteLine(String.Format("Ожидалось: {0}", mustbe));
+                        Console.WriteLine(String.Format("Найдено: {0}", cell));
+                        correct = false;
+                        break;
+                    }
+                    Console.WriteLine(String.Format("X={0},Y={1}:  {2}=={3}",x,y,mustbe,cell));
+                }
+                if (correct) return form;
+            }
+            return null;
         }
 
         public bool WriteResourceToFile(string resourceName, string fileName)
@@ -103,20 +153,23 @@ namespace DomofonExcelToDbf
             dbf.close();
         }
 
-        private void readCOMExcel()
+        private Worksheet getWorksheet(string filepath)
         {
             var app = new Microsoft.Office.Interop.Excel.Application();
 
-            Workbook wb = app.Workbooks.Open(@"C:\test\example.xls", Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+            Workbook wb = app.Workbooks.Open(filepath, Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                     Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                     Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                     Type.Missing, Type.Missing);
 
             Worksheet worksheet = (Worksheet)wb.Sheets["Лист1"];
+            return worksheet;
+            /*
             var a1 = worksheet.Cells[1,10];
             object rawValue = a1.Value;
             string formattedText = a1.Text;
             Console.WriteLine("rawValue={0} formattedText={1}", rawValue, formattedText);
+            */
         }
 
         private void readExcel()

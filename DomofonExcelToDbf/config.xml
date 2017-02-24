@@ -13,17 +13,20 @@
     <Form>
       <Name>Форма 1-18 с ФИО</Name>
       <Rules>
-        <Equals Y="1" X="11">Форма 1-18</Equals>
+        <Equal Y="1" X="10">Форма 1-18</Equal>
         
-        <Equals Y="11" X="1">№ кв.</Equals>        
-        <Equals Y="11" X="2">ФИО</Equals>
-        <Equals Y="11" X="3">Код плательщика</Equals>
-        <Equals Y="11" X="11">Исходящее сальдо</Equals>
+        <Equal Y="11" X="1">№ кв.</Equal>        
+        <Equal Y="11" X="2">ФИО</Equal>
+        <Equal Y="11" X="3">Код плательщика</Equal>
+        <Equal Y="11" X="11">Исходящее сальдо</Equal>
+		
+		<!--<Equal Y="33" X="3">Несуществующее поле</Equal>-->
       </Rules>
       <Fields>
         <StartY>11</StartY>
         <!-- language - необязательный тэг, по умолчанию будет задан ru-ru -->
         <!-- форматы даты: https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx -->
+        <!-- ВНИМАНИЕ: Static внутри THEN/ELSE будет ПРОИГНОРИРОВАН! -->
         <Static Y="3" X="7" name="DATEOPL" type="date" format="MMMM yyyy" lastday="true" language="ru-ru" />
         
         <IF X="1"></IF>
