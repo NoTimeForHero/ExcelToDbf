@@ -61,6 +61,51 @@ namespace DomofonExcelToDbf
 
     }
 
+    class XmlCondition
+    {
+        public int x;
+        public String value;
+
+        public XElement then;
+        public XElement or;
+
+        public override string ToString()
+        {
+            String total = "";
+            total += String.Format("X={0}",x) + "\n";
+            total += String.Format("Value={0}",value) + "\n";
+            total += String.Format("BEGIN:\n  {0}",then) + "\n";
+            total += String.Format("ELSE:\n  {0}", or) + "\n\n";
+            return total;
+        }
+
+        public static List<XmlCondition> makeList(XElement form)
+        {
+            var conditions = new List<XmlCondition>();
+
+            var local = form.Element("Fields").Elements("IF");
+            foreach (XElement elem in local)
+            {
+                var cond = new XmlCondition();
+
+                cond.x = Int32.Parse(elem.Attribute("X").Value);
+                cond.value = elem.Value;
+
+                // Получаем секцию THEN, так как она обязана быть следующей после IF
+                cond.then = (XElement)elem.NextNode;
+
+                // А вот секции ELSE может и не быть
+                var next = elem.NextNode.NextNode;
+
+                var nextName = ((XElement)next).Name.ToString();
+                if (nextName == "ELSE") cond.or = (XElement)next;
+
+                conditions.Add(cond);
+            }
+            return conditions;
+        }
+    }
+
     class Program
     {
         static void Main(string[] args)
@@ -84,7 +129,7 @@ namespace DomofonExcelToDbf
                 return;
             }
 
-            readRecords(sheet, form);
+            eachRecord(sheet, form, debugRecords);
 
 
             var a = DateTime.ParseExact("Декабря 2017", "MMMM yyyy", CultureInfo.GetCultureInfo("ru-ru"));
@@ -97,10 +142,38 @@ namespace DomofonExcelToDbf
             //WriteResourceToFile("xConfig", "config.xml");
         }
 
-        public void readRecords(Worksheet worksheet, XElement form)
+        static int i = 0;
+        public void debugRecords(Dictionary<string, object> variables)
+        {
+            foreach (var x in variables) Console.WriteLine(x.Key + "=" + x.Value);
+
+            i++;
+            if (i % 10 > 0) return;
+            Console.WriteLine("Записей обработано: {0}",i);
+        }
+
+        private static void Benchmark(System.Action act, int iterations)
+        {
+            GC.Collect();
+            act.Invoke(); // run once outside of loop to avoid initialization costs
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < iterations; i++)
+            {
+                act.Invoke();
+            }
+            sw.Stop();
+            Console.WriteLine((sw.ElapsedMilliseconds / iterations).ToString());
+        }
+
+        public void eachRecord(Worksheet worksheet, XElement form, Action<Dictionary<string,object>> callback)
         {
             Dictionary<string, object> variables = new Dictionary<string, object>();
 
+            // Позиция с которой начинаются данные
+            var minY = Int32.Parse(form.Element("Fields").Element("StartY").Value);
+            var maxY = worksheet.UsedRange.Rows.Count;
+
+            // Получаем список статических переменных, которые не меняются для всех записей в данном листе
             var staticvars = form.Element("Fields").Elements("Static");
             foreach (XElement staticvar in staticvars)
             {
@@ -108,46 +181,90 @@ namespace DomofonExcelToDbf
                 var y = Int32.Parse(staticvar.Attribute("Y").Value);
 
                 var name = staticvar.Attribute("name").Value;
-                String type = attrOrDefault(staticvar, "type", "string");
-
-                Console.WriteLine(staticvar);
 
                 var cell = worksheet.Cells[y, x].Value;
-                if (cell == null)
-                {
-                    variables.Add(name, "");
-                    continue;
-                }
-
-                if (type == "string")
-                {
-                    variables.Add(name, cell);
-                }
-
-                if (type == "date")
-                {
-                    var date = readDate(staticvar, cell);
-                    variables.Add(name, date);
-                }
-                             
-                if (cell != null) Console.WriteLine(cell);
-                //inlineRead(worksheet, x, y, field);
+                variables.Add(name, getVar(staticvar, cell));
             }
+
+            var dynamicvars = form.Element("Fields").Elements("Dynamic");
+            var conditions = XmlCondition.makeList(form);
+            // Начинаем обходить каждый лист
+            for (int y = minY; y < maxY; y++)
+            {
+                // Получаем значения динамических переменных без условий
+                foreach (XElement dyvar in dynamicvars)
+                {
+                    var x = Int32.Parse(dyvar.Attribute("X").Value);
+                    var name = dyvar.Attribute("name").Value;
+
+                    var cell = worksheet.Cells[y, x].Value;
+                    variables[name] = getVar(dyvar, cell);
+                }
+
+                // Проверяем каждое условие
+                foreach (XmlCondition cond in conditions)
+                {
+                    var cell = worksheet.Cells[y, cond.x].Text;
+
+                    XElement section = (cell == cond.value) ? cond.then : cond.or;
+                    if (section == null) continue;
+
+                    if (section.Element("SKIP_RECORD") != null) goto skip_record;
+                    if (section.Element("STOP_LOOP") != null) goto skip_loop;
+
+                    var condvars = section.Elements("Dynamic");
+                    foreach (XElement dyvar in condvars)
+                    {
+                        var x = Int32.Parse(dyvar.Attribute("X").Value);
+                        var name = dyvar.Attribute("name").Value;
+
+                        cell = worksheet.Cells[y, x].Value;
+                        variables[name] = getVar(dyvar, cell);
+                    }
+                }
+
+                callback(variables);
+                skip_record:;
+            }
+            skip_loop:;
 
             Console.WriteLine("Составление записей завершено?");
 
         }
 
-        public DateTime readDate(XElement staticvar, String cell)
+        // <summary>
+        // Метод считывает внутренний ресурс и записывает его в файл, возвращая статус существования ресурса
+        // </summary>
+        // <param name="var">Имя внутренного ресурса</param>
+        // <param name="cell">Имя внутренного ресурса</param>
+        // <returns>false если внутренний ресурс не был найден</returns>
+        public object getVar(XElement var, object obj)
         {
-            var format = staticvar.Attribute("format").Value;
-            var language = attrOrDefault(staticvar, "language", "ru-ru");
-            DateTime date = DateTime.ParseExact(cell, format, CultureInfo.GetCultureInfo(language));
+            if (obj == null)
+            {
+                return null;
+            }
 
-            // Если нам нужен последний день в месяце
-            string lastday = attrOrDefault(staticvar, "lastday", "");
-            if (lastday == "true") date = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
-            return date;
+            String type = attrOrDefault(var, "type", "string");
+            String cell = obj.ToString();
+
+            if (type == "string")
+            {
+                return cell;
+            }
+
+            if (type == "date") {
+                var format = var.Attribute("format").Value;
+                var language = attrOrDefault(var, "language", "ru-ru");
+                DateTime date = DateTime.ParseExact(cell, format, CultureInfo.GetCultureInfo(language));
+
+                // Если нам нужен последний день в месяце
+                string lastday = attrOrDefault(var, "lastday", "");
+                if (lastday == "true") date = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
+                return date;
+            }
+
+            return null;
         }
 
         public string attrOrDefault(XElement element, String attr, String def) {
@@ -156,14 +273,9 @@ namespace DomofonExcelToDbf
             return xattr.Value;
         }
 
-        public object inlineRead(Worksheet worksheet, int x, int y, XElement field)
-        {
-            String type = field.Attribute("type").Value;
-            if (type == null) type = "string";
-
-            return null;
-        }
-
+        // <summary>
+        // Ищет подходящую XML форму для документа или null если ни одна не подходит
+        // </summary>
         public XElement findCorrectForm(Worksheet worksheet, List<XElement> forms)
         {
             foreach (XElement form in forms)
@@ -208,6 +320,12 @@ namespace DomofonExcelToDbf
             return null;
         }
 
+        // <summary>
+        // Метод считывает внутренний ресурс и записывает его в файл, возвращая статус существования ресурса
+        // </summary>
+        // <param name="resourceName">Имя внутренного ресурса</param>
+        // <param name="resourceName">Имя внутренного ресурса</param>
+        // <returns>false если внутренний ресурс не был найден</returns>
         public bool WriteResourceToFile(string resourceName, string fileName)
         {
             using (var resource = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))

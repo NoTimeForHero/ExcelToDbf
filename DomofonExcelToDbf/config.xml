@@ -31,6 +31,7 @@
 		<Static Y="1" X="10" name="FORM" />
 		<Dynamic X="12" name="RAND" />
         
+		<!-- IF подобно Dynamic будет вызван для каждой записи -->
         <IF X="1"></IF>
         <THEN>
           <SKIP_RECORD />
