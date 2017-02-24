@@ -7,6 +7,7 @@ using System.Data.OleDb;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -98,6 +99,69 @@ namespace DomofonExcelToDbf
 
         public void readRecords(Worksheet worksheet, XElement form)
         {
+            Dictionary<string, object> variables = new Dictionary<string, object>();
+
+            var staticvars = form.Element("Fields").Elements("Static");
+            foreach (XElement staticvar in staticvars)
+            {
+                var x = Int32.Parse(staticvar.Attribute("X").Value);
+                var y = Int32.Parse(staticvar.Attribute("Y").Value);
+
+                var name = staticvar.Attribute("name").Value;
+                String type = attrOrDefault(staticvar, "type", "string");
+
+                Console.WriteLine(staticvar);
+
+                var cell = worksheet.Cells[y, x].Value;
+                if (cell == null)
+                {
+                    variables.Add(name, "");
+                    continue;
+                }
+
+                if (type == "string")
+                {
+                    variables.Add(name, cell);
+                }
+
+                if (type == "date")
+                {
+                    var date = readDate(staticvar, cell);
+                    variables.Add(name, date);
+                }
+                             
+                if (cell != null) Console.WriteLine(cell);
+                //inlineRead(worksheet, x, y, field);
+            }
+
+            Console.WriteLine("Составление записей завершено?");
+
+        }
+
+        public DateTime readDate(XElement staticvar, String cell)
+        {
+            var format = staticvar.Attribute("format").Value;
+            var language = attrOrDefault(staticvar, "language", "ru-ru");
+            DateTime date = DateTime.ParseExact(cell, format, CultureInfo.GetCultureInfo(language));
+
+            // Если нам нужен последний день в месяце
+            string lastday = attrOrDefault(staticvar, "lastday", "");
+            if (lastday == "true") date = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
+            return date;
+        }
+
+        public string attrOrDefault(XElement element, String attr, String def) {
+            XAttribute xattr = element.Attribute(attr);
+            if (xattr == null) return def;
+            return xattr.Value;
+        }
+
+        public object inlineRead(Worksheet worksheet, int x, int y, XElement field)
+        {
+            String type = field.Attribute("type").Value;
+            if (type == null) type = "string";
+
+            return null;
         }
 
         public XElement findCorrectForm(Worksheet worksheet, List<XElement> forms)
@@ -115,19 +179,31 @@ namespace DomofonExcelToDbf
                     var y = Int32.Parse(equal.Attribute("Y").Value);
                     var mustbe = equal.Value;
 
-                    var cell = worksheet.Cells[y, x].Value.ToString();
+                    string cell = null;
 
-                    if (mustbe != cell)
+                    try
                     {
-                        Console.WriteLine(String.Format("Проверка провалена (Y={0},X={1})",y,x));
+                        cell = worksheet.Cells[y, x].Value.ToString();
+                    } catch (Exception ex)
+                    {
+                        Console.WriteLine(String.Format("Произошла ошибка при чтении ячейки Y={0},X={1}!", y, x));
                         Console.WriteLine(String.Format("Ожидалось: {0}", mustbe));
-                        Console.WriteLine(String.Format("Найдено: {0}", cell));
+                        Console.WriteLine("Ошибка: {0}",ex.Message);
                         correct = false;
                         break;
                     }
-                    Console.WriteLine(String.Format("X={0},Y={1}:  {2}=={3}",x,y,mustbe,cell));
-                }
-                if (correct) return form;
+
+                    if (mustbe != cell)
+                        {
+                            Console.WriteLine(String.Format("Проверка провалена (Y={0},X={1})",y,x));
+                            Console.WriteLine(String.Format("Ожидалось: {0}", mustbe));
+                            Console.WriteLine(String.Format("Найдено: {0}", cell));
+                            correct = false;
+                            break;
+                        }
+                        Console.WriteLine(String.Format("X={0},Y={1}:  {2}=={3}",x,y,mustbe,cell));
+                    }
+                    if (correct) return form;
             }
             return null;
         }
@@ -170,79 +246,6 @@ namespace DomofonExcelToDbf
             string formattedText = a1.Text;
             Console.WriteLine("rawValue={0} formattedText={1}", rawValue, formattedText);
             */
-        }
-
-        private void readExcel()
-        {
-            Console.WriteLine("Где первая строка? ");
-
-
-            string connectionString = GetConnectionString();
-
-            using (OleDbConnection conn = new OleDbConnection(connectionString))
-            {
-                conn.Open();
-                OleDbCommand cmd = new OleDbCommand();
-                cmd.Connection = conn;
-
-                // Get all Sheets in Excel File
-                System.Data.DataTable dtSheet = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
-
-                // Loop through all Sheets to get data   
-                foreach (DataRow dr in dtSheet.Rows)
-                {
-                    string sheetName = dr["TABLE_NAME"].ToString();
-
-                    if (!sheetName.EndsWith("$"))
-                        continue;
-
-                    // Get all rows from the Sheet
-                    cmd.CommandText = "SELECT * FROM [" + sheetName + "]";
-                    using (OleDbDataReader reader = cmd.ExecuteReader())
-                    {
-                        Console.WriteLine("Начинаем читать файл...");
-                        Console.WriteLine();
-                        while (reader.Read())
-                        {
-                            var count = reader.FieldCount;
-                            for (int i = 0; i < count; i++)
-                            {
-                                var x = reader.GetValue(i);
-                                Console.Write(x);
-                                Console.Write('|');
-                            }
-                            Console.WriteLine();
-                        }
-                    }
-                }
-                cmd = null;
-                conn.Close();
-            }
-        }
-
-        private string GetConnectionString()
-        {
-            Dictionary<string, string> props = new Dictionary<string, string>();
-
-            //props["Provider"] = "Microsoft.ACE.OLEDB.12.0;";
-            //props["Extended Properties"] = "Excel 12.0 XML";
-            //props["Extended Properties"] = "\"Excel 12.0 Xml; HDR=No\"";
-            //props["Data Source"] = @"C:\Users\user\Documents\visual studio 2015\Projects\DomofonExcelToDbf\DomofonExcelToDbf\bin\Debug\example.xls";
-
-            //props["Driver"] = "{Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb, *.xml)};";
-            //props["DBQ"] = @"C:\Users\user\Documents\visual studio 2015\Projects\DomofonExcelToDbf\DomofonExcelToDbf\bin\Debug\example.xls";
-
-            StringBuilder sb = new StringBuilder();
-
-            foreach (KeyValuePair<string, string> prop in props)
-            {
-                sb.Append(prop.Key);
-                sb.Append('=');
-                sb.Append(prop.Value);
-                sb.Append(';');
-            }
-
-            return sb.ToString();
         }
 
     }

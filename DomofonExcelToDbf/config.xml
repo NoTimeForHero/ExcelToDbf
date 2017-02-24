@@ -27,7 +27,9 @@
         <!-- language - необязательный тэг, по умолчанию будет задан ru-ru -->
         <!-- форматы даты: https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx -->
         <!-- ВНИМАНИЕ: Static внутри THEN/ELSE будет ПРОИГНОРИРОВАН! -->
-        <Static Y="3" X="7" name="DATEOPL" type="date" format="MMMM yyyy" lastday="true" language="ru-ru" />
+        <Static Y="3" X="3" name="DATEOPL" type="date" format="MMMM yyyy" lastday="true" language="ru-ru" />
+		<Static Y="1" X="10" name="FORM" />
+		<Dynamic X="12" name="RAND" />
         
         <IF X="1"></IF>
         <THEN>
