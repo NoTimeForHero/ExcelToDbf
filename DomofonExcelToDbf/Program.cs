@@ -19,6 +19,8 @@ namespace DomofonExcelToDbf
     class DBF
     {
         public DbfFile odbf;
+        public IEnumerable<XElement> dbfields;
+        public int records = 0;
 
         public DBF(String path, Encoding encoding = null)
         {
@@ -29,18 +31,85 @@ namespace DomofonExcelToDbf
 
             odbf = new DbfFile(encoding);
             odbf.Open(path, FileMode.Create); // FileMode.Create = файл будет перезаписан если уже существует
-            writeHeader();
+            Console.WriteLine("Создаём DBF с именем {0} и кодировкой {1}", path, encoding);
         }
 
         // Эту функцию нельзя вызвать за пределами данного класса
-        protected void writeHeader()
+        public void writeHeader(XElement form)
         {
-            odbf.Header.AddColumn(new DbfColumn("KP", DbfColumn.DbfColumnType.Character, 14, 0));
-            odbf.Header.AddColumn(new DbfColumn("FIO", DbfColumn.DbfColumnType.Character, 40, 0));
-            odbf.Header.AddColumn(new DbfColumn("ADRES", DbfColumn.DbfColumnType.Character, 40, 0));
-            odbf.Header.AddColumn(new DbfColumn("SUMMA", DbfColumn.DbfColumnType.Number, 10, 2));
-            odbf.Header.AddColumn(new DbfColumn("DATEOPL", DbfColumn.DbfColumnType.Date));
-            odbf.WriteHeader();
+            dbfields = form.Element("DBF").Elements("field");
+            Console.WriteLine("Записываем в DBF {0} полей", dbfields.Count());
+            foreach (XElement field in dbfields)
+            {
+                string input = field.Value;
+                string name = field.Attribute("name").Value;
+                string type = field.Attribute("type").Value;
+
+                XAttribute attrlen = field.Attribute("length");
+
+                DbfColumn.DbfColumnType column = DbfColumn.DbfColumnType.Character;
+                if (type == "string") column = DbfColumn.DbfColumnType.Character;
+                if (type == "date") column = DbfColumn.DbfColumnType.Date;
+                if (type == "numeric") column = DbfColumn.DbfColumnType.Number;
+
+                if (attrlen != null)
+                {
+                    var length = attrlen.Value.Split(',');
+                    int nlen = Int32.Parse(length[0]);
+                    int ndec = (length.Length > 1) ? Int32.Parse(length[1]) : 0;
+                    odbf.Header.AddColumn(new DbfColumn(name, column, nlen, ndec));
+                    Console.WriteLine("Записываем поле '{0}' типа '{1}' длиной {2},{3}", name, type, nlen, ndec);
+                } else
+                {
+                    odbf.Header.AddColumn(new DbfColumn(name, column));
+                    Console.WriteLine("Записываем поле '{0}' типа '{1}'", name, type);
+                }
+            }
+            odbf.WriteHeader();    
+        }
+
+        public void appendRecord(Dictionary<string, object> variables)
+        {
+            var orec = new DbfRecord(odbf.Header);
+
+            int fid = 0;
+            foreach (XElement field in dbfields)
+            {
+
+                string input = field.Value;
+                string name = field.Attribute("name").Value;
+                string type = XmlCondition.attrOrDefault(field, "type", "string");
+
+                var matches = Regex.Matches(input, "\\$([0-9a-zA-Z]+)", RegexOptions.Compiled);
+                foreach (Match m in matches)
+                {
+                    var repvar = m.Groups[1].Value;
+
+                    if (!variables.ContainsKey(repvar)) continue;
+                    object data = variables[repvar];
+                    if (data == null) data = "";
+
+                    if (type == "string" || type == "numeric")
+                    {
+                        input = input.Replace(m.Value, data.ToString());
+                    }
+                    else if (type == "date")
+                    {
+                        string format = XmlCondition.attrOrDefault(field, "format", "yyyy-MM-dd");
+                        input = input.Replace(m.Value, ((DateTime)data).ToString(format));
+                    }
+                }
+
+                orec[fid] = input;
+                fid++;
+            }
+
+            odbf.Write(orec, true);
+            //if (i < 20) foreach (var x in variables) Console.WriteLine(x.Key + "=" + x.Value);
+
+            records++;
+            if (records % 100 > 0) return;
+            Console.WriteLine("Записей обработано: {0}", records);
         }
 
         public void append(String kp, String fio, String adres, String summa, String dateopl)
@@ -78,6 +147,13 @@ namespace DomofonExcelToDbf
             total += String.Format("BEGIN:\n  {0}",then) + "\n";
             total += String.Format("ELSE:\n  {0}", or) + "\n\n";
             return total;
+        }
+
+        public static string attrOrDefault(XElement element, String attr, String def)
+        {
+            XAttribute xattr = element.Attribute(attr);
+            if (xattr == null) return def;
+            return xattr.Value;
         }
 
         public static List<XmlCondition> makeList(XElement form)
@@ -119,16 +195,27 @@ namespace DomofonExcelToDbf
             WriteResourceToFile("xConfig", "config.xml");
             XDocument xdoc = XDocument.Load("config.xml");
 
-            var sheet = getWorksheet(@"C:\Test\work.xml");
+            var app = new Microsoft.Office.Interop.Excel.Application();
+
+            Workbook wb = app.Workbooks.Open(@"C:\Test\work.xml", Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing);
+
+            Worksheet worksheet = (Worksheet)wb.Sheets["Лист1"];
 
             var forms = xdoc.Root.Element("Forms").Elements("Form").ToList();
 
-            var form = findCorrectForm(sheet, forms);
+            var form = findCorrectForm(worksheet, forms);
             if (form == null)
             {
                 Console.WriteLine("Не найдено подходящих форм для обработки документа work.xml!");
                 return;
             }
+
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "output.dbf");
+            DBF dbf = new DBF(path);
+            dbf.writeHeader(form);
 
             // Create new stopwatch.
             var stopwatch = new System.Diagnostics.Stopwatch();
@@ -137,15 +224,18 @@ namespace DomofonExcelToDbf
             stopwatch.Start();
 
             dbfields = form.Element("DBF").Elements("field");
-            eachRecord(sheet, form, debugRecords);
+            eachRecord(worksheet, form, dbf.appendRecord);
 
             // Stop timing.
             stopwatch.Stop();
   
             // Write result.
             Console.WriteLine("Времени потрачено на обработку данных: {0}", stopwatch.Elapsed);
-            Console.WriteLine("Обработано записей: {0}", i);
+            Console.WriteLine("Обработано записей: {0}", dbf.records);
 
+            dbf.close();
+            wb.Close(0);
+            app.Quit();
 
             var a = DateTime.ParseExact("Декабря 2017", "MMMM yyyy", CultureInfo.GetCultureInfo("ru-ru"));
         }
@@ -153,44 +243,7 @@ namespace DomofonExcelToDbf
         static int i = 0;
         static IEnumerable<XElement> dbfields;
 
-        public void debugRecords(Dictionary<string, object> variables)
-        {
-            
-            foreach (XElement field in dbfields)
-            {
-                string input = field.Value;
-                string name = field.Attribute("name").Value;
-                string type = attrOrDefault(field, "type", "string");
-
-
-                var matches = Regex.Matches(input, "\\$([0-9a-zA-Z]+)", RegexOptions.Compiled);
-                foreach (Match m in matches)
-                {
-                    var repvar = m.Groups[1].Value;
-
-                    if (!variables.ContainsKey(repvar)) continue;
-                    object data = variables[repvar];
-                    if (data == null) data = "";
-
-                    if (type == "string" || type == "numeric")
-                    {
-                        input = input.Replace(m.Value, data.ToString());
-                    }
-                    else if (type == "date")
-                    {
-                        string format = field.Attribute("format").Value;
-                        input = input.Replace(m.Value, ((DateTime)data).ToString(format));
-                    }
-                }
-                Console.WriteLine(name + "=" + input);
-            }
-
-            //if (i < 20) foreach (var x in variables) Console.WriteLine(x.Key + "=" + x.Value);
-
-            i++;
-            if (i % 10 > 0) return;
-            Console.WriteLine("Записей обработано: {0}",i);
-        }
+        Dictionary<string, object> outputvars = new Dictionary<string, object>();
 
         public void finalVariables(XElement form)
         {
@@ -203,19 +256,6 @@ namespace DomofonExcelToDbf
                     Console.WriteLine(m);
                 }
             }
-        }
-
-        private static void Benchmark(System.Action act, int iterations)
-        {
-            GC.Collect();
-            act.Invoke(); // run once outside of loop to avoid initialization costs
-            var sw = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < iterations; i++)
-            {
-                act.Invoke();
-            }
-            sw.Stop();
-            Console.WriteLine((sw.ElapsedMilliseconds / iterations).ToString());
         }
 
         public void eachRecord(Worksheet worksheet, XElement form, Action<Dictionary<string,object>> callback)
@@ -300,7 +340,7 @@ namespace DomofonExcelToDbf
                 return null;
             }
 
-            String type = attrOrDefault(var, "type", "string");
+            String type = XmlCondition.attrOrDefault(var, "type", "string");
             String cell = obj.ToString();
 
             if (type == "string" || type == "numeric")
@@ -310,11 +350,11 @@ namespace DomofonExcelToDbf
 
             if (type == "date") {
                 var format = var.Attribute("format").Value;
-                var language = attrOrDefault(var, "language", "ru-ru");
+                var language = XmlCondition.attrOrDefault(var, "language", "ru-ru");
                 DateTime date = DateTime.ParseExact(cell, format, CultureInfo.GetCultureInfo(language));
 
                 // Если нам нужен последний день в месяце
-                string lastday = attrOrDefault(var, "lastday", "");
+                string lastday = XmlCondition.attrOrDefault(var, "lastday", "");
                 if (lastday == "true") date = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
                 return date;
             }
@@ -322,11 +362,6 @@ namespace DomofonExcelToDbf
             return null;
         }
 
-        public string attrOrDefault(XElement element, String attr, String def) {
-            XAttribute xattr = element.Attribute(attr);
-            if (xattr == null) return def;
-            return xattr.Value;
-        }
 
         // <summary>
         // Ищет подходящую XML форму для документа или null если ни одна не подходит
@@ -394,32 +429,6 @@ namespace DomofonExcelToDbf
             return true;
         }
 
-        private void createDBF()
-        {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "TestNew2.dbf");
-            DBF dbf = new DBF(path);
-            dbf.append("22", "Иванов Иван Иванович", "Москва, Красная Площадь", "5555", "2017-01-01");
-            dbf.close();
-        }
-
-        private Worksheet getWorksheet(string filepath)
-        {
-            var app = new Microsoft.Office.Interop.Excel.Application();
-
-            Workbook wb = app.Workbooks.Open(filepath, Type.Missing, Type.Missing, Type.Missing, Type.Missing,
-                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
-                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
-                    Type.Missing, Type.Missing);
-
-            Worksheet worksheet = (Worksheet)wb.Sheets["Лист1"];
-            return worksheet;
-            /*
-            var a1 = worksheet.Cells[1,10];
-            object rawValue = a1.Value;
-            string formattedText = a1.Text;
-            Console.WriteLine("rawValue={0} formattedText={1}", rawValue, formattedText);
-            */
-        }
 
     }
 }

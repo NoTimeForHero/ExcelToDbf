@@ -23,7 +23,7 @@
 		<!--<Equal Y="33" X="3">Несуществующее поле</Equal>-->
       </Rules>
       <Fields>
-        <StartY>13</StartY>
+        <StartY>900</StartY> <!-- 13 -->
         <!-- language - необязательный тэг, по умолчанию будет задан ru-ru -->
         <!-- форматы даты: https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx -->
         <!-- ВНИМАНИЕ: Static внутри THEN/ELSE будет ПРОИГНОРИРОВАН! -->
