@@ -85,7 +85,12 @@ namespace DomofonExcelToDbf
                 {
                     var repvar = m.Groups[1].Value;
 
-                    if (!variables.ContainsKey(repvar)) continue;
+                    if (!variables.ContainsKey(repvar)) // чтобы в финальном файле не оказалось строк вида $VARIABLE
+                    {
+                        input = input.Replace(m.Value, "");
+                        continue;
+                    }
+
                     object data = variables[repvar];
                     if (data == null) data = "";
 
@@ -128,6 +133,38 @@ namespace DomofonExcelToDbf
         {
             odbf.Close();
         }
+
+    }
+
+    class Excel
+    {
+        Microsoft.Office.Interop.Excel.Application app;
+        Workbook wb;
+        public Worksheet worksheet;
+
+        public Excel(String path)
+        {
+            app = new Microsoft.Office.Interop.Excel.Application();
+
+            wb = app.Workbooks.Open(@"C:\Test\work.xml", Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                    Type.Missing, Type.Missing);
+
+            if (wb.Worksheets.Count < 1)
+            {
+                Console.WriteLine("Выбранный Excel не содержит ни одного листа!");
+            }
+        
+            worksheet = wb.Worksheets[1];
+        }
+
+        public void close()
+        {
+            wb.Close(0);
+            app.Quit();
+        }
+
 
     }
 
@@ -195,18 +232,10 @@ namespace DomofonExcelToDbf
             WriteResourceToFile("xConfig", "config.xml");
             XDocument xdoc = XDocument.Load("config.xml");
 
-            var app = new Microsoft.Office.Interop.Excel.Application();
-
-            Workbook wb = app.Workbooks.Open(@"C:\Test\work.xml", Type.Missing, Type.Missing, Type.Missing, Type.Missing,
-                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
-                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
-                    Type.Missing, Type.Missing);
-
-            Worksheet worksheet = (Worksheet)wb.Sheets["Лист1"];
-
+            var excel = new Excel(@"C:\Test\work.xml");
             var forms = xdoc.Root.Element("Forms").Elements("Form").ToList();
 
-            var form = findCorrectForm(worksheet, forms);
+            var form = findCorrectForm(excel.worksheet, forms);
             if (form == null)
             {
                 Console.WriteLine("Не найдено подходящих форм для обработки документа work.xml!");
@@ -223,8 +252,7 @@ namespace DomofonExcelToDbf
             // Begin timing.
             stopwatch.Start();
 
-            dbfields = form.Element("DBF").Elements("field");
-            eachRecord(worksheet, form, dbf.appendRecord);
+            eachRecord(excel.worksheet, form, dbf.appendRecord);
 
             // Stop timing.
             stopwatch.Stop();
@@ -234,29 +262,12 @@ namespace DomofonExcelToDbf
             Console.WriteLine("Обработано записей: {0}", dbf.records);
 
             dbf.close();
-            wb.Close(0);
-            app.Quit();
+            excel.close();
 
             var a = DateTime.ParseExact("Декабря 2017", "MMMM yyyy", CultureInfo.GetCultureInfo("ru-ru"));
         }
-
-        static int i = 0;
-        static IEnumerable<XElement> dbfields;
-
+        
         Dictionary<string, object> outputvars = new Dictionary<string, object>();
-
-        public void finalVariables(XElement form)
-        {
-            foreach (XElement field in dbfields)
-            {
-                Console.WriteLine(field.Value);
-                var matches = Regex.Matches(field.Value, "\\$([0-9a-zA-Z]+)");
-                foreach (Match m in matches)
-                {
-                    Console.WriteLine(m);
-                }
-            }
-        }
 
         public void eachRecord(Worksheet worksheet, XElement form, Action<Dictionary<string,object>> callback)
         {
