@@ -126,7 +126,8 @@ namespace DomofonExcelToDbf
 
         public void delete()
         {
-            close();
+            if (odbf != null) close();
+            for (int i=0;i<3;i++) Console.WriteLine(":::: Метод DBF->delete() не реализован!!! :::");
         }
 
     }
@@ -136,28 +137,45 @@ namespace DomofonExcelToDbf
         Microsoft.Office.Interop.Excel.Application app;
         Workbook wb;
         public Worksheet worksheet;
+        protected bool saveMemory;
 
-        public Excel(String path)
+        public Excel(bool saveMemory)
         {
-            app = new Microsoft.Office.Interop.Excel.Application();
+            if (saveMemory) app = new Microsoft.Office.Interop.Excel.Application();
+            this.saveMemory = saveMemory;
+
+        }
+
+        public bool OpenWorksheet(String path)
+        {
+            // Если не экономим память, то создаём новый экземпляр COM OLE
+            if (saveMemory)
+            {
+                if (wb != null) wb.Close(0);
+            } else
+            {
+                if (app != null) app.Quit();
+                app = new Microsoft.Office.Interop.Excel.Application();
+            }
 
             wb = app.Workbooks.Open(path, Type.Missing, Type.Missing, Type.Missing, Type.Missing,
-                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
-                    Type.Missing, Type.Missing, Type.Missing, Type.Missing,
-                    Type.Missing, Type.Missing);
-
+                Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+                Type.Missing, Type.Missing);
             if (wb.Worksheets.Count < 1)
             {
                 Console.WriteLine("Выбранный Excel не содержит ни одного листа!");
+                return false;
             }
-        
+
             worksheet = wb.Worksheets[1];
+            return true;
         }
 
         public void close()
         {
-            wb.Close(0);
-            app.Quit();
+            if (wb != null) wb.Close(0);
+            if (app != null) app.Quit();
         }
 
 
@@ -232,9 +250,9 @@ namespace DomofonExcelToDbf
 
             Console.WriteLine("Директория чтения: {0}", dirInput);
             Console.WriteLine("Директория записи: {0}", dirOutput);
-            
-            bool onlyRules = XmlCondition.attrOrDefault(xdoc.Root, "type", "true") == "true";
-            bool saveMemory = false; // экономить память, если включено то будет использоваться один инстанс COM Excel с переключением Worksheet
+
+            bool onlyRules = xdoc.Root.Element("only_rules").Value == "true";
+            bool saveMemory = xdoc.Root.Element("save_memory").Value == "true"; ; // экономить память, если включено то будет использоваться один инстанс COM Excel с переключением Worksheet
 
             var formToFile = new Dictionary<string, string>();
             var files = new HashSet<string>();
@@ -245,9 +263,11 @@ namespace DomofonExcelToDbf
                 Console.WriteLine("Файлов найдено {1} по маске {0}", extension.Value, fbyext.Length);
             }
 
-            Excel excel = null;
+            Excel excel = new Excel(saveMemory);
             DBF dbf = null;
 
+            var totalwatch = new System.Diagnostics.Stopwatch();
+            totalwatch.Start();
             foreach (string fname in files)
             {
                 for (int i = 0; i < 2; i++) Console.WriteLine();
@@ -261,7 +281,7 @@ namespace DomofonExcelToDbf
                 try
                 {
                     Console.WriteLine("Загружаем Excel документ: {0}", Path.GetFileName(finput));
-                    excel = new Excel(finput);
+                    excel.OpenWorksheet(finput);
 
                     var form = Tools.findCorrectForm(excel.worksheet, xdoc);
 
@@ -302,11 +322,14 @@ namespace DomofonExcelToDbf
                 {
                     Console.WriteLine("Закрытие COM Excel и DBF");
                     if (dbf != null) dbf.close();
-                    if (excel != null) excel.close();
-                    if (deleteDbf) dbf.delete();
+                    if (dbf != null && deleteDbf) dbf.delete();
                 }
 
-            }   
+            }
+            totalwatch.Stop();
+
+            // Не забываем завершить Excel
+            excel.close();
 
             if (onlyRules)
             {
@@ -316,6 +339,8 @@ namespace DomofonExcelToDbf
                     Console.WriteLine("Для файла {0} выбрана форма {1}", tup.Key, tup.Value);
                 }
             }
+
+            Console.WriteLine("Времени затрачено суммарно: {0}", totalwatch.Elapsed);
 
             for (int i = 0; i < 2; i++) Console.WriteLine();
                 Console.WriteLine("End?");

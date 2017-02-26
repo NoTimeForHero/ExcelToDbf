@@ -4,6 +4,7 @@
   <outputDirectory>DATA\2016\12</outputDirectory>
   <log>true</log> 
   <only_rules>true</only_rules> <!-- не создавать DBF, только проверить заголовки -->
+  <save_memory>true</save_memory> <!-- использовать только один экземпляр COM Excel -->
   <extensions>
     <ext>*.xls</ext>
     <ext>*.xlsx</ext>
@@ -24,7 +25,7 @@
 		<!--<Equal Y="33" X="3">Несуществующее поле</Equal>-->
       </Rules>
       <Fields>
-        <StartY>13</StartY> <!-- 13 -->
+        <StartY>13</StartY>
         <!-- language - необязательный тэг, по умолчанию будет задан ru-ru -->
         <!-- форматы даты: https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx -->
         <!-- ВНИМАНИЕ: Static внутри THEN/ELSE будет ПРОИГНОРИРОВАН! -->
