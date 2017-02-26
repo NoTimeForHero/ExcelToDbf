@@ -255,10 +255,12 @@ namespace DomofonExcelToDbf
             bool saveMemory = xdoc.Root.Element("save_memory").Value == "true"; ; // экономить память, если включено то будет использоваться один инстанс COM Excel с переключением Worksheet
 
             var formToFile = new Dictionary<string, string>();
+            var outlog = new List<string>();
             var files = new HashSet<string>();
             foreach (var extension in xdoc.Root.Element("extensions").Elements("ext"))
             {
                 string []fbyext = Directory.GetFiles(dirInput, extension.Value, SearchOption.TopDirectoryOnly);
+                fbyext = fbyext.Where(path => !Path.GetFileName(path).StartsWith("~$")).ToArray(); // Игнорируем временные файлы Excel вида ~$Document.xls[x]
                 files.UnionWith(fbyext);
                 Console.WriteLine("Файлов найдено {1} по маске {0}", extension.Value, fbyext.Length);
             }
@@ -309,6 +311,7 @@ namespace DomofonExcelToDbf
 
                     Console.WriteLine("Времени потрачено на обработку данных: {0}", stopwatch.Elapsed);
                     Console.WriteLine("Обработано записей: {0} ", dbf.records);
+                    outlog.Add(String.Format("Файл {0} в {1} записей обработан за {2}",Path.GetFileName(finput),dbf.records,stopwatch.Elapsed));
 
                     int startY = Tools.startY(form);
                     Console.WriteLine("Начиная с {0} по {1}", startY, startY + dbf.records);
@@ -340,11 +343,14 @@ namespace DomofonExcelToDbf
                 }
             }
 
+            foreach (string line in outlog) Console.WriteLine(line);
+
             Console.WriteLine("Времени затрачено суммарно: {0}", totalwatch.Elapsed);
 
             for (int i = 0; i < 2; i++) Console.WriteLine();
-                Console.WriteLine("End?");
 
+            Console.WriteLine("Нажмите любую клавишу для выхода...");
+            Console.ReadKey();
         }
     }
     

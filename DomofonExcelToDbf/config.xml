@@ -3,7 +3,7 @@
   <inputDirectory>DATA\2016\12</inputDirectory>
   <outputDirectory>DATA\2016\12</outputDirectory>
   <log>true</log> 
-  <only_rules>true</only_rules> <!-- не создавать DBF, только проверить заголовки -->
+  <only_rules>false</only_rules> <!-- не создавать DBF, только проверить заголовки -->
   <save_memory>true</save_memory> <!-- использовать только один экземпляр COM Excel -->
   <extensions>
     <ext>*.xls</ext>
