@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <config>
-  <inputDirectory>INPUT\2016\12</inputDirectory>
-  <outputDirectory>OUTPUT\2016\12</outputDirectory>
+  <inputDirectory>DATA\2016\11</inputDirectory>
+  <outputDirectory>DATA\2016\12</outputDirectory>
   <log>true</log>
   <extensions>
     <ext>*.xls</ext>

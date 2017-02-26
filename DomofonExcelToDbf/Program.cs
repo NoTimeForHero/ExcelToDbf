@@ -31,7 +31,7 @@ namespace DomofonExcelToDbf
 
             odbf = new DbfFile(encoding);
             odbf.Open(path, FileMode.Create); // FileMode.Create = файл будет перезаписан если уже существует
-            Console.WriteLine("Создаём DBF с именем {0} и кодировкой {1}", path, encoding);
+            Console.WriteLine("Создаём DBF с именем {0} и\nкодировкой: {1}", path, encoding);
         }
 
         // Эту функцию нельзя вызвать за пределами данного класса
@@ -229,52 +229,92 @@ namespace DomofonExcelToDbf
 
         public Program()
         {
-            WriteResourceToFile("xConfig", "config.xml");
+            Tools.WriteResourceToFile("xConfig", "config.xml");
             XDocument xdoc = XDocument.Load("config.xml");
 
-            var excel = new Excel(@"C:\Test\work.xml");
-            var forms = xdoc.Root.Element("Forms").Elements("Form").ToList();
+            String dirInput = xdoc.Root.Element("inputDirectory").Value;
+            String dirOutput = xdoc.Root.Element("outputDirectory").Value;
 
-            var form = findCorrectForm(excel.worksheet, forms);
-            if (form == null)
+            Console.WriteLine("Директория чтения: {0}", dirInput);
+            Console.WriteLine("Директория записи: {0}", dirOutput);
+
+            var files = new HashSet<string>();
+            foreach (var extension in xdoc.Root.Element("extensions").Elements("ext"))
             {
-                Console.WriteLine("Не найдено подходящих форм для обработки документа work.xml!");
-                return;
+                string []fbyext = Directory.GetFiles(dirInput, extension.Value, SearchOption.TopDirectoryOnly);
+                files.UnionWith(fbyext);
+                Console.WriteLine("Файлов найдено {1} по маске {0}", extension.Value, fbyext.Length);
             }
 
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "output.dbf");
-            DBF dbf = new DBF(path);
-            dbf.writeHeader(form);
+            Excel excel = null;
+            DBF dbf = null;
 
-            // Create new stopwatch.
-            var stopwatch = new System.Diagnostics.Stopwatch();
+            foreach (string fname in files)
+            {
+                for (int i = 0; i < 2; i++) Console.WriteLine();
 
-            // Begin timing.
-            stopwatch.Start();
+                // COM Excel требуется полный путь до файла
+                string finput = Path.GetFullPath(fname);
+                var foutput = Path.Combine(dirOutput, Path.GetFileName(Path.ChangeExtension(finput, ".dbf")));
 
-            eachRecord(excel.worksheet, form, dbf.appendRecord);
+                try
+                {
+                    Console.WriteLine("Загружаем Excel документ: {0}", Path.GetFileName(finput));
+                    excel = new Excel(finput);
 
-            // Stop timing.
-            stopwatch.Stop();
-  
-            // Write result.
-            Console.WriteLine("Времени потрачено на обработку данных: {0}", stopwatch.Elapsed);
-            Console.WriteLine("Обработано записей: {0}", dbf.records);
+                    var form = Tools.findCorrectForm(excel.worksheet, xdoc);
+                    if (form == null)
+                    {
+                        Console.WriteLine("Не найдено подходящих форм для обработки документа work.xml!");
+                        break;
+                    }
 
-            dbf.close();
-            excel.close();
+                    dbf = new DBF(foutput);
+                    dbf.writeHeader(form);
 
-            var a = DateTime.ParseExact("Декабря 2017", "MMMM yyyy", CultureInfo.GetCultureInfo("ru-ru"));
+                    var stopwatch = new System.Diagnostics.Stopwatch();
+
+                    stopwatch.Start();
+                    Tools.eachRecord(excel.worksheet, form, dbf.appendRecord);
+                    stopwatch.Stop();
+
+                    Console.WriteLine("Времени потрачено на обработку данных: {0}", stopwatch.Elapsed);
+                    Console.WriteLine("Обработано записей: {0} ", dbf.records);
+
+                    int startY = Tools.startY(form);
+                    Console.WriteLine("Начиная с {0} по {1}", startY, startY + dbf.records);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(ex);
+                }
+                finally
+                {
+                    Console.WriteLine("Закрытие COM Excel и DBF");
+                    if (dbf != null) dbf.close();
+                    if (excel != null) excel.close();
+                }
+            }
+
+            for (int i = 0; i < 2; i++) Console.WriteLine();
+            Console.WriteLine("End?");
+
         }
-        
-        Dictionary<string, object> outputvars = new Dictionary<string, object>();
+    }
+    
+    class Tools {         
 
-        public void eachRecord(Worksheet worksheet, XElement form, Action<Dictionary<string,object>> callback)
+        public static Int32 startY(XElement form)
+        {
+            return Int32.Parse(form.Element("Fields").Element("StartY").Value);
+        }
+
+        public static void eachRecord(Worksheet worksheet, XElement form, Action<Dictionary<string,object>> callback)
         {
             Dictionary<string, object> variables = new Dictionary<string, object>();
 
             // Позиция с которой начинаются данные
-            var minY = Int32.Parse(form.Element("Fields").Element("StartY").Value);
+            var minY = startY(form);
             var maxY = worksheet.UsedRange.Rows.Count;
 
             // Получаем список статических переменных, которые не меняются для всех записей в данном листе
@@ -344,7 +384,7 @@ namespace DomofonExcelToDbf
         // <param name="var">Имя внутренного ресурса</param>
         // <param name="cell">Имя внутренного ресурса</param>
         // <returns>false если внутренний ресурс не был найден</returns>
-        public object getVar(XElement var, object obj)
+        public static object getVar(XElement var, object obj)
         {
             if (obj == null)
             {
@@ -377,8 +417,10 @@ namespace DomofonExcelToDbf
         // <summary>
         // Ищет подходящую XML форму для документа или null если ни одна не подходит
         // </summary>
-        public XElement findCorrectForm(Worksheet worksheet, List<XElement> forms)
+        public static XElement findCorrectForm(Worksheet worksheet, XDocument xdoc)
         {
+            var forms = xdoc.Root.Element("Forms").Elements("Form").ToList();
+
             foreach (XElement form in forms)
             {
                 bool correct = true;
@@ -427,7 +469,7 @@ namespace DomofonExcelToDbf
         // <param name="resourceName">Имя внутренного ресурса</param>
         // <param name="resourceName">Имя внутренного ресурса</param>
         // <returns>false если внутренний ресурс не был найден</returns>
-        public bool WriteResourceToFile(string resourceName, string fileName)
+        public static bool WriteResourceToFile(string resourceName, string fileName)
         {
             using (var resource = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
             {
