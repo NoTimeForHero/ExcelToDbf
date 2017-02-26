@@ -1,8 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <config>
-  <inputDirectory>DATA\2016\11</inputDirectory>
+  <inputDirectory>DATA\2016\12</inputDirectory>
   <outputDirectory>DATA\2016\12</outputDirectory>
-  <log>true</log>
+  <log>true</log> 
+  <only_rules>true</only_rules> <!-- не создавать DBF, только проверить заголовки -->
   <extensions>
     <ext>*.xls</ext>
     <ext>*.xlsx</ext>
@@ -18,18 +19,18 @@
         <Equal Y="11" X="1">№ кв.</Equal>        
         <Equal Y="11" X="2">ФИО</Equal>
         <Equal Y="11" X="3">Код плательщика</Equal>
-        <Equal Y="11" X="11">Исходящее сальдо</Equal>
+        <Equal Y="11" X="10">Оплачено</Equal>
 		
 		<!--<Equal Y="33" X="3">Несуществующее поле</Equal>-->
       </Rules>
       <Fields>
-        <StartY>900</StartY> <!-- 13 -->
+        <StartY>13</StartY> <!-- 13 -->
         <!-- language - необязательный тэг, по умолчанию будет задан ru-ru -->
         <!-- форматы даты: https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx -->
         <!-- ВНИМАНИЕ: Static внутри THEN/ELSE будет ПРОИГНОРИРОВАН! -->
         <Static Y="3" X="3" name="DATEOPL" type="date" format="MMMM yyyy" lastday="true" language="ru-ru" />
-		<Static Y="1" X="10" name="FORM" />
-		<Dynamic X="12" name="RAND" />
+		    <Static Y="1" X="10" name="FORM" />
+		    <Dynamic X="12" name="RAND" />
         
 		<!-- IF подобно Dynamic будет вызван для каждой записи -->
         <IF X="1"></IF>

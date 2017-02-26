@@ -71,6 +71,8 @@ namespace DomofonExcelToDbf
         public void appendRecord(Dictionary<string, object> variables)
         {
             var orec = new DbfRecord(odbf.Header);
+            orec.AllowIntegerTruncate = true;
+            orec.AllowStringTurncate = true;
 
             int fid = 0;
             foreach (XElement field in dbfields)
@@ -117,21 +119,14 @@ namespace DomofonExcelToDbf
             Console.WriteLine("Записей обработано: {0}", records);
         }
 
-        public void append(String kp, String fio, String adres, String summa, String dateopl)
-        {
-            var orec = new DbfRecord(odbf.Header);
-            orec.AllowDecimalTruncate = true; // Отсекает дробную часть числа?
-            orec[0] = kp;
-            orec[1] = fio;
-            orec[2] = adres;
-            orec[3] = summa;
-            orec[4] = dateopl;
-            odbf.Write(orec, true); 
-        }
-
         public void close()
         {
             odbf.Close();
+        }
+
+        public void delete()
+        {
+            close();
         }
 
     }
@@ -146,7 +141,7 @@ namespace DomofonExcelToDbf
         {
             app = new Microsoft.Office.Interop.Excel.Application();
 
-            wb = app.Workbooks.Open(@"C:\Test\work.xml", Type.Missing, Type.Missing, Type.Missing, Type.Missing,
+            wb = app.Workbooks.Open(path, Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                     Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                     Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                     Type.Missing, Type.Missing);
@@ -237,7 +232,11 @@ namespace DomofonExcelToDbf
 
             Console.WriteLine("Директория чтения: {0}", dirInput);
             Console.WriteLine("Директория записи: {0}", dirOutput);
+            
+            bool onlyRules = XmlCondition.attrOrDefault(xdoc.Root, "type", "true") == "true";
+            bool saveMemory = false; // экономить память, если включено то будет использоваться один инстанс COM Excel с переключением Worksheet
 
+            var formToFile = new Dictionary<string, string>();
             var files = new HashSet<string>();
             foreach (var extension in xdoc.Root.Element("extensions").Elements("ext"))
             {
@@ -257,16 +256,26 @@ namespace DomofonExcelToDbf
                 string finput = Path.GetFullPath(fname);
                 var foutput = Path.Combine(dirOutput, Path.GetFileName(Path.ChangeExtension(finput, ".dbf")));
 
+                bool deleteDbf = false;
+
                 try
                 {
                     Console.WriteLine("Загружаем Excel документ: {0}", Path.GetFileName(finput));
                     excel = new Excel(finput);
 
                     var form = Tools.findCorrectForm(excel.worksheet, xdoc);
+
+                    if (onlyRules)
+                    {
+                        var formname = (form == null) ? "null" : form.Element("Name").Value;
+                        formToFile.Add(Path.GetFileName(finput), formname);
+                        continue;
+                    }
+
                     if (form == null)
                     {
                         Console.WriteLine("Не найдено подходящих форм для обработки документа work.xml!");
-                        break;
+                        continue;
                     }
 
                     dbf = new DBF(foutput);
@@ -286,6 +295,7 @@ namespace DomofonExcelToDbf
                 }
                 catch (Exception ex)
                 {
+                    deleteDbf = true;
                     Console.Error.WriteLine(ex);
                 }
                 finally
@@ -293,11 +303,22 @@ namespace DomofonExcelToDbf
                     Console.WriteLine("Закрытие COM Excel и DBF");
                     if (dbf != null) dbf.close();
                     if (excel != null) excel.close();
+                    if (deleteDbf) dbf.delete();
+                }
+
+            }   
+
+            if (onlyRules)
+            {
+                for (int i = 0; i < 3; i++) Console.WriteLine();
+                foreach (var tup in formToFile)
+                {
+                    Console.WriteLine("Для файла {0} выбрана форма {1}", tup.Key, tup.Value);
                 }
             }
 
             for (int i = 0; i < 2; i++) Console.WriteLine();
-            Console.WriteLine("End?");
+                Console.WriteLine("End?");
 
         }
     }
@@ -364,9 +385,15 @@ namespace DomofonExcelToDbf
                     }
 
                     if (section.Element("SKIP_RECORD") != null)
+                    {
+                        Console.WriteLine("Пропускаем строку Y={0}", y);
                         goto skip_record;
+                    }
                     if (section.Element("STOP_LOOP") != null)
+                    {
+                        Console.WriteLine("Выходим из цикла на Y={0} по условию X[{1}]={2}", y, cond.x, cond.value);
                         goto skip_loop;
+                    }
                 }
 
                 callback(variables);
@@ -456,7 +483,7 @@ namespace DomofonExcelToDbf
                             correct = false;
                             break;
                         }
-                        Console.WriteLine(String.Format("X={0},Y={1}:  {2}=={3}",x,y,mustbe,cell));
+                        Console.WriteLine(String.Format("Y={0},X={1}:  {2}=={3}",y,x,mustbe,cell));
                     }
                     if (correct) return form;
             }
