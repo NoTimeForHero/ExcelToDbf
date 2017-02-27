@@ -1,4 +1,5 @@
 ﻿using Microsoft.Office.Interop.Excel;
+using NickBuhro.Translit;
 using SocialExplorer.IO.FastDBF;
 using System;
 using System.Collections.Generic;
@@ -21,9 +22,12 @@ namespace DomofonExcelToDbf
         public DbfFile odbf;
         public IEnumerable<XElement> dbfields;
         public int records = 0;
+        public bool closed = false;
+        protected string path;
 
         public DBF(String path, Encoding encoding = null)
         {
+            this.path = path;
             // Если мы не передали кодировку, то используем DOS (=866)
             // Нельзя писать DBF(xxx, Encoding encoding = Encoding.GetEncoding(866)) так как аргументы метода должны вычисляться на этапе компиляции
             // А Encoding.GetEncoding(866) можно высчитать только при запуске приложения
@@ -71,7 +75,7 @@ namespace DomofonExcelToDbf
         public void appendRecord(Dictionary<string, object> variables)
         {
             var orec = new DbfRecord(odbf.Header);
-            orec.AllowIntegerTruncate = true;
+            //orec.AllowIntegerTruncate = true;
             orec.AllowStringTurncate = true;
 
             int fid = 0;
@@ -121,13 +125,17 @@ namespace DomofonExcelToDbf
 
         public void close()
         {
+            if (closed) return;
+            closed = false;
             odbf.Close();
         }
 
         public void delete()
         {
-            if (odbf != null) close();
-            for (int i=0;i<3;i++) Console.WriteLine(":::: Метод DBF->delete() не реализован!!! :::");
+            if (closed) return;
+            close();
+
+            File.Delete(this.path);
         }
 
     }
@@ -242,11 +250,19 @@ namespace DomofonExcelToDbf
 
         public Program()
         {
-            Tools.WriteResourceToFile("xConfig", "config.xml");
-            XDocument xdoc = XDocument.Load("config.xml");
+            String confName = Path.ChangeExtension(System.AppDomain.CurrentDomain.FriendlyName, ".xml");
 
-            String dirInput = xdoc.Root.Element("inputDirectory").Value;
-            String dirOutput = xdoc.Root.Element("outputDirectory").Value;
+            if (!File.Exists(confName) || true)
+            {
+                Console.WriteLine("Не найден конфигурационный файл!");
+                Console.WriteLine("Распаковываем его из внутренних ресурсов...");
+                Tools.WriteResourceToFile("xConfig", confName);
+            }
+
+            XDocument xdoc = XDocument.Load(confName);
+
+            String dirInput = Tools.getDirectory(xdoc, "inputDirectory"); 
+            String dirOutput = Tools.getDirectory(xdoc, "outputDirectory");
 
             Console.WriteLine("Директория чтения: {0}", dirInput);
             Console.WriteLine("Директория записи: {0}", dirOutput);
@@ -276,7 +292,6 @@ namespace DomofonExcelToDbf
 
                 // COM Excel требуется полный путь до файла
                 string finput = Path.GetFullPath(fname);
-                var foutput = Path.Combine(dirOutput, Path.GetFileName(Path.ChangeExtension(finput, ".dbf")));
 
                 bool deleteDbf = false;
 
@@ -286,6 +301,7 @@ namespace DomofonExcelToDbf
                     excel.OpenWorksheet(finput);
 
                     var form = Tools.findCorrectForm(excel.worksheet, xdoc);
+                    string foutput = Path.Combine(dirOutput, Tools.getOutputFilename(excel.worksheet, xdoc, dirInput, finput));
 
                     if (onlyRules)
                     {
@@ -356,6 +372,67 @@ namespace DomofonExcelToDbf
     
     class Tools {         
 
+        public static string getDirectory(XDocument xdoc, String type)
+        {
+            var elem = xdoc.Root.Element(type);
+            var regex = elem.Attribute("regex");
+
+            if (regex != null)
+            {
+                var lastDir = getDirectoryName(elem.Value); // Проверяем только последнюю директорию во всём пути
+                Match match = (new Regex(regex.Value)).Match(lastDir);
+                if (!match.Success) throw new ArgumentException(String.Format("Директория '{0}' не попадает под регулярное выражение '{1}'!",lastDir, regex.Value));
+            }
+
+            return elem.Value;
+        }
+
+        public static string getOutputFilename(Worksheet worksheet, XDocument xdoc, String inputDirectory, String inputFile)
+        {
+            XElement outfile = xdoc.Root.Element("outfile");
+
+            bool simple = outfile.Element("simple").Value == "true";
+            if (simple) return Path.GetFileName(Path.ChangeExtension(inputFile, ".dbf"));
+
+            var x = Int32.Parse(outfile.Element("X").Value);
+            var y = Int32.Parse(outfile.Element("Y").Value);
+
+            string cAfter = outfile.Element("after").Value;
+            string fullName = worksheet.Cells[y, x].Value;
+
+            int nAfter = fullName.IndexOf(cAfter);
+            if (nAfter < 0) throw new ArgumentNullException(String.Format("Подстрока '{0}' не найдена в строке '{1}'!",cAfter,fullName));
+
+            string regionName = fullName.Substring(nAfter + cAfter.Length);
+
+            // Транслит если нужно
+            bool translit = outfile.Element("translit").Value == "true";
+            if (translit) regionName = Transliteration.CyrillicToLatin(regionName, Language.Russian);
+
+            // Заменяем пробелы в имени файла на заданный в конфиге символ/подстроку
+            string replaceSpaceWith = outfile.Element("spaces").Value;
+            regionName = regionName.Replace(" ", replaceSpaceWith);
+
+            // Нужно ли добавлять имя директории перед файлом
+            bool dirname = outfile.Element("include_dir_name").Value == "true";
+            if (dirname)
+            {
+                string delim = outfile.Element("dir_delimiter").Value;
+                regionName = getDirectoryName(inputDirectory) + delim + regionName;
+            }
+
+            // Не забываем добавить расширение на конец
+            regionName = regionName + ".dbf";
+
+            return regionName;
+        }
+
+        public static string getDirectoryName(String path)
+        {
+            if (Path.GetExtension(path) == "") return Path.GetFileName(path);
+            return new FileInfo(path).Directory.Name;
+        }
+
         public static Int32 startY(XElement form)
         {
             return Int32.Parse(form.Element("Fields").Element("StartY").Value);
@@ -411,8 +488,15 @@ namespace DomofonExcelToDbf
                         var x = Int32.Parse(dyvar.Attribute("X").Value);
                         var name = dyvar.Attribute("name").Value;
 
-                        cell = worksheet.Cells[y, x].Value;
-                        variables[name] = getVar(dyvar, cell);
+                        try
+                        {
+                            cell = worksheet.Cells[y, x].Value;
+                            variables[name] = getVar(dyvar, cell);
+                        } catch (Exception)
+                        {
+                            Console.WriteLine("Ошибка в переменной {0} на Y={1},X={2}", name, y, x);
+                            throw;
+                        }
                     }
 
                     if (section.Element("SKIP_RECORD") != null)
@@ -452,9 +536,13 @@ namespace DomofonExcelToDbf
             String type = XmlCondition.attrOrDefault(var, "type", "string");
             String cell = obj.ToString();
 
-            if (type == "string" || type == "numeric")
+            if (type == "string")
             {
                 return cell;
+            }
+            if (type == "numeric")
+            {
+                return Double.Parse(cell);
             }
 
             if (type == "date") {

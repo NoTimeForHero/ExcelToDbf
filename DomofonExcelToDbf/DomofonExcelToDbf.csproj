@@ -67,6 +67,10 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NickBuhro.Translit, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NickBuhro.Translit.1.0.0\lib\net40-Client\NickBuhro.Translit.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="SocialExplorer.FastDBF">
       <HintPath>..\packages\SocialExplorer.FastDBF.dll</HintPath>
     </Reference>
@@ -86,6 +90,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -138,8 +143,8 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="config.xml">
-		<LogicalName>xConfig</LogicalName>
-	</EmbeddedResource>
+      <LogicalName>xConfig</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

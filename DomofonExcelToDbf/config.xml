@@ -1,15 +1,27 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <config>
-  <inputDirectory>DATA\2016\12</inputDirectory>
-  <outputDirectory>DATA\2016\12</outputDirectory>
+  <inputDirectory regex="^([1-9]|1[0-2])$">DATA\2016\11</inputDirectory>
+  <outputDirectory>DATA\2016\11</outputDirectory>
   <log>true</log> 
   <only_rules>false</only_rules> <!-- не создавать DBF, только проверить заголовки -->
   <save_memory>true</save_memory> <!-- использовать только один экземпляр COM Excel -->
+  
   <extensions>
     <ext>*.xls</ext>
     <ext>*.xlsx</ext>
     <ext>*.xml</ext>
   </extensions>
+
+  <outfile>
+    <simple>false</simple> <!-- если стоит true, то последующие инструкции будут проигнорированы, конвертируя по принципу "Some_document.xlsx" => "Some_document.dbf" -->
+    <X>1</X>
+    <Y>2</Y>
+    <after>района </after> <!-- например "района Москвы" => "Москвы.dbf" -->
+    <translit>true</translit> <!-- имя файла в транслит по ГОСТ 7.79—2000 -->
+    <spaces></spaces> <!-- заменить пробелы в имени файла на указанный символ -->
+    <include_dir_name>true</include_dir_name> <!-- добавлять ли название директории к имени файла , например "11/Example.xlsx" => "11/11-Example.dbf" -->
+    <dir_delimiter>-</dir_delimiter> <!-- префикс к предыдущему пункту -->
+  </outfile>
   
   <Forms>
     <Form>
@@ -22,7 +34,7 @@
         <Equal Y="11" X="3">Код плательщика</Equal>
         <Equal Y="11" X="10">Оплачено</Equal>
 		
-		<!--<Equal Y="33" X="3">Несуществующее поле</Equal>-->
+		    <!--<Equal Y="33" X="3">Несуществующее поле</Equal>-->
       </Rules>
       <Fields>
         <StartY>13</StartY>
@@ -33,7 +45,7 @@
 		    <Static Y="1" X="10" name="FORM" />
 		    <Dynamic X="12" name="RAND" />
         
-		<!-- IF подобно Dynamic будет вызван для каждой записи -->
+		    <!-- IF подобно Dynamic будет вызван для каждой записи -->
         <IF X="1"></IF>
         <THEN>
           <SKIP_RECORD />
@@ -57,16 +69,17 @@
         <ELSE>
           <Dynamic X="1" name="NUMKV" />
           <Dynamic X="2" name="FIO" />
+          <Dynamic X="3" name="KP" />
           <Dynamic X="10" name="SUMMA" type="numeric"/>
         </ELSE>
         
       </Fields>
       <DBF>
-        <field name="KP" type="string" length="14"></field>
+        <field name="KP" type="string" length="14">$KP</field>
         <field name="FIO" type="string" length="40">$FIO</field>
         <field name="ADRES" type="string" length="40">$SMADR, кв.$NUMKV</field>
         <field name="SUMMA" type="numeric" length="10,2">$SUMMA</field>
-        <field name="DATEOPL" type="date" format="yyyy-MM-dd" length="8">$DATEOPL</field>
+        <field name="DATAOPL" type="date" format="yyyy-MM-dd" length="8">$DATEOPL</field>
       </DBF>
     </Form>
   </Forms>
