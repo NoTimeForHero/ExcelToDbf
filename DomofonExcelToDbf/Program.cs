@@ -11,6 +11,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
@@ -306,9 +307,21 @@ namespace DomofonExcelToDbf
             }
         }
 
-
-        public void action()
+        public void action(MainWindow wmain)
         {
+            StatusWindow wstatus = new StatusWindow();
+            wstatus.Show();
+
+            Thread x = new Thread(delegate_action);
+            x.Start(wstatus);
+        }
+
+        public void delegate_action(object obj)
+        {            
+            StatusWindow window = (StatusWindow)obj;
+            window.setState(true, "Подготовка файлов", 0, filesExcel.Count);
+            int idoc = 1;
+
             Excel excel = new Excel(saveMemory);
             DBF dbf = null;
 
@@ -316,7 +329,6 @@ namespace DomofonExcelToDbf
             totalwatch.Start();
             foreach (string fname in filesExcel)
             {
-                for (int i = 0; i < 2; i++) Console.WriteLine();
 
                 // COM Excel требуется полный путь до файла
                 string finput = Path.GetFullPath(fname);
@@ -326,6 +338,9 @@ namespace DomofonExcelToDbf
                 try
                 {
                     Console.WriteLine("Загружаем Excel документ: {0}", Path.GetFileName(finput));
+                    window.updateState(true, String.Format("Документ: {0}", Path.GetFileName(finput)), idoc);
+                    idoc++;
+
                     excel.OpenWorksheet(finput);
 
                     var form = Tools.findCorrectForm(excel.worksheet, xdoc);
@@ -344,26 +359,30 @@ namespace DomofonExcelToDbf
                         continue;
                     }
 
+                    var total = excel.worksheet.UsedRange.Rows.Count - Tools.startY(form);
+                    window.setState(false, String.Format("Обработано записей: {0}/{1}", 0, total), 0, total);
+
                     dbf = new DBF(foutput);
                     dbf.writeHeader(form);
 
                     var stopwatch = new System.Diagnostics.Stopwatch();
 
                     stopwatch.Start();
-                    Tools.eachRecord(excel.worksheet, form, dbf.appendRecord);
+                    Tools.eachRecord(excel.worksheet, form, dbf.appendRecord, delegate(int id) { window.updateState(false, String.Format("Обработано записей: {0}/{1}", id, total), id); } );
                     stopwatch.Stop();
 
                     Console.WriteLine("Времени потрачено на обработку данных: {0}", stopwatch.Elapsed);
                     Console.WriteLine("Обработано записей: {0} ", dbf.records);
                     outlog.Add(String.Format("Файл {0} в {1} записей обработан за {2}",Path.GetFileName(finput),dbf.records,stopwatch.Elapsed));
 
-                    int startY = Tools.startY(form);
+                    int startY = Tools.startY(form);    
                     Console.WriteLine("Начиная с {0} по {1}", startY, startY + dbf.records);
                 }
                 catch (Exception ex)
                 {
                     deleteDbf = true;
                     Console.Error.WriteLine(ex);
+                    MessageBox.Show(ex.Message, "Документ будет пропущен", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 finally
                 {
@@ -378,18 +397,33 @@ namespace DomofonExcelToDbf
             // Не забываем завершить Excel
             excel.close();
 
+            string crules = "";
+
             if (onlyRules)
             {
                 for (int i = 0; i < 3; i++) Console.WriteLine();
                 foreach (var tup in formToFile)
                 {
-                    Console.WriteLine("Для файла {0} выбрана форма {1}", tup.Key, tup.Value);
+                    string line = String.Format("Для файла {0} выбрана форма {1}", tup.Key, tup.Value);
+                    Console.WriteLine(line);
+                    crules += line + "\n";
                 }
+                MessageBox.Show(crules, "Отчёт о формах", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
 
-            foreach (string line in outlog) Console.WriteLine(line);
+            crules = "";
+
+            foreach (string line in outlog)
+            {
+                crules += line + "\n";
+                Console.WriteLine(line);
+            }
 
             Console.WriteLine("Времени затрачено суммарно: {0}", totalwatch.Elapsed);
+            crules += String.Format("Времени затрачено суммарно: {0}", totalwatch.Elapsed);
+
+            MessageBox.Show(crules, "Отчёт о времени", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            window.mayClose();
 
             for (int i = 0; i < 2; i++) Console.WriteLine();
 
@@ -466,7 +500,7 @@ namespace DomofonExcelToDbf
             return Int32.Parse(form.Element("Fields").Element("StartY").Value);
         }
 
-        public static void eachRecord(Worksheet worksheet, XElement form, Action<Dictionary<string,object>> callback)
+        public static void eachRecord(Worksheet worksheet, XElement form, Action<Dictionary<string,object>> callback, Action<int> guiCallback = null)
         {
             Dictionary<string, object> variables = new Dictionary<string, object>();
 
@@ -492,6 +526,8 @@ namespace DomofonExcelToDbf
             // Начинаем обходить каждый лист
             for (int y = minY; y < maxY; y++)
             {
+                int id = y - minY;
+
                 // Получаем значения динамических переменных без условий
                 foreach (XElement dyvar in dynamicvars)
                 {
@@ -540,6 +576,7 @@ namespace DomofonExcelToDbf
                 }
 
                 callback(variables);
+                if (id % 100 == 0) guiCallback?.Invoke(id);
                 skip_record:;
             }
             skip_loop:;

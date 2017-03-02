@@ -28,9 +28,10 @@ namespace DomofonExcelToDbf
 
         private void buttonConvert_Click(object sender, EventArgs e)
         {
-            StatusWindow window = new StatusWindow();
+            program.action(this);
+            //StatusWindow window = new StatusWindow();
             //this.Enabled = false;
-            window.Show(this);
+            //window.Show(this);
         }
 
         private void MainWindow_Load(object sender, EventArgs e)

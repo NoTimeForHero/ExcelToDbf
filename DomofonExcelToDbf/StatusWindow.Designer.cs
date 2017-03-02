@@ -55,7 +55,6 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(420, 23);
             this.label1.TabIndex = 2;
-            this.label1.Text = "label1";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // label2
@@ -65,7 +64,6 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(420, 23);
             this.label2.TabIndex = 3;
-            this.label2.Text = "label2";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // StatusWindow
