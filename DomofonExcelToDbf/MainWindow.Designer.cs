@@ -1,0 +1,250 @@
+﻿namespace DomofonExcelToDbf
+{
+    partial class MainWindow
+    {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.buttonDirectory = new System.Windows.Forms.Button();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.buttonExit = new System.Windows.Forms.Button();
+            this.buttonConvert = new System.Windows.Forms.Button();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.listBox1 = new System.Windows.Forms.ListBox();
+            this.listBox2 = new System.Windows.Forms.ListBox();
+            this.pictureBox4 = new System.Windows.Forms.PictureBox();
+            this.pictureBox3 = new System.Windows.Forms.PictureBox();
+            this.pictureBox2 = new System.Windows.Forms.PictureBox();
+            this.panel1.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+            this.SuspendLayout();
+            // 
+            // panel1
+            // 
+            this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(155)))), ((int)(((byte)(173)))));
+            this.panel1.Controls.Add(this.buttonDirectory);
+            this.panel1.Controls.Add(this.textBox1);
+            this.panel1.Controls.Add(this.buttonExit);
+            this.panel1.Controls.Add(this.buttonConvert);
+            this.panel1.Location = new System.Drawing.Point(0, 343);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(705, 202);
+            this.panel1.TabIndex = 0;
+            // 
+            // buttonDirectory
+            // 
+            this.buttonDirectory.Image = global::DomofonExcelToDbf.Properties.Resources.iPapkaLupa32;
+            this.buttonDirectory.Location = new System.Drawing.Point(12, 12);
+            this.buttonDirectory.Name = "buttonDirectory";
+            this.buttonDirectory.Size = new System.Drawing.Size(47, 47);
+            this.buttonDirectory.TabIndex = 5;
+            this.buttonDirectory.UseVisualStyleBackColor = true;
+            // 
+            // textBox1
+            // 
+            this.textBox1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
+            this.textBox1.ForeColor = System.Drawing.Color.Yellow;
+            this.textBox1.Location = new System.Drawing.Point(65, 22);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.ReadOnly = true;
+            this.textBox1.Size = new System.Drawing.Size(612, 26);
+            this.textBox1.TabIndex = 4;
+            this.textBox1.Text = "C:\\Users\\user\\Documents\\Visual Studio 2015\\Projects\\DomofonExcelToDbf\\DomofonExce" +
+    "lToDbf\\bin\\Debug";
+            // 
+            // buttonExit
+            // 
+            this.buttonExit.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(254)))), ((int)(((byte)(73)))), ((int)(((byte)(83)))));
+            this.buttonExit.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.buttonExit.ForeColor = System.Drawing.Color.White;
+            this.buttonExit.Image = global::DomofonExcelToDbf.Properties.Resources.iExit64;
+            this.buttonExit.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.buttonExit.Location = new System.Drawing.Point(361, 65);
+            this.buttonExit.Name = "buttonExit";
+            this.buttonExit.Padding = new System.Windows.Forms.Padding(10);
+            this.buttonExit.Size = new System.Drawing.Size(317, 86);
+            this.buttonExit.TabIndex = 3;
+            this.buttonExit.Text = "Выход из программы";
+            this.buttonExit.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.buttonExit.UseVisualStyleBackColor = false;
+            this.buttonExit.Click += new System.EventHandler(this.buttonExit_Click);
+            // 
+            // buttonConvert
+            // 
+            this.buttonConvert.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(179)))), ((int)(((byte)(15)))));
+            this.buttonConvert.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.buttonConvert.ForeColor = System.Drawing.Color.White;
+            this.buttonConvert.Image = global::DomofonExcelToDbf.Properties.Resources.iConv;
+            this.buttonConvert.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.buttonConvert.Location = new System.Drawing.Point(12, 65);
+            this.buttonConvert.Name = "buttonConvert";
+            this.buttonConvert.Padding = new System.Windows.Forms.Padding(10);
+            this.buttonConvert.Size = new System.Drawing.Size(307, 87);
+            this.buttonConvert.TabIndex = 2;
+            this.buttonConvert.Text = "Конвертировать в DBF ";
+            this.buttonConvert.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.buttonConvert.UseVisualStyleBackColor = false;
+            this.buttonConvert.Click += new System.EventHandler(this.buttonConvert_Click);
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripStatusLabel1});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 509);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
+            this.statusStrip1.Size = new System.Drawing.Size(693, 22);
+            this.statusStrip1.TabIndex = 1;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabel1
+            // 
+            this.toolStripStatusLabel1.BackColor = System.Drawing.Color.Transparent;
+            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(183, 17);
+            this.toolStripStatusLabel1.Text = "Тут будет какая-то информация";
+            // 
+            // listBox1
+            // 
+            this.listBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.listBox1.ForeColor = System.Drawing.Color.Green;
+            this.listBox1.FormattingEnabled = true;
+            this.listBox1.ItemHeight = 20;
+            this.listBox1.Items.AddRange(new object[] {
+            "Example.xlsx",
+            "Example.xlsx",
+            "Example.xlsx",
+            "Example.xlsx",
+            "Example.xlsx",
+            "Example.xlsx",
+            "Example.xlsx"});
+            this.listBox1.Location = new System.Drawing.Point(12, 13);
+            this.listBox1.Name = "listBox1";
+            this.listBox1.ScrollAlwaysVisible = true;
+            this.listBox1.Size = new System.Drawing.Size(226, 324);
+            this.listBox1.TabIndex = 3;
+            // 
+            // listBox2
+            // 
+            this.listBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.listBox2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
+            this.listBox2.FormattingEnabled = true;
+            this.listBox2.ItemHeight = 20;
+            this.listBox2.Items.AddRange(new object[] {
+            "Example.dbf",
+            "Example.dbf",
+            "Example.dbf",
+            "Example.dbf",
+            "Example.dbf",
+            "Example.dbf",
+            "Example.dbf"});
+            this.listBox2.Location = new System.Drawing.Point(452, 13);
+            this.listBox2.Name = "listBox2";
+            this.listBox2.ScrollAlwaysVisible = true;
+            this.listBox2.Size = new System.Drawing.Size(226, 324);
+            this.listBox2.TabIndex = 4;
+            // 
+            // pictureBox4
+            // 
+            this.pictureBox4.Image = global::DomofonExcelToDbf.Properties.Resources.zStrelka1;
+            this.pictureBox4.Location = new System.Drawing.Point(327, 140);
+            this.pictureBox4.Name = "pictureBox4";
+            this.pictureBox4.Size = new System.Drawing.Size(37, 33);
+            this.pictureBox4.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox4.TabIndex = 5;
+            this.pictureBox4.TabStop = false;
+            // 
+            // pictureBox3
+            // 
+            this.pictureBox3.Image = global::DomofonExcelToDbf.Properties.Resources.oDBF2;
+            this.pictureBox3.Location = new System.Drawing.Point(393, 131);
+            this.pictureBox3.Name = "pictureBox3";
+            this.pictureBox3.Size = new System.Drawing.Size(53, 50);
+            this.pictureBox3.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox3.TabIndex = 4;
+            this.pictureBox3.TabStop = false;
+            // 
+            // pictureBox2
+            // 
+            this.pictureBox2.Image = global::DomofonExcelToDbf.Properties.Resources.zXls;
+            this.pictureBox2.Location = new System.Drawing.Point(244, 131);
+            this.pictureBox2.Name = "pictureBox2";
+            this.pictureBox2.Size = new System.Drawing.Size(53, 50);
+            this.pictureBox2.TabIndex = 3;
+            this.pictureBox2.TabStop = false;
+            // 
+            // MainWindow
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.White;
+            this.ClientSize = new System.Drawing.Size(693, 531);
+            this.Controls.Add(this.pictureBox4);
+            this.Controls.Add(this.pictureBox3);
+            this.Controls.Add(this.listBox2);
+            this.Controls.Add(this.pictureBox2);
+            this.Controls.Add(this.statusStrip1);
+            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.listBox1);
+            this.DoubleBuffered = true;
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
+            this.Name = "MainWindow";
+            this.Text = "Конвертирование XLS файлов в DBF";
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Button buttonConvert;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.Button buttonExit;
+        private System.Windows.Forms.PictureBox pictureBox2;
+        private System.Windows.Forms.PictureBox pictureBox3;
+        private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.ListBox listBox2;
+        private System.Windows.Forms.PictureBox pictureBox4;
+        private System.Windows.Forms.Button buttonDirectory;
+        private System.Windows.Forms.TextBox textBox1;
+    }
+}

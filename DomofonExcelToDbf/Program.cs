@@ -243,9 +243,14 @@ namespace DomofonExcelToDbf
 
     class Program
     {
+        [STAThread]
         static void Main(string[] args)
         {
-            new Program();
+
+            System.Windows.Forms.Application.EnableVisualStyles();
+            System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
+            System.Windows.Forms.Application.Run(new MainWindow());
+            //new Program();
         }
 
         public Program()
@@ -366,7 +371,7 @@ namespace DomofonExcelToDbf
             for (int i = 0; i < 2; i++) Console.WriteLine();
 
             Console.WriteLine("Нажмите любую клавишу для выхода...");
-            Console.ReadKey();
+            //Console.ReadKey();
         }
     }
     
