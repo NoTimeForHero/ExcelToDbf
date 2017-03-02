@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <config>
-  <inputDirectory regex="^([1-9]|1[0-2])$">DATA\2016\11</inputDirectory>
-  <outputDirectory>DATA\2016\11</outputDirectory>
+  <inputDirectory regex="^([1-9]|1[0-2])$">DATA\2016\12</inputDirectory>
+  <outputDirectory>DATA\2016\12</outputDirectory>
   <log>true</log> 
   <only_rules>false</only_rules> <!-- не создавать DBF, только проверить заголовки -->
   <save_memory>true</save_memory> <!-- использовать только один экземпляр COM Excel -->

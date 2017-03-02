@@ -241,57 +241,80 @@ namespace DomofonExcelToDbf
         }
     }
 
-    class Program
+    public class Program
     {
         [STAThread]
         static void Main(string[] args)
         {
-
             System.Windows.Forms.Application.EnableVisualStyles();
             System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
-            System.Windows.Forms.Application.Run(new MainWindow());
-            //new Program();
+
+            Program program = new Program();
+            MainWindow window = new MainWindow(program);
+            System.Windows.Forms.Application.Run(window);
         }
 
-        public Program()
+        public XDocument xdoc;
+        public bool onlyRules;
+        public bool saveMemory;
+        public String dirInput;
+        public String dirOutput;
+
+        public Dictionary<string, string> formToFile = new Dictionary<string, string>();
+        public List<string> outlog = new List<string>();
+        public HashSet<string> filesExcel = new HashSet<string>();
+        public HashSet<string> filesDBF = new HashSet<string>();
+
+        public void init()
         {
             String confName = Path.ChangeExtension(System.AppDomain.CurrentDomain.FriendlyName, ".xml");
 
-            if (!File.Exists(confName) || true)
+            if (true || !File.Exists(confName))
             {
                 Console.WriteLine("Не найден конфигурационный файл!");
                 Console.WriteLine("Распаковываем его из внутренних ресурсов...");
                 Tools.WriteResourceToFile("xConfig", confName);
             }
 
-            XDocument xdoc = XDocument.Load(confName);
+            xdoc = XDocument.Load(confName);
 
-            String dirInput = Tools.getDirectory(xdoc, "inputDirectory"); 
-            String dirOutput = Tools.getDirectory(xdoc, "outputDirectory");
+            dirInput = xdoc.Root.Element("inputDirectory").Value; 
+            dirOutput = xdoc.Root.Element("outputDirectory").Value;
 
             Console.WriteLine("Директория чтения: {0}", dirInput);
             Console.WriteLine("Директория записи: {0}", dirOutput);
 
-            bool onlyRules = xdoc.Root.Element("only_rules").Value == "true";
-            bool saveMemory = xdoc.Root.Element("save_memory").Value == "true"; ; // экономить память, если включено то будет использоваться один инстанс COM Excel с переключением Worksheet
+            onlyRules = xdoc.Root.Element("only_rules").Value == "true";
+            saveMemory = xdoc.Root.Element("save_memory").Value == "true"; // экономить память, если включено то будет использоваться один инстанс COM Excel с переключением Worksheet
+            updateDirectory();
+        }
 
-            var formToFile = new Dictionary<string, string>();
-            var outlog = new List<string>();
-            var files = new HashSet<string>();
+        public void updateDirectory()
+        { 
+            filesDBF.Clear();
+            filesExcel.Clear();
+
+            string[] fbyext = Directory.GetFiles(dirOutput, "*.dbf", SearchOption.TopDirectoryOnly);
+            filesDBF.UnionWith(fbyext);
+
             foreach (var extension in xdoc.Root.Element("extensions").Elements("ext"))
             {
-                string []fbyext = Directory.GetFiles(dirInput, extension.Value, SearchOption.TopDirectoryOnly);
+                fbyext = Directory.GetFiles(dirInput, extension.Value, SearchOption.TopDirectoryOnly);
                 fbyext = fbyext.Where(path => !Path.GetFileName(path).StartsWith("~$")).ToArray(); // Игнорируем временные файлы Excel вида ~$Document.xls[x]
-                files.UnionWith(fbyext);
+                filesExcel.UnionWith(fbyext);
                 Console.WriteLine("Файлов найдено {1} по маске {0}", extension.Value, fbyext.Length);
             }
+        }
 
+
+        public void action()
+        {
             Excel excel = new Excel(saveMemory);
             DBF dbf = null;
 
             var totalwatch = new System.Diagnostics.Stopwatch();
             totalwatch.Start();
-            foreach (string fname in files)
+            foreach (string fname in filesExcel)
             {
                 for (int i = 0; i < 2; i++) Console.WriteLine();
 
