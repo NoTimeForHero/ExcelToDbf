@@ -61,6 +61,25 @@ namespace DomofonExcelToDbf.Properties {
         }
         
         /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Icon, аналогичного (Значок).
+        /// </summary>
+        internal static System.Drawing.Icon export_excel {
+            get {
+                object obj = ResourceManager.GetObject("export_excel", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Icon by https://www.iconfinder.com/icons/64174/excel_export_xlsx_icon#size=32.
+        /// </summary>
+        internal static string icon_credits {
+            get {
+                return ResourceManager.GetString("icon_credits", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap iConv {

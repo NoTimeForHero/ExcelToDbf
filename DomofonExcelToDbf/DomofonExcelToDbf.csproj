@@ -69,6 +69,9 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Resources\1488562050_export_excel.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\WindowsAPICodePack-Core.1.1.2\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
@@ -202,7 +205,23 @@
   <ItemGroup>
     <None Include="Resources\iPapkaLupa32.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\1Programm.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\1488562050_export_excel.ico" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>if "Release" NEQ "$(ConfigurationName)" (exit /b 0)
+"$(SolutionDir)packages\LibZ.Tool.1.2.0.0\tools\libz.exe" inject-dll --assembly $(TargetFileName) --include *.dll --move
+del /q *.config
+verify &gt; nul
+ren $(TargetName).xml config.bin
+del /q *.xml
+ren config.bin $(TargetName).xml
+verify &gt; nul</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
