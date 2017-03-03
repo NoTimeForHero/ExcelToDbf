@@ -275,7 +275,7 @@ namespace DomofonExcelToDbf
         {
             String confName = Path.ChangeExtension(System.AppDomain.CurrentDomain.FriendlyName, ".xml");
 
-            if (true || !File.Exists(confName))
+            if (!File.Exists(confName))
             {
                 Console.WriteLine("Не найден конфигурационный файл!");
                 Console.WriteLine("Распаковываем его из внутренних ресурсов...");
@@ -304,6 +304,9 @@ namespace DomofonExcelToDbf
             Logger.instance.log("Директория чтения: {0}", dirInput);
             Logger.instance.log("Директория записи: {0}", dirOutput);
 
+            if (!Directory.Exists(dirInput)) dirInput = Directory.GetCurrentDirectory();
+            if (!Directory.Exists(dirOutput)) dirOutput = Directory.GetCurrentDirectory();
+
             filesDBF.Clear();
             filesExcel.Clear();
 
@@ -322,7 +325,7 @@ namespace DomofonExcelToDbf
         private void onFormMainClosing(object sender, FormClosingEventArgs e)
         {
             if (process == null) return;
-            DialogResult abort = DialogResult.No;
+            DialogResult abort = DialogResult.None;
 
             if (process.IsAlive)
             {
@@ -381,7 +384,6 @@ namespace DomofonExcelToDbf
                     excel.OpenWorksheet(finput);
 
                     var form = Tools.findCorrectForm(excel.worksheet, xdoc);
-                    string foutput = Path.Combine(dirOutput, Tools.getOutputFilename(excel.worksheet, xdoc, dirInput, finput));
 
                     if (onlyRules)
                     {
@@ -395,6 +397,8 @@ namespace DomofonExcelToDbf
                         Logger.instance.log("Не найдено подходящих форм для обработки документа work.xml!");
                         continue;
                     }
+
+                    string foutput = Path.Combine(dirOutput, Tools.getOutputFilename(excel.worksheet, xdoc, dirInput, finput));
 
                     var total = excel.worksheet.UsedRange.Rows.Count - Tools.startY(form);
                     window.setState(false, String.Format("Обработано записей: {0}/{1}", 0, total), 0, total);
