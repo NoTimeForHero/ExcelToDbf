@@ -3,6 +3,7 @@ using NickBuhro.Translit;
 using SocialExplorer.IO.FastDBF;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.OleDb;
 using System.Globalization;
@@ -252,6 +253,7 @@ namespace DomofonExcelToDbf
 
             Program program = new Program();
             MainWindow window = new MainWindow(program);
+            window.FormClosing += new FormClosingEventHandler(program.onFormMainClosing);
             System.Windows.Forms.Application.Run(window);
         }
 
@@ -261,6 +263,8 @@ namespace DomofonExcelToDbf
         public String dirInput;
         public String dirOutput;
         public String status;
+
+        Thread process = null;
 
         public Dictionary<string, string> formToFile = new Dictionary<string, string>();
         public List<string> outlog = new List<string>();
@@ -315,14 +319,38 @@ namespace DomofonExcelToDbf
             }
         }
 
+        private void onFormMainClosing(object sender, FormClosingEventArgs e)
+        {
+            if (process == null) return;
+            DialogResult abort = DialogResult.No;
+
+            if (process.IsAlive)
+            {
+                abort = MessageBox.Show("Вы действительно хотите выйти?\nПроцесс конвертирования будет прерван.", "Предупреждение", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            }
+
+            if (abort == DialogResult.No)
+            {
+                    e.Cancel = true;
+                    return;
+            }
+
+            process.Abort();
+        }
+
         public void action(MainWindow wmain)
         {
+            if (process != null && process.IsAlive)
+            {
+                MessageBox.Show("Процесс конвертирования уже запущен!\nДождись его завершения, если вы хотите начать новый.", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             StatusWindow wstatus = new StatusWindow();
             wstatus.Show();
 
-            Thread x = new Thread(delegate_action);
-            x.IsBackground = true;
-            x.Start(wstatus);
+            process = new Thread(delegate_action);
+            process.Start(wstatus);
         }
 
         public void delegate_action(object obj)
@@ -389,9 +417,16 @@ namespace DomofonExcelToDbf
                 }
                 catch (Exception ex)
                 {
-                    deleteDbf = true;
-                    Console.Error.WriteLine(ex);
+                    if (ex is ThreadAbortException)
+                    {
+                        excel.close();
+                        goto skip_error_msgbox;
+                    }
+
                     MessageBox.Show(ex.Message, "Документ будет пропущен", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    skip_error_msgbox:;
+                    Console.Error.WriteLine(ex);
+                    deleteDbf = true;
                 }
                 finally
                 {
@@ -431,8 +466,8 @@ namespace DomofonExcelToDbf
             Logger.instance.log("Времени затрачено суммарно: {0}", totalwatch.Elapsed);
             crules += String.Format("Времени затрачено суммарно: {0}", totalwatch.Elapsed);
 
-            MessageBox.Show(crules, "Отчёт о времени", MessageBoxButtons.OK, MessageBoxIcon.Information);
             window.mayClose();
+            MessageBox.Show(crules, "Отчёт о времени", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             for (int i = 0; i < 2; i++) Logger.instance.log();
 
