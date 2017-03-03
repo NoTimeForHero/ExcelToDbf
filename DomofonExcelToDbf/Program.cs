@@ -36,14 +36,14 @@ namespace DomofonExcelToDbf
 
             odbf = new DbfFile(encoding);
             odbf.Open(path, FileMode.Create); // FileMode.Create = файл будет перезаписан если уже существует
-            Console.WriteLine("Создаём DBF с именем {0} и\nкодировкой: {1}", path, encoding);
+            Logger.instance.log("Создаём DBF с именем {0} и\nкодировкой: {1}", path, encoding);
         }
 
         // Эту функцию нельзя вызвать за пределами данного класса
         public void writeHeader(XElement form)
         {
             dbfields = form.Element("DBF").Elements("field");
-            Console.WriteLine("Записываем в DBF {0} полей", dbfields.Count());
+            Logger.instance.log("Записываем в DBF {0} полей", dbfields.Count());
             foreach (XElement field in dbfields)
             {
                 string input = field.Value;
@@ -63,11 +63,11 @@ namespace DomofonExcelToDbf
                     int nlen = Int32.Parse(length[0]);
                     int ndec = (length.Length > 1) ? Int32.Parse(length[1]) : 0;
                     odbf.Header.AddColumn(new DbfColumn(name, column, nlen, ndec));
-                    Console.WriteLine("Записываем поле '{0}' типа '{1}' длиной {2},{3}", name, type, nlen, ndec);
+                    Logger.instance.log("Записываем поле '{0}' типа '{1}' длиной {2},{3}", name, type, nlen, ndec);
                 } else
                 {
                     odbf.Header.AddColumn(new DbfColumn(name, column));
-                    Console.WriteLine("Записываем поле '{0}' типа '{1}'", name, type);
+                    Logger.instance.log("Записываем поле '{0}' типа '{1}'", name, type);
                 }
             }
             odbf.WriteHeader();    
@@ -117,11 +117,11 @@ namespace DomofonExcelToDbf
             }
 
             odbf.Write(orec, true);
-            //if (i < 20) foreach (var x in variables) Console.WriteLine(x.Key + "=" + x.Value);
+            //if (i < 20) foreach (var x in variables) Logger.instance.log(x.Key + "=" + x.Value);
 
             records++;
             if (records % 100 > 0) return;
-            Console.WriteLine("Записей обработано: {0}", records);
+            Logger.instance.log("Записей обработано: {0}", records);
         }
 
         public void close()
@@ -173,7 +173,7 @@ namespace DomofonExcelToDbf
                 Type.Missing, Type.Missing);
             if (wb.Worksheets.Count < 1)
             {
-                Console.WriteLine("Выбранный Excel не содержит ни одного листа!");
+                Logger.instance.log("Выбранный Excel не содержит ни одного листа!");
                 return false;
             }
 
@@ -260,6 +260,7 @@ namespace DomofonExcelToDbf
         public bool saveMemory;
         public String dirInput;
         public String dirOutput;
+        public String status;
 
         public Dictionary<string, string> formToFile = new Dictionary<string, string>();
         public List<string> outlog = new List<string>();
@@ -279,11 +280,15 @@ namespace DomofonExcelToDbf
 
             xdoc = XDocument.Load(confName);
 
+            var log = xdoc.Root.Element("log");
+            string log_file = (log != null && log.Value == "true") ? Path.ChangeExtension(confName, ".log") : null;
+            Logger.instance = new Logger(log_file);
+
+            var status = xdoc.Root.Element("status");
+            this.status = (status != null) ? status.Value : "";
+
             dirInput = xdoc.Root.Element("inputDirectory").Value; 
             dirOutput = xdoc.Root.Element("outputDirectory").Value;
-
-            Console.WriteLine("Директория чтения: {0}", dirInput);
-            Console.WriteLine("Директория записи: {0}", dirOutput);
 
             onlyRules = xdoc.Root.Element("only_rules").Value == "true";
             saveMemory = xdoc.Root.Element("save_memory").Value == "true"; // экономить память, если включено то будет использоваться один инстанс COM Excel с переключением Worksheet
@@ -291,7 +296,10 @@ namespace DomofonExcelToDbf
         }
 
         public void updateDirectory()
-        { 
+        {
+            Logger.instance.log("Директория чтения: {0}", dirInput);
+            Logger.instance.log("Директория записи: {0}", dirOutput);
+
             filesDBF.Clear();
             filesExcel.Clear();
 
@@ -303,7 +311,7 @@ namespace DomofonExcelToDbf
                 fbyext = Directory.GetFiles(dirInput, extension.Value, SearchOption.TopDirectoryOnly);
                 fbyext = fbyext.Where(path => !Path.GetFileName(path).StartsWith("~$")).ToArray(); // Игнорируем временные файлы Excel вида ~$Document.xls[x]
                 filesExcel.UnionWith(fbyext);
-                Console.WriteLine("Файлов найдено {1} по маске {0}", extension.Value, fbyext.Length);
+                Logger.instance.log("Файлов найдено {1} по маске {0}", extension.Value, fbyext.Length);
             }
         }
 
@@ -313,6 +321,7 @@ namespace DomofonExcelToDbf
             wstatus.Show();
 
             Thread x = new Thread(delegate_action);
+            x.IsBackground = true;
             x.Start(wstatus);
         }
 
@@ -337,7 +346,7 @@ namespace DomofonExcelToDbf
 
                 try
                 {
-                    Console.WriteLine("Загружаем Excel документ: {0}", Path.GetFileName(finput));
+                    Logger.instance.log("Загружаем Excel документ: {0}", Path.GetFileName(finput));
                     window.updateState(true, String.Format("Документ: {0}", Path.GetFileName(finput)), idoc);
                     idoc++;
 
@@ -355,7 +364,7 @@ namespace DomofonExcelToDbf
 
                     if (form == null)
                     {
-                        Console.WriteLine("Не найдено подходящих форм для обработки документа work.xml!");
+                        Logger.instance.log("Не найдено подходящих форм для обработки документа work.xml!");
                         continue;
                     }
 
@@ -371,12 +380,12 @@ namespace DomofonExcelToDbf
                     Tools.eachRecord(excel.worksheet, form, dbf.appendRecord, delegate(int id) { window.updateState(false, String.Format("Обработано записей: {0}/{1}", id, total), id); } );
                     stopwatch.Stop();
 
-                    Console.WriteLine("Времени потрачено на обработку данных: {0}", stopwatch.Elapsed);
-                    Console.WriteLine("Обработано записей: {0} ", dbf.records);
+                    Logger.instance.log("Времени потрачено на обработку данных: {0}", stopwatch.Elapsed);
+                    Logger.instance.log("Обработано записей: {0} ", dbf.records);
                     outlog.Add(String.Format("Файл {0} в {1} записей обработан за {2}",Path.GetFileName(finput),dbf.records,stopwatch.Elapsed));
 
                     int startY = Tools.startY(form);    
-                    Console.WriteLine("Начиная с {0} по {1}", startY, startY + dbf.records);
+                    Logger.instance.log("Начиная с {0} по {1}", startY, startY + dbf.records);
                 }
                 catch (Exception ex)
                 {
@@ -386,7 +395,7 @@ namespace DomofonExcelToDbf
                 }
                 finally
                 {
-                    Console.WriteLine("Закрытие COM Excel и DBF");
+                    Logger.instance.log("Закрытие COM Excel и DBF");
                     if (dbf != null) dbf.close();
                     if (dbf != null && deleteDbf) dbf.delete();
                 }
@@ -401,11 +410,11 @@ namespace DomofonExcelToDbf
 
             if (onlyRules)
             {
-                for (int i = 0; i < 3; i++) Console.WriteLine();
+                for (int i = 0; i < 3; i++) Logger.instance.log();
                 foreach (var tup in formToFile)
                 {
                     string line = String.Format("Для файла {0} выбрана форма {1}", tup.Key, tup.Value);
-                    Console.WriteLine(line);
+                    Logger.instance.log(line);
                     crules += line + "\n";
                 }
                 MessageBox.Show(crules, "Отчёт о формах", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -416,20 +425,49 @@ namespace DomofonExcelToDbf
             foreach (string line in outlog)
             {
                 crules += line + "\n";
-                Console.WriteLine(line);
+                Logger.instance.log(line);
             }
 
-            Console.WriteLine("Времени затрачено суммарно: {0}", totalwatch.Elapsed);
+            Logger.instance.log("Времени затрачено суммарно: {0}", totalwatch.Elapsed);
             crules += String.Format("Времени затрачено суммарно: {0}", totalwatch.Elapsed);
 
             MessageBox.Show(crules, "Отчёт о времени", MessageBoxButtons.OK, MessageBoxIcon.Information);
             window.mayClose();
 
-            for (int i = 0; i < 2; i++) Console.WriteLine();
+            for (int i = 0; i < 2; i++) Logger.instance.log();
 
-            Console.WriteLine("Нажмите любую клавишу для выхода...");
+            Logger.instance.log("Нажмите любую клавишу для выхода...");
             //Console.ReadKey();
         }
+    }
+
+    class Logger
+    {
+        bool console = false;
+        StreamWriter writer;
+
+        public static Logger instance;
+
+        public Logger(string file=null)
+        {
+            this.console = (file == null);
+            if (file != null)
+            {
+                writer = new StreamWriter(file, false);
+                writer.AutoFlush = true;
+            }
+        }
+
+        public void log(string data="", object arg0=null, object arg1=null, object arg2=null, object arg3=null)
+        {
+            if (console) Console.WriteLine(data, arg0, arg1, arg2, arg3);
+            else
+            {
+                writer.WriteLine(data, arg0, arg1, arg2, arg3);
+                writer.Flush();
+            }
+        }
+
     }
     
     class Tools {         
@@ -558,19 +596,19 @@ namespace DomofonExcelToDbf
                             variables[name] = getVar(dyvar, cell);
                         } catch (Exception)
                         {
-                            Console.WriteLine("Ошибка в переменной {0} на Y={1},X={2}", name, y, x);
+                            Logger.instance.log("Ошибка в переменной {0} на Y={1},X={2}", name, y, x);
                             throw;
                         }
                     }
 
                     if (section.Element("SKIP_RECORD") != null)
                     {
-                        Console.WriteLine("Пропускаем строку Y={0}", y);
+                        Logger.instance.log("Пропускаем строку Y={0}", y);
                         goto skip_record;
                     }
                     if (section.Element("STOP_LOOP") != null)
                     {
-                        Console.WriteLine("Выходим из цикла на Y={0} по условию X[{1}]={2}", y, cond.x, cond.value);
+                        Logger.instance.log("Выходим из цикла на Y={0} по условию X[{1}]={2}", y, cond.x, cond.value);
                         goto skip_loop;
                     }
                 }
@@ -581,7 +619,7 @@ namespace DomofonExcelToDbf
             }
             skip_loop:;
 
-            Console.WriteLine("Составление записей завершено?");
+            Logger.instance.log("Составление записей завершено?");
 
         }
 
@@ -636,7 +674,7 @@ namespace DomofonExcelToDbf
             {
                 bool correct = true;
                 String name = form.Element("Name").Value;
-                Console.WriteLine(String.Format("Проверяем форму \"{0}\"",name));
+                Logger.instance.log(String.Format("Проверяем форму \"{0}\"",name));
 
                 var equals = form.Element("Rules").Elements("Equal");
                 foreach (XElement equal in equals)
@@ -652,22 +690,22 @@ namespace DomofonExcelToDbf
                         cell = worksheet.Cells[y, x].Value.ToString();
                     } catch (Exception ex)
                     {
-                        Console.WriteLine(String.Format("Произошла ошибка при чтении ячейки Y={0},X={1}!", y, x));
-                        Console.WriteLine(String.Format("Ожидалось: {0}", mustbe));
-                        Console.WriteLine("Ошибка: {0}",ex.Message);
+                        Logger.instance.log(String.Format("Произошла ошибка при чтении ячейки Y={0},X={1}!", y, x));
+                        Logger.instance.log(String.Format("Ожидалось: {0}", mustbe));
+                        Logger.instance.log("Ошибка: {0}",ex.Message);
                         correct = false;
                         break;
                     }
 
                     if (mustbe != cell)
                         {
-                            Console.WriteLine(String.Format("Проверка провалена (Y={0},X={1})",y,x));
-                            Console.WriteLine(String.Format("Ожидалось: {0}", mustbe));
-                            Console.WriteLine(String.Format("Найдено: {0}", cell));
+                            Logger.instance.log(String.Format("Проверка провалена (Y={0},X={1})",y,x));
+                            Logger.instance.log(String.Format("Ожидалось: {0}", mustbe));
+                            Logger.instance.log(String.Format("Найдено: {0}", cell));
                             correct = false;
                             break;
                         }
-                        Console.WriteLine(String.Format("Y={0},X={1}:  {2}=={3}",y,x,mustbe,cell));
+                        Logger.instance.log(String.Format("Y={0},X={1}:  {2}=={3}",y,x,mustbe,cell));
                     }
                     if (correct) return form;
             }

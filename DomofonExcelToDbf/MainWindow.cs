@@ -43,6 +43,7 @@ namespace DomofonExcelToDbf
         private void fillElementsData()
         {
             textBoxPath.Text = Path.GetFullPath(program.dirInput);
+            toolStripStatusLabel1.Text = program.status;
 
             listBoxExcel.Items.Clear();
             foreach (string fpath in program.filesExcel)
