@@ -28,10 +28,10 @@ namespace DomofonExcelToDbf
 
         private void buttonConvert_Click(object sender, EventArgs e)
         {
+            program.updateDirectory();
+            fillElementsData();
+
             program.action(this);
-            //StatusWindow window = new StatusWindow();
-            //this.Enabled = false;
-            //window.Show(this);
         }
 
         private void MainWindow_Load(object sender, EventArgs e)
@@ -40,7 +40,7 @@ namespace DomofonExcelToDbf
             fillElementsData();
         }
 
-        private void fillElementsData()
+        public void fillElementsData()
         {
             textBoxPath.Text = Path.GetFullPath(program.dirInput);
             toolStripStatusLabel1.Text = program.status;

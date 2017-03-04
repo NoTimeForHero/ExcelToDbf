@@ -279,6 +279,7 @@ namespace DomofonExcelToDbf
 
         public Dictionary<string, string> formToFile = new Dictionary<string, string>();
         public List<string> outlog = new List<string>();
+        public List<string> errlog = new List<string>();
         public HashSet<string> filesExcel = new HashSet<string>();
         public HashSet<string> filesDBF = new HashSet<string>();
 
@@ -363,13 +364,18 @@ namespace DomofonExcelToDbf
             StatusWindow wstatus = new StatusWindow();
             wstatus.Show();
 
+            object forms = new object[2] { wstatus, wmain };
+
             process = new Thread(delegate_action);
-            process.Start(wstatus);
+            process.Start(forms);
         }
 
-        public void delegate_action(object obj)
-        {            
-            StatusWindow window = (StatusWindow)obj;
+        protected void delegate_action(object obj)
+        {
+            object []forms = (object[])obj;
+                   
+            StatusWindow window = (StatusWindow)forms[0];
+            MainWindow wmain = (MainWindow)forms[1];
             window.setState(true, "Подготовка файлов", 0, filesExcel.Count);
             int idoc = 1;
 
@@ -406,7 +412,7 @@ namespace DomofonExcelToDbf
                     if (form == null)
                     {
                         Logger.instance.log("Не найдено подходящих форм для обработки документа work.xml!");
-                        continue;
+                        throw new NoNullAllowedException("Не найдено подходящих форм для обработки документа work.xml!");
                     }
 
                     string foutput = Path.Combine(dirOutput, Tools.getOutputFilename(excel.worksheet, xdoc, dirInput, finput));
@@ -425,7 +431,7 @@ namespace DomofonExcelToDbf
 
                     Logger.instance.log("Времени потрачено на обработку данных: {0}", stopwatch.Elapsed);
                     Logger.instance.log("Обработано записей: {0} ", dbf.records);
-                    outlog.Add(String.Format("Файл {0} в {1} записей обработан за {2}",Path.GetFileName(finput),dbf.records,stopwatch.Elapsed));
+                    outlog.Add(String.Format("{0} в {1} строк за {2}",Path.GetFileNameWithoutExtension(finput),dbf.records,stopwatch.Elapsed.ToString("hh\\:mm\\:ss\\.ff")));
 
                     int startY = Tools.startY(form);    
                     Logger.instance.log("Начиная с {0} по {1}", startY, startY + dbf.records);
@@ -433,12 +439,17 @@ namespace DomofonExcelToDbf
                 catch (Exception ex)
                 {
                     if (ex is ThreadAbortException)
-                    {
+                    { 
                         excel.close();
                         goto skip_error_msgbox;
                     }
 
-                    MessageBox.Show(ex.Message, "Документ будет пропущен", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    errlog.Add(String.Format("Документ \"{0}\" был пропущен!",Path.GetFileNameWithoutExtension(finput)));
+
+                    var message = String.Format("Ошибка! Документ \"{0}\" будет пропущен!\n\n{1}", Path.GetFileNameWithoutExtension(finput), ex.Message);
+                    Logger.instance.log(message);
+                    MessageBox.Show(message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
                     skip_error_msgbox:;
                     Console.Error.WriteLine(ex);
                     deleteDbf = true;
@@ -470,24 +481,28 @@ namespace DomofonExcelToDbf
                 MessageBox.Show(crules, "Отчёт о формах", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
 
-            crules = "";
-
-            foreach (string line in outlog)
-            {
-                crules += line + "\n";
-                Logger.instance.log(line);
-            }
+            crules = "Время обработки документов:\n";
+           
+            var coutlog = String.Join("\n", outlog) + "\n";
+            crules += coutlog;
+            Logger.instance.log(coutlog);
 
             Logger.instance.log("Времени затрачено суммарно: {0}", totalwatch.Elapsed);
-            crules += String.Format("Времени затрачено суммарно: {0}", totalwatch.Elapsed);
+            crules += String.Format("Времени затрачено суммарно: {0}", totalwatch.Elapsed.ToString("hh\\:mm\\:ss\\.ff"));
+
+            var icon = MessageBoxIcon.Information;
+
+            if (errlog.Count > 0) {
+                icon = MessageBoxIcon.Warning;
+                crules += "\n\n";
+                crules += String.Join("\n", errlog);
+            }
+
+            updateDirectory();
+            wmain.BeginInvoke((MethodInvoker)wmain.fillElementsData);
 
             window.mayClose();
-            MessageBox.Show(crules, "Отчёт о времени", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-            for (int i = 0; i < 2; i++) Logger.instance.log();
-
-            Logger.instance.log("Нажмите любую клавишу для выхода...");
-            //Console.ReadKey();
+            MessageBox.Show(crules, "Отчёт о времени", MessageBoxButtons.OK, icon);
         }
     }
 
@@ -521,21 +536,6 @@ namespace DomofonExcelToDbf
     }
     
     class Tools {         
-
-        public static string getDirectory(XDocument xdoc, String type)
-        {
-            var elem = xdoc.Root.Element(type);
-            var regex = elem.Attribute("regex");
-
-            if (regex != null)
-            {
-                var lastDir = getDirectoryName(elem.Value); // Проверяем только последнюю директорию во всём пути
-                Match match = (new Regex(regex.Value)).Match(lastDir);
-                if (!match.Success) throw new ArgumentException(String.Format("Директория '{0}' не попадает под регулярное выражение '{1}'!",lastDir, regex.Value));
-            }
-
-            return elem.Value;
-        }
 
         public static string getOutputFilename(Worksheet worksheet, XDocument xdoc, String inputDirectory, String inputFile)
         {

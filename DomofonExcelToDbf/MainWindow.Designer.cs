@@ -191,7 +191,7 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = global::DomofonExcelToDbf.Properties.Resources.zEIRC;
+            this.pictureBox1.Image = global::DomofonExcelToDbf.Properties.Resources.Moscow;
             this.pictureBox1.Location = new System.Drawing.Point(244, 133);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(202, 204);
