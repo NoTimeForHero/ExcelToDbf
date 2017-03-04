@@ -75,7 +75,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\WindowsAPICodePack-Core.1.1.2\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.WindowsAPICodePack.Shell, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\WindowsAPICodePack-Shell.1.1.1\lib\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
@@ -182,6 +182,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="StatusWindow.resx">
       <DependentUpon>StatusWindow.cs</DependentUpon>
@@ -206,10 +207,13 @@
     <None Include="Resources\iPapkaLupa32.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\1Programm.ico" />
+    <None Include="Resources\1488562050_export_excel.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\1488562050_export_excel.ico" />
+    <None Include="Resources\Moscow.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\Microsoft.WindowsAPICodePack.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

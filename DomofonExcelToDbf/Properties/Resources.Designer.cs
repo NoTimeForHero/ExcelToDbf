@@ -110,11 +110,31 @@ namespace DomofonExcelToDbf.Properties {
         }
         
         /// <summary>
+        ///   Поиск локализованного ресурса типа System.Byte[].
+        /// </summary>
+        internal static byte[] Microsoft_WindowsAPICodePack {
+            get {
+                object obj = ResourceManager.GetObject("Microsoft_WindowsAPICodePack", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap oDBF2 {
             get {
                 object obj = ResourceManager.GetObject("oDBF2", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap zEIRC {
+            get {
+                object obj = ResourceManager.GetObject("zEIRC", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
