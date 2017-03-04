@@ -145,6 +145,7 @@
             this.listBoxExcel.Location = new System.Drawing.Point(12, 13);
             this.listBoxExcel.Name = "listBoxExcel";
             this.listBoxExcel.ScrollAlwaysVisible = true;
+            this.listBoxExcel.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
             this.listBoxExcel.Size = new System.Drawing.Size(226, 324);
             this.listBoxExcel.TabIndex = 3;
             // 

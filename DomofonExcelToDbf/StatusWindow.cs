@@ -13,8 +13,6 @@ namespace DomofonExcelToDbf
     public partial class StatusWindow : Form
     {
 
-        bool locked = false;
-
         public StatusWindow()
         {
             InitializeComponent();
@@ -52,7 +50,5 @@ namespace DomofonExcelToDbf
                 progress.Value = progress_value;
             });
         }
-
-
     }
 }

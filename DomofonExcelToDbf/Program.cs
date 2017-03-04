@@ -363,7 +363,7 @@ namespace DomofonExcelToDbf
             process.Abort();
         }
 
-        public void action(MainWindow wmain)
+        public void action(MainWindow wmain, HashSet<string> files)
         {
             if (process != null && process.IsAlive)
             {
@@ -372,21 +372,41 @@ namespace DomofonExcelToDbf
             }
 
             StatusWindow wstatus = new StatusWindow();
+            wstatus.FormClosing += new FormClosingEventHandler(delegate(object sender, FormClosingEventArgs e)
+            {
+                if (e.CloseReason != CloseReason.UserClosing) return;
+                e.Cancel = DialogResult.No == MessageBox.Show("Вы действительно хотите прервать обработку файлов?", "Внимание", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (!e.Cancel)
+                {
+                    process.Abort();
+                    wstatus.Hide();
+                    MessageBox.Show("Документы не были обработаны: процесс был прерван пользователем!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            });
             wstatus.Show();
 
-            object forms = new object[2] { wstatus, wmain };
+            object data = new object[3] { wstatus, wmain, files };
+
+            outlog.Clear();
+            errlog.Clear();
 
             process = new Thread(delegate_action);
-            process.Start(forms);
+            process.Start(data);
+        }
+
+        private void Wstatus_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         protected void delegate_action(object obj)
         {
-            object []forms = (object[])obj;
+            object [] data = (object[])obj;
                    
-            StatusWindow window = (StatusWindow)forms[0];
-            MainWindow wmain = (MainWindow)forms[1];
-            window.setState(true, "Подготовка файлов", 0, filesExcel.Count);
+            StatusWindow window = (StatusWindow)data[0];
+            MainWindow wmain = (MainWindow)data[1];
+            HashSet<string> files = (HashSet<string>)data[2];
+            window.setState(true, "Подготовка файлов", 0, files.Count);
             int idoc = 1;
 
             Excel excel = new Excel(saveMemory);
@@ -394,7 +414,7 @@ namespace DomofonExcelToDbf
 
             var totalwatch = new System.Diagnostics.Stopwatch();
             totalwatch.Start();
-            foreach (string fname in filesExcel)
+            foreach (string fname in files)
             {
 
                 // COM Excel требуется полный путь до файла
@@ -484,7 +504,7 @@ namespace DomofonExcelToDbf
                 for (int i = 0; i < 3; i++) Logger.instance.log();
                 foreach (var tup in formToFile)
                 {
-                    string line = String.Format("Для файла {0} выбрана форма {1}", tup.Key, tup.Value);
+                    string line = String.Format("Для \"{0}\" форма \"{1}\"", tup.Key, tup.Value);
                     Logger.instance.log(line);
                     crules += line + "\n";
                 }

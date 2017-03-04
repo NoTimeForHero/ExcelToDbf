@@ -28,10 +28,20 @@ namespace DomofonExcelToDbf
 
         private void buttonConvert_Click(object sender, EventArgs e)
         {
-            program.updateDirectory();
-            fillElementsData();
+            HashSet<string> files = program.filesExcel;
+            HashSet<string> selectedfiles = new HashSet<string>();
 
-            program.action(this);
+            foreach (string filename in listBoxExcel.SelectedItems)
+                selectedfiles.Add(Path.Combine(program.dirInput, filename));
+
+            if (selectedfiles.Count > 0)
+            {
+                DialogResult ask = MessageBox.Show("Вы действительно хотите конвертировать только выбранные файлы?","Вопрос",MessageBoxButtons.YesNoCancel,MessageBoxIcon.Question);
+                if (ask == DialogResult.Yes) files = selectedfiles;
+                if (ask == DialogResult.Cancel) return;
+            }
+
+            program.action(this,files);
         }
 
         private void MainWindow_Load(object sender, EventArgs e)
