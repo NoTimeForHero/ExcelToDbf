@@ -268,6 +268,7 @@ namespace DomofonExcelToDbf
             System.Windows.Forms.Application.Run(window);
         }
 
+        string confName;
         public XDocument xdoc;
         public bool onlyRules;
         public bool saveMemory;
@@ -285,7 +286,7 @@ namespace DomofonExcelToDbf
 
         public void init()
         {
-            String confName = Path.ChangeExtension(System.AppDomain.CurrentDomain.FriendlyName, ".xml");
+            confName = Path.ChangeExtension(System.AppDomain.CurrentDomain.FriendlyName, ".xml");
 
             if (!File.Exists(confName))
             {
@@ -336,6 +337,15 @@ namespace DomofonExcelToDbf
 
         private void onFormMainClosing(object sender, FormClosingEventArgs e)
         {
+            onCloseCheckProcess(e);
+
+            xdoc.Root.Element("inputDirectory").Value = dirInput;
+            xdoc.Root.Element("outputDirectory").Value = dirOutput;
+            xdoc.Save(confName);
+        }
+
+        private void onCloseCheckProcess(FormClosingEventArgs e)
+        {
             if (process == null) return;
             DialogResult abort = DialogResult.None;
 
@@ -346,8 +356,8 @@ namespace DomofonExcelToDbf
 
             if (abort == DialogResult.No)
             {
-                    e.Cancel = true;
-                    return;
+                e.Cancel = true;
+                return;
             }
 
             process.Abort();
@@ -495,7 +505,11 @@ namespace DomofonExcelToDbf
             if (errlog.Count > 0) {
                 icon = MessageBoxIcon.Warning;
                 crules += "\n\n";
-                crules += String.Join("\n", errlog);
+
+                var xmlWarning = xdoc.Root.Element("warning");          
+                string warnFormat = (xmlWarning == null) ? "{0}" : xmlWarning.Value;
+                warnFormat = warnFormat.Replace("\\n", "\n");
+                crules += String.Format(warnFormat,String.Join("\n", errlog));
             }
 
             updateDirectory();

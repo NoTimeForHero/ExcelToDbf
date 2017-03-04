@@ -6,6 +6,7 @@
   <only_rules>false</only_rules> <!-- не создавать DBF, только проверить заголовки -->
   <save_memory>true</save_memory> <!-- использовать только один экземпляр COM Excel -->
   <status>Тут будет какая-то информация</status>
+  <warning>{0}</warning>
   
   <extensions>
     <ext>*.xls</ext>
