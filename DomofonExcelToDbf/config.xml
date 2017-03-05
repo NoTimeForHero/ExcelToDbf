@@ -2,7 +2,8 @@
 <config>
   <inputDirectory regex="^([1-9]|1[0-2])$">DATA\2016\12</inputDirectory>
   <outputDirectory>DATA\2016\12</outputDirectory>
-  <log>true</log> 
+  <log>true</log>
+  <show_stacktrace>false</show_stacktrace>
   <only_rules>false</only_rules> <!-- не создавать DBF, только проверить заголовки -->
   <save_memory>true</save_memory> <!-- использовать только один экземпляр COM Excel -->
   <status>Тут будет какая-то информация</status>

@@ -38,13 +38,15 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.menu_settings = new System.Windows.Forms.ToolStripDropDownButton();
             this.settings_only_rules = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.settings_version = new System.Windows.Forms.ToolStripStatusLabel();
             this.listBoxExcel = new System.Windows.Forms.ListBox();
             this.listBoxDBF = new System.Windows.Forms.ListBox();
             this.pictureBox4 = new System.Windows.Forms.PictureBox();
             this.pictureBox3 = new System.Windows.Forms.PictureBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
+            this.settings_stack_trace = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).BeginInit();
@@ -91,6 +93,7 @@
             // buttonExit
             // 
             this.buttonExit.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(254)))), ((int)(((byte)(73)))), ((int)(((byte)(83)))));
+            this.buttonExit.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.buttonExit.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.buttonExit.ForeColor = System.Drawing.Color.White;
             this.buttonExit.Image = global::DomofonExcelToDbf.Properties.Resources.iExit64;
@@ -108,6 +111,7 @@
             // buttonConvert
             // 
             this.buttonConvert.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(179)))), ((int)(((byte)(15)))));
+            this.buttonConvert.Cursor = System.Windows.Forms.Cursors.Default;
             this.buttonConvert.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.buttonConvert.ForeColor = System.Drawing.Color.White;
             this.buttonConvert.Image = global::DomofonExcelToDbf.Properties.Resources.iConv;
@@ -145,7 +149,10 @@
             // 
             this.menu_settings.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.menu_settings.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.settings_only_rules});
+            this.settings_only_rules,
+            this.settings_stack_trace,
+            this.toolStripSeparator1,
+            this.settings_version});
             this.menu_settings.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menu_settings.Name = "menu_settings";
             this.menu_settings.Size = new System.Drawing.Size(80, 20);
@@ -160,6 +167,17 @@
             this.settings_only_rules.Size = new System.Drawing.Size(264, 22);
             this.settings_only_rules.Text = "Только правила, без создания DBF";
             this.settings_only_rules.CheckStateChanged += new System.EventHandler(this.settings_only_rules_CheckStateChanged);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(261, 6);
+            // 
+            // settings_version
+            // 
+            this.settings_version.Name = "settings_version";
+            this.settings_version.Size = new System.Drawing.Size(45, 15);
+            this.settings_version.Text = "version";
             // 
             // listBoxExcel
             // 
@@ -225,10 +243,13 @@
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
             // 
-            // toolStripTextBox1
+            // settings_stack_trace
             // 
-            this.toolStripTextBox1.Name = "toolStripTextBox1";
-            this.toolStripTextBox1.Size = new System.Drawing.Size(100, 23);
+            this.settings_stack_trace.CheckOnClick = true;
+            this.settings_stack_trace.Name = "settings_stack_trace";
+            this.settings_stack_trace.Size = new System.Drawing.Size(264, 22);
+            this.settings_stack_trace.Text = "Стек-трейс ошибок";
+            this.settings_stack_trace.CheckStateChanged += new System.EventHandler(this.settings_stack_trace_CheckStateChanged);
             // 
             // MainWindow
             // 
@@ -280,8 +301,10 @@
         private System.Windows.Forms.Button buttonDirectory;
         private System.Windows.Forms.TextBox textBoxPath;
         private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.ToolStripTextBox toolStripTextBox1;
         private System.Windows.Forms.ToolStripDropDownButton menu_settings;
         private System.Windows.Forms.ToolStripMenuItem settings_only_rules;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripStatusLabel settings_version;
+        private System.Windows.Forms.ToolStripMenuItem settings_stack_trace;
     }
 }

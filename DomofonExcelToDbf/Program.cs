@@ -280,6 +280,7 @@ namespace DomofonExcelToDbf
         string confName;
         public XDocument xdoc;
         public bool onlyRules;
+        public bool showStacktrace;
         public bool saveMemory;
         public String dirInput;
         public String dirOutput;
@@ -312,6 +313,9 @@ namespace DomofonExcelToDbf
 
             var status = xdoc.Root.Element("status");
             this.status = (status != null) ? status.Value : "";
+
+            var xStackTrace = xdoc.Root.Element("show_stacktrace");
+            this.showStacktrace = (xStackTrace != null && xStackTrace.Value == "true");
 
             dirInput = xdoc.Root.Element("inputDirectory").Value; 
             dirOutput = xdoc.Root.Element("outputDirectory").Value;
@@ -406,6 +410,7 @@ namespace DomofonExcelToDbf
 
             outlog.Clear();
             errlog.Clear();
+            formToFile.Clear();
 
             process = new Thread(delegate_action);
             process.Start(data);
@@ -493,9 +498,11 @@ namespace DomofonExcelToDbf
 
                     errlog.Add(String.Format("Документ \"{0}\" был пропущен!",Path.GetFileNameWithoutExtension(finput)));
 
-                    var message = String.Format("Ошибка! Документ \"{0}\" будет пропущен!\n\n{1}", Path.GetFileNameWithoutExtension(finput), ex.Message);
+                    string stacktrace = (showStacktrace) ? ex.StackTrace : "";
+
+                    var message = String.Format("Ошибка! Документ \"{0}\" будет пропущен!\n\n{1}\n\n{2}", Path.GetFileNameWithoutExtension(finput), ex.Message, stacktrace);
                     Logger.instance.log(message + "\n" + ex.StackTrace);
-                    MessageBox.Show(window, message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                     skip_error_msgbox:;
                     Console.Error.WriteLine(ex);

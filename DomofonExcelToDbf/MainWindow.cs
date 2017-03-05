@@ -92,12 +92,23 @@ namespace DomofonExcelToDbf
         {
             settings_only_rules.Checked = program.onlyRules;
             settings_only_rules_CheckStateChanged(null, null);
+
+            settings_stack_trace.Checked = program.showStacktrace;
+            settings_stack_trace_CheckStateChanged(null, null);
+
+            settings_version.Text = "Версия: " + Properties.Resources.version;
         }
 
         private void settings_only_rules_CheckStateChanged(object sender, EventArgs e)
         {
             settings_only_rules.Image = (settings_only_rules.Checked) ? Properties.Resources.smallcheck : null;
             program.onlyRules = settings_only_rules.Checked;
+        }
+
+        private void settings_stack_trace_CheckStateChanged(object sender, EventArgs e)
+        {
+            settings_stack_trace.Image = (settings_stack_trace.Checked) ? Properties.Resources.smallcheck : null;
+            program.showStacktrace = settings_stack_trace.Checked;
         }
 
         private void listBoxDBF_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -112,5 +123,6 @@ namespace DomofonExcelToDbf
             psi.UseShellExecute = true;
             System.Diagnostics.Process.Start(psi);
         }
+
     }
 }
