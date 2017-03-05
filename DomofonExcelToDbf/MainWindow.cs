@@ -99,5 +99,18 @@ namespace DomofonExcelToDbf
             settings_only_rules.Image = (settings_only_rules.Checked) ? Properties.Resources.smallcheck : null;
             program.onlyRules = settings_only_rules.Checked;
         }
+
+        private void listBoxDBF_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            int index = this.listBoxDBF.IndexFromPoint(e.Location);
+            if (index == System.Windows.Forms.ListBox.NoMatches) return;
+
+            var item = listBoxDBF.Items[index];
+            string path = Path.Combine(program.dirInput, item.ToString());
+
+            var psi = new System.Diagnostics.ProcessStartInfo(path);
+            psi.UseShellExecute = true;
+            System.Diagnostics.Process.Start(psi);
+        }
     }
 }

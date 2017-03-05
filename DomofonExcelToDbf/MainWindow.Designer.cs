@@ -185,6 +185,7 @@
             this.listBoxDBF.ScrollAlwaysVisible = true;
             this.listBoxDBF.Size = new System.Drawing.Size(226, 324);
             this.listBoxDBF.TabIndex = 4;
+            this.listBoxDBF.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listBoxDBF_MouseDoubleClick);
             // 
             // pictureBox4
             // 
