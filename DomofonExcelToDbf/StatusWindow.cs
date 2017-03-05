@@ -13,6 +13,8 @@ namespace DomofonExcelToDbf
     public partial class StatusWindow : Form
     {
 
+        public bool codeClose = false;
+
         public StatusWindow()
         {
             InitializeComponent();
@@ -37,6 +39,7 @@ namespace DomofonExcelToDbf
 
         public void mayClose()
         {
+            codeClose = true;
             this.BeginInvoke((MethodInvoker)this.Close);
         }
 

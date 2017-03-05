@@ -88,29 +88,37 @@ namespace DomofonExcelToDbf
                 string name = field.Attribute("name").Value;
                 string type = XmlCondition.attrOrDefault(field, "type", "string");
 
-                var matches = Regex.Matches(input, "\\$([0-9a-zA-Z]+)", RegexOptions.Compiled);
-                foreach (Match m in matches)
+                try
                 {
-                    var repvar = m.Groups[1].Value;
 
-                    if (!variables.ContainsKey(repvar)) // чтобы в финальном файле не оказалось строк вида $VARIABLE
+                    var matches = Regex.Matches(input, "\\$([0-9a-zA-Z]+)", RegexOptions.Compiled);
+                    foreach (Match m in matches)
                     {
-                        input = input.Replace(m.Value, "");
-                        continue;
+                        var repvar = m.Groups[1].Value;
+
+                        if (!variables.ContainsKey(repvar)) // чтобы в финальном файле не оказалось строк вида $VARIABLE
+                        {
+                            input = input.Replace(m.Value, "");
+                            continue;
+                        }
+
+                        object data = variables[repvar];
+                        if (data == null) data = "";
+
+                        if (type == "string" || type == "numeric")
+                        {
+                            input = input.Replace(m.Value, data.ToString());
+                        }
+                        else if (type == "date")
+                        {
+                            string format = XmlCondition.attrOrDefault(field, "format", "yyyy-MM-dd");
+                            input = input.Replace(m.Value, ((DateTime)data).ToString(format));
+                        }
                     }
 
-                    object data = variables[repvar];
-                    if (data == null) data = "";
-
-                    if (type == "string" || type == "numeric")
-                    {
-                        input = input.Replace(m.Value, data.ToString());
-                    }
-                    else if (type == "date")
-                    {
-                        string format = XmlCondition.attrOrDefault(field, "format", "yyyy-MM-dd");
-                        input = input.Replace(m.Value, ((DateTime)data).ToString(format));
-                    }
+                } catch (Exception ex)
+                {
+                    throw new Exception(String.Format("Ошибка в переменной \"{0}\": {1}", input, ex.Message), ex);
                 }
 
                 orec[fid] = input;
@@ -249,6 +257,7 @@ namespace DomofonExcelToDbf
         static void Main(string[] args)
         {
 
+
             var exists = System.Diagnostics.Process.GetProcessesByName(System.IO.Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetEntryAssembly().Location)).Count() > 1;
             if (exists)
             {
@@ -375,6 +384,7 @@ namespace DomofonExcelToDbf
             wstatus.FormClosing += new FormClosingEventHandler(delegate(object sender, FormClosingEventArgs e)
             {
                 if (e.CloseReason != CloseReason.UserClosing) return;
+                if (wstatus.codeClose) return;
                 e.Cancel = DialogResult.No == MessageBox.Show("Вы действительно хотите прервать обработку файлов?", "Внимание", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (!e.Cancel)
                 {
@@ -477,7 +487,7 @@ namespace DomofonExcelToDbf
                     errlog.Add(String.Format("Документ \"{0}\" был пропущен!",Path.GetFileNameWithoutExtension(finput)));
 
                     var message = String.Format("Ошибка! Документ \"{0}\" будет пропущен!\n\n{1}", Path.GetFileNameWithoutExtension(finput), ex.Message);
-                    Logger.instance.log(message);
+                    Logger.instance.log(message + "\n" + ex.StackTrace);
                     MessageBox.Show(message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                     skip_error_msgbox:;
@@ -581,10 +591,19 @@ namespace DomofonExcelToDbf
             var x = Int32.Parse(outfile.Element("X").Value);
             var y = Int32.Parse(outfile.Element("Y").Value);
 
-            string cAfter = outfile.Element("after").Value;
+            var xAfter = outfile.Element("after").Elements("item");
             string fullName = worksheet.Cells[y, x].Value;
 
-            int nAfter = fullName.IndexOf(cAfter);
+            string cAfter = null;
+            int nAfter = 0;
+
+            foreach (var xItem in xAfter)
+            {
+                cAfter = xItem.Value;
+                nAfter = fullName.IndexOf(cAfter);
+                if (nAfter > -1) break;
+            }
+
             if (nAfter < 0) throw new ArgumentNullException(String.Format("Подстрока '{0}' не найдена в строке '{1}'!",cAfter,fullName));
 
             string regionName = fullName.Substring(nAfter + cAfter.Length);
@@ -697,7 +716,12 @@ namespace DomofonExcelToDbf
                     }
                 }
 
-                callback(variables);
+                try
+                {
+                } catch (Exception ex)
+                {
+                    throw new Exception(String.Format("Исключение в коллбеке (Y={0}): {1}", y, ex.Message), ex);
+                }
                 if (id % 100 == 0) guiCallback?.Invoke(id);
                 skip_record:;
             }
