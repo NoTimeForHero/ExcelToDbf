@@ -390,10 +390,17 @@ namespace DomofonExcelToDbf
                 {
                     process.Abort();
                     wstatus.Hide();
-                    MessageBox.Show("Документы не были обработаны: процесс был прерван пользователем!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(wmain, "Документы не были обработаны: процесс был прерван пользователем!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             });
-            wstatus.Show();
+            wstatus.Location = new System.Drawing.Point(
+                wmain.Location.X + ((wmain.Width - wstatus.Width) / 2),
+                wmain.Location.Y + ((wmain.Height - wstatus.Height) / 2)
+            );
+            wstatus.Show(wmain);
+            // Альтернативный вариант:
+            //wstatus.StartPosition = FormStartPosition.CenterParent;
+            //wstatus.ShowDialog(wmain);
 
             object data = new object[3] { wstatus, wmain, files };
 
@@ -488,7 +495,7 @@ namespace DomofonExcelToDbf
 
                     var message = String.Format("Ошибка! Документ \"{0}\" будет пропущен!\n\n{1}", Path.GetFileNameWithoutExtension(finput), ex.Message);
                     Logger.instance.log(message + "\n" + ex.StackTrace);
-                    MessageBox.Show(message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(window, message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                     skip_error_msgbox:;
                     Console.Error.WriteLine(ex);
@@ -718,6 +725,7 @@ namespace DomofonExcelToDbf
 
                 try
                 {
+                    callback(variables);
                 } catch (Exception ex)
                 {
                     throw new Exception(String.Format("Исключение в коллбеке (Y={0}): {1}", y, ex.Message), ex);

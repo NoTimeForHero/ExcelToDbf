@@ -87,5 +87,17 @@ namespace DomofonExcelToDbf
                 fillElementsData();
             }
         }
+
+        private void menu_settings_DropDownOpening(object sender, EventArgs e)
+        {
+            settings_only_rules.Checked = program.onlyRules;
+            settings_only_rules_CheckStateChanged(null, null);
+        }
+
+        private void settings_only_rules_CheckStateChanged(object sender, EventArgs e)
+        {
+            settings_only_rules.Image = (settings_only_rules.Checked) ? Properties.Resources.smallcheck : null;
+            program.onlyRules = settings_only_rules.Checked;
+        }
     }
 }

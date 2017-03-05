@@ -61,6 +61,15 @@ namespace DomofonExcelToDbf.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Icon by https://www.iconfinder.com/icons/293662/check_icon#size=32.
+        /// </summary>
+        internal static string check_credits {
+            get {
+                return ResourceManager.GetString("check_credits", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Icon, аналогичного (Значок).
         /// </summary>
         internal static System.Drawing.Icon export_excel {
@@ -135,6 +144,16 @@ namespace DomofonExcelToDbf.Properties {
         internal static System.Drawing.Bitmap oDBF2 {
             get {
                 object obj = ResourceManager.GetObject("oDBF2", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap smallcheck {
+            get {
+                object obj = ResourceManager.GetObject("smallcheck", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

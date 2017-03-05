@@ -36,12 +36,15 @@
             this.buttonConvert = new System.Windows.Forms.Button();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.menu_settings = new System.Windows.Forms.ToolStripDropDownButton();
+            this.settings_only_rules = new System.Windows.Forms.ToolStripMenuItem();
             this.listBoxExcel = new System.Windows.Forms.ListBox();
             this.listBoxDBF = new System.Windows.Forms.ListBox();
             this.pictureBox4 = new System.Windows.Forms.PictureBox();
             this.pictureBox3 = new System.Windows.Forms.PictureBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
             this.panel1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).BeginInit();
@@ -122,10 +125,12 @@
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabel1});
+            this.toolStripStatusLabel1,
+            this.menu_settings});
             this.statusStrip1.Location = new System.Drawing.Point(0, 509);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
+            this.statusStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
             this.statusStrip1.Size = new System.Drawing.Size(693, 22);
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip1";
@@ -135,6 +140,26 @@
             this.toolStripStatusLabel1.BackColor = System.Drawing.Color.Transparent;
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(0, 17);
+            // 
+            // menu_settings
+            // 
+            this.menu_settings.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.menu_settings.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.settings_only_rules});
+            this.menu_settings.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.menu_settings.Name = "menu_settings";
+            this.menu_settings.Size = new System.Drawing.Size(80, 20);
+            this.menu_settings.Text = "Настройки";
+            this.menu_settings.TextDirection = System.Windows.Forms.ToolStripTextDirection.Horizontal;
+            this.menu_settings.DropDownOpening += new System.EventHandler(this.menu_settings_DropDownOpening);
+            // 
+            // settings_only_rules
+            // 
+            this.settings_only_rules.CheckOnClick = true;
+            this.settings_only_rules.Name = "settings_only_rules";
+            this.settings_only_rules.Size = new System.Drawing.Size(264, 22);
+            this.settings_only_rules.Text = "Только правила, без создания DBF";
+            this.settings_only_rules.CheckStateChanged += new System.EventHandler(this.settings_only_rules_CheckStateChanged);
             // 
             // listBoxExcel
             // 
@@ -199,6 +224,11 @@
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
             // 
+            // toolStripTextBox1
+            // 
+            this.toolStripTextBox1.Name = "toolStripTextBox1";
+            this.toolStripTextBox1.Size = new System.Drawing.Size(100, 23);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -249,5 +279,8 @@
         private System.Windows.Forms.Button buttonDirectory;
         private System.Windows.Forms.TextBox textBoxPath;
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.ToolStripTextBox toolStripTextBox1;
+        private System.Windows.Forms.ToolStripDropDownButton menu_settings;
+        private System.Windows.Forms.ToolStripMenuItem settings_only_rules;
     }
 }

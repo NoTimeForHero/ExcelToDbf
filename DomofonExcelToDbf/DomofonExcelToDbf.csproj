@@ -215,6 +215,9 @@
   <ItemGroup>
     <None Include="bin\Debug\Microsoft.WindowsAPICodePack.dll" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\smallcheck.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if "Release" NEQ "$(ConfigurationName)" (exit /b 0)
