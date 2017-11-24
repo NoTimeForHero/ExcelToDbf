@@ -108,6 +108,7 @@ namespace DomofonExcelToDbf
                         if (type == "string" || type == "numeric")
                         {
                             input = input.Replace(m.Value, data.ToString());
+                            if (type == "numeric") input = input.Replace(',', '.');
                         }
                         else if (type == "date")
                         {
@@ -221,6 +222,13 @@ namespace DomofonExcelToDbf
         {
             XAttribute xattr = element.Attribute(attr);
             if (xattr == null) return def;
+            return xattr.Value;
+        }
+
+        public static String attr(XElement element, String attr)
+        {
+            XAttribute xattr = element.Attribute(attr);
+            if (xattr == null) return null;
             return xattr.Value;
         }
 
@@ -446,7 +454,10 @@ namespace DomofonExcelToDbf
 
                 try
                 {
+                    Logger.instance.log("\n");
+                    Logger.instance.log("==============================================================");
                     Logger.instance.log("Загружаем Excel документ: {0}", Path.GetFileName(finput));
+                    Logger.instance.log("==============================================================");
                     window.updateState(true, String.Format("Документ: {0}", Path.GetFileName(finput)), idoc);
                     idoc++;
 
@@ -477,8 +488,15 @@ namespace DomofonExcelToDbf
 
                     var stopwatch = new System.Diagnostics.Stopwatch();
 
+                    RegExCache cache = new RegExCache();
+
                     stopwatch.Start();
-                    Tools.eachRecord(excel.worksheet, form, dbf.appendRecord, delegate(int id) { window.updateState(false, String.Format("Обработано записей: {0}/{1}", id, total), id); } );
+                    Tools.eachRecord(
+                        excel.worksheet, form, dbf.appendRecord, cache,
+                        delegate(int id) {
+                            window.updateState(false, String.Format("Обработано записей: {0}/{1}", id, total), id);
+                        }
+                    );
                     stopwatch.Stop();
 
                     Logger.instance.log("Времени потрачено на обработку данных: {0}", stopwatch.Elapsed);
@@ -581,7 +599,17 @@ namespace DomofonExcelToDbf
             }
         }
 
-        public void log(string data="", object arg0=null, object arg1=null, object arg2=null, object arg3=null)
+        public void log(string data="")
+        {
+            if (console) Console.WriteLine(data);
+            else
+            {
+                writer.WriteLine(data);
+                writer.Flush();
+            }
+        }
+
+        public void log(string data, object arg0, object arg1=null, object arg2=null, object arg3=null)
         {
             if (console) Console.WriteLine(data, arg0, arg1, arg2, arg3);
             else
@@ -591,6 +619,38 @@ namespace DomofonExcelToDbf
             }
         }
 
+    }
+
+    class RegExCache
+    {
+        protected Dictionary<String,Regex> regexes = new Dictionary<String,Regex>();
+
+        protected Regex Prepare(String strregex)
+        {
+            if (!regexes.ContainsKey(strregex)) regexes.Add(strregex, new Regex(strregex, RegexOptions.IgnoreCase | RegexOptions.Compiled));
+            return regexes[strregex];
+        }
+
+        public String Replace(String input, String strregex, String replacement="$1")
+        {
+            Regex regex = Prepare(strregex);
+            return regex.Replace(input, replacement);
+        }
+
+        public bool IsMatch(String input, String strregex)
+        {
+            Regex regex = Prepare(strregex);
+            return regex.Match(input).Success;
+        }
+
+        public String MatchGroup(String input, String strregex, int group=1)
+        {
+            Regex regex = Prepare(strregex);
+            Match match = regex.Match(input);
+            if (!match.Success) return "";
+            if (match.Groups.Count - 1 < group) return "";
+            return match.Groups[group].Value;
+        }
     }
     
     class Tools {         
@@ -655,7 +715,7 @@ namespace DomofonExcelToDbf
             return Int32.Parse(form.Element("Fields").Element("StartY").Value);
         }
 
-        public static void eachRecord(Worksheet worksheet, XElement form, Action<Dictionary<string,object>> callback, Action<int> guiCallback = null)
+        public static void eachRecord(Worksheet worksheet, XElement form, Action<Dictionary<string,object>> callback, RegExCache cache, Action<int> guiCallback = null)
         {
             Dictionary<string, object> variables = new Dictionary<string, object>();
 
@@ -673,7 +733,7 @@ namespace DomofonExcelToDbf
                 var name = staticvar.Attribute("name").Value;
 
                 var cell = worksheet.Cells[y, x].Value;
-                variables.Add(name, getVar(staticvar, cell));
+                variables.Add(name, getVar(staticvar, cache, cell));
             }
 
             var dynamicvars = form.Element("Fields").Elements("Dynamic");
@@ -690,7 +750,7 @@ namespace DomofonExcelToDbf
                     var name = dyvar.Attribute("name").Value;
 
                     var cell = worksheet.Cells[y, x].Value;
-                    variables[name] = getVar(dyvar, cell);
+                    variables[name] = getVar(dyvar, cache, cell);
                 }
 
                 // Проверяем каждое условие
@@ -710,7 +770,7 @@ namespace DomofonExcelToDbf
                         try
                         {
                             cell = worksheet.Cells[y, x].Value;
-                            variables[name] = getVar(dyvar, cell);
+                            variables[name] = getVar(dyvar, cache, cell);
                         } catch (Exception)
                         {
                             Logger.instance.log("Ошибка в переменной {0} на Y={1},X={2}", name, y, x);
@@ -750,9 +810,9 @@ namespace DomofonExcelToDbf
         // Метод считывает внутренний ресурс и записывает его в файл, возвращая статус существования ресурса
         // </summary>
         // <param name="var">Имя внутренного ресурса</param>
-        // <param name="cell">Имя внутренного ресурса</param>
+        // <param name="obj">Имя внутренного ресурса</param>
         // <returns>false если внутренний ресурс не был найден</returns>
-        public static object getVar(XElement var, object obj)
+        public static object getVar(XElement var, RegExCache cache, object obj)
         {
             if (obj == null)
             {
@@ -762,12 +822,21 @@ namespace DomofonExcelToDbf
             String type = XmlCondition.attrOrDefault(var, "type", "string");
             String cell = obj.ToString();
 
+            String regex_pattern = XmlCondition.attr(var, "regex_pattern");
+            int regex_group = var.Attribute("regex_group") == null ? 1 : Int32.Parse(var.Attribute("regex_group").Value);
+
+            if (regex_pattern != null)
+            {
+                cell = cache.MatchGroup(cell, regex_pattern, regex_group);
+            }
+
             if (type == "string")
             {
                 return cell;
             }
             if (type == "numeric")
             {
+                if (cell == "") cell = "0";
                 return Double.Parse(cell);
             }
 
@@ -792,12 +861,14 @@ namespace DomofonExcelToDbf
         public static XElement findCorrectForm(Worksheet worksheet, XDocument xdoc)
         {
             var forms = xdoc.Root.Element("Forms").Elements("Form").ToList();
+            RegExCache regExCache = new RegExCache();
 
             foreach (XElement form in forms)
             {
                 bool correct = true;
                 String name = form.Element("Name").Value;
-                Logger.instance.log(String.Format("Проверяем форму \"{0}\"",name));
+                Logger.instance.log(String.Format("\nПроверяем форму \"{0}\"",name));
+                Logger.instance.log("==========================================");
 
                 var equals = form.Element("Rules").Elements("Equal");
                 foreach (XElement equal in equals)
@@ -806,7 +877,13 @@ namespace DomofonExcelToDbf
                     var y = Int32.Parse(equal.Attribute("Y").Value);
                     var mustbe = equal.Value;
 
+                    bool useRegex = equal.Attribute("regex_pattern") != null;
+                    string regex_pattern = useRegex ? equal.Attribute("regex_pattern").Value.ToString() : "";
+                    int regex_group = equal.Attribute("regex_group") != null ? Int32.Parse(equal.Attribute("regex_group").Value) : 1;
+                    bool validateRegex = equal.Attribute("validate") != null && equal.Attribute("validate").Value.ToString() == "regex";
+
                     string cell = null;
+                    string origcell = null;
 
                     try
                     {
@@ -820,15 +897,31 @@ namespace DomofonExcelToDbf
                         break;
                     }
 
-                    if (mustbe != cell)
+                    origcell = cell;
+                    if (useRegex && !validateRegex) {
+                        cell = regExCache.MatchGroup(cell, regex_pattern, regex_group);
+                    }                    
+
+                    bool failed = false;
+                    if (mustbe != cell && !validateRegex) failed = true;
+                    if (validateRegex && !regExCache.IsMatch(cell, mustbe)) failed = true;
+
+                    if (failed)
+                    {
+                        if (validateRegex || useRegex) Logger.instance.log("Провалена проверка по регулярному выражению!");
+                        Logger.instance.log(String.Format("Проверка провалена (Y={0},X={1})",y,x));
+                        Logger.instance.log(String.Format("Ожидалось: {0}", mustbe));
+                        Logger.instance.log(String.Format("Найдено: {0}", cell));
+                        if (useRegex)
                         {
-                            Logger.instance.log(String.Format("Проверка провалена (Y={0},X={1})",y,x));
-                            Logger.instance.log(String.Format("Ожидалось: {0}", mustbe));
-                            Logger.instance.log(String.Format("Найдено: {0}", cell));
-                            correct = false;
-                            break;
+                            Logger.instance.log(String.Format("Оригинальная ячейка: {0}", origcell));
+                            Logger.instance.log(String.Format("Регулярное выражение: {0}", regex_pattern));
+                            Logger.instance.log(String.Format("Группа для поиска: {0}", regex_group));
                         }
-                        Logger.instance.log(String.Format("Y={0},X={1}:  {2}=={3}",y,x,mustbe,cell));
+                        correct = false;
+                        break;
+                    }
+                        Logger.instance.log(String.Format("Y={0},X={1}: {2}{4}{3}",y,x,mustbe,cell,(validateRegex? " is match" : "==")));
                     }
                     if (correct) return form;
             }
@@ -839,7 +932,7 @@ namespace DomofonExcelToDbf
         // Метод считывает внутренний ресурс и записывает его в файл, возвращая статус существования ресурса
         // </summary>
         // <param name="resourceName">Имя внутренного ресурса</param>
-        // <param name="resourceName">Имя внутренного ресурса</param>
+        // <param name="fileName">Имя внутренного ресурса</param>
         // <returns>false если внутренний ресурс не был найден</returns>
         public static bool WriteResourceToFile(string resourceName, string fileName)
         {
