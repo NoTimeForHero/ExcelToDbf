@@ -38,6 +38,7 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.menu_settings = new System.Windows.Forms.ToolStripDropDownButton();
             this.settings_only_rules = new System.Windows.Forms.ToolStripMenuItem();
+            this.settings_stack_trace = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.settings_version = new System.Windows.Forms.ToolStripStatusLabel();
             this.listBoxExcel = new System.Windows.Forms.ListBox();
@@ -46,7 +47,7 @@
             this.pictureBox3 = new System.Windows.Forms.PictureBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.settings_stack_trace = new System.Windows.Forms.ToolStripMenuItem();
+            this.labelTitle = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).BeginInit();
@@ -62,9 +63,9 @@
             this.panel1.Controls.Add(this.textBoxPath);
             this.panel1.Controls.Add(this.buttonExit);
             this.panel1.Controls.Add(this.buttonConvert);
-            this.panel1.Location = new System.Drawing.Point(0, 343);
+            this.panel1.Location = new System.Drawing.Point(0, 392);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(705, 202);
+            this.panel1.Size = new System.Drawing.Size(705, 157);
             this.panel1.TabIndex = 0;
             // 
             // buttonDirectory
@@ -101,7 +102,7 @@
             this.buttonExit.Location = new System.Drawing.Point(361, 65);
             this.buttonExit.Name = "buttonExit";
             this.buttonExit.Padding = new System.Windows.Forms.Padding(10);
-            this.buttonExit.Size = new System.Drawing.Size(317, 86);
+            this.buttonExit.Size = new System.Drawing.Size(317, 71);
             this.buttonExit.TabIndex = 3;
             this.buttonExit.Text = "Выход из программы";
             this.buttonExit.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -119,7 +120,7 @@
             this.buttonConvert.Location = new System.Drawing.Point(12, 65);
             this.buttonConvert.Name = "buttonConvert";
             this.buttonConvert.Padding = new System.Windows.Forms.Padding(10);
-            this.buttonConvert.Size = new System.Drawing.Size(307, 87);
+            this.buttonConvert.Size = new System.Drawing.Size(307, 71);
             this.buttonConvert.TabIndex = 2;
             this.buttonConvert.Text = "Конвертировать в DBF ";
             this.buttonConvert.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -131,7 +132,7 @@
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1,
             this.menu_settings});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 509);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 539);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
             this.statusStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
@@ -168,6 +169,14 @@
             this.settings_only_rules.Text = "Только правила, без создания DBF";
             this.settings_only_rules.CheckStateChanged += new System.EventHandler(this.settings_only_rules_CheckStateChanged);
             // 
+            // settings_stack_trace
+            // 
+            this.settings_stack_trace.CheckOnClick = true;
+            this.settings_stack_trace.Name = "settings_stack_trace";
+            this.settings_stack_trace.Size = new System.Drawing.Size(264, 22);
+            this.settings_stack_trace.Text = "Стек-трейс ошибок";
+            this.settings_stack_trace.CheckStateChanged += new System.EventHandler(this.settings_stack_trace_CheckStateChanged);
+            // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
@@ -185,11 +194,11 @@
             this.listBoxExcel.ForeColor = System.Drawing.Color.Green;
             this.listBoxExcel.FormattingEnabled = true;
             this.listBoxExcel.ItemHeight = 20;
-            this.listBoxExcel.Location = new System.Drawing.Point(12, 13);
+            this.listBoxExcel.Location = new System.Drawing.Point(12, 72);
             this.listBoxExcel.Name = "listBoxExcel";
             this.listBoxExcel.ScrollAlwaysVisible = true;
             this.listBoxExcel.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
-            this.listBoxExcel.Size = new System.Drawing.Size(226, 324);
+            this.listBoxExcel.Size = new System.Drawing.Size(226, 304);
             this.listBoxExcel.TabIndex = 3;
             // 
             // listBoxDBF
@@ -198,17 +207,17 @@
             this.listBoxDBF.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
             this.listBoxDBF.FormattingEnabled = true;
             this.listBoxDBF.ItemHeight = 20;
-            this.listBoxDBF.Location = new System.Drawing.Point(452, 13);
+            this.listBoxDBF.Location = new System.Drawing.Point(452, 72);
             this.listBoxDBF.Name = "listBoxDBF";
             this.listBoxDBF.ScrollAlwaysVisible = true;
-            this.listBoxDBF.Size = new System.Drawing.Size(226, 324);
+            this.listBoxDBF.Size = new System.Drawing.Size(226, 304);
             this.listBoxDBF.TabIndex = 4;
             this.listBoxDBF.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listBoxDBF_MouseDoubleClick);
             // 
             // pictureBox4
             // 
             this.pictureBox4.Image = global::DomofonExcelToDbf.Properties.Resources.zStrelka1;
-            this.pictureBox4.Location = new System.Drawing.Point(327, 51);
+            this.pictureBox4.Location = new System.Drawing.Point(327, 101);
             this.pictureBox4.Name = "pictureBox4";
             this.pictureBox4.Size = new System.Drawing.Size(37, 33);
             this.pictureBox4.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -218,7 +227,7 @@
             // pictureBox3
             // 
             this.pictureBox3.Image = global::DomofonExcelToDbf.Properties.Resources.oDBF2;
-            this.pictureBox3.Location = new System.Drawing.Point(393, 42);
+            this.pictureBox3.Location = new System.Drawing.Point(393, 92);
             this.pictureBox3.Name = "pictureBox3";
             this.pictureBox3.Size = new System.Drawing.Size(53, 50);
             this.pictureBox3.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -228,7 +237,7 @@
             // pictureBox2
             // 
             this.pictureBox2.Image = global::DomofonExcelToDbf.Properties.Resources.zXls;
-            this.pictureBox2.Location = new System.Drawing.Point(244, 42);
+            this.pictureBox2.Location = new System.Drawing.Point(244, 92);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(53, 50);
             this.pictureBox2.TabIndex = 3;
@@ -237,26 +246,29 @@
             // pictureBox1
             // 
             this.pictureBox1.Image = global::DomofonExcelToDbf.Properties.Resources.Moscow;
-            this.pictureBox1.Location = new System.Drawing.Point(244, 133);
+            this.pictureBox1.Location = new System.Drawing.Point(244, 172);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(202, 204);
             this.pictureBox1.TabIndex = 6;
             this.pictureBox1.TabStop = false;
             // 
-            // settings_stack_trace
+            // labelTitle
             // 
-            this.settings_stack_trace.CheckOnClick = true;
-            this.settings_stack_trace.Name = "settings_stack_trace";
-            this.settings_stack_trace.Size = new System.Drawing.Size(264, 22);
-            this.settings_stack_trace.Text = "Стек-трейс ошибок";
-            this.settings_stack_trace.CheckStateChanged += new System.EventHandler(this.settings_stack_trace_CheckStateChanged);
+            this.labelTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 21.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.labelTitle.ForeColor = System.Drawing.Color.Purple;
+            this.labelTitle.Location = new System.Drawing.Point(12, 9);
+            this.labelTitle.Name = "labelTitle";
+            this.labelTitle.Size = new System.Drawing.Size(665, 46);
+            this.labelTitle.TabIndex = 7;
+            this.labelTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(693, 531);
+            this.ClientSize = new System.Drawing.Size(693, 561);
+            this.Controls.Add(this.labelTitle);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.pictureBox4);
             this.Controls.Add(this.pictureBox3);
@@ -306,5 +318,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripStatusLabel settings_version;
         private System.Windows.Forms.ToolStripMenuItem settings_stack_trace;
+        private System.Windows.Forms.Label labelTitle;
     }
 }

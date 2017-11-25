@@ -54,6 +54,7 @@ namespace DomofonExcelToDbf
         {
             textBoxPath.Text = Path.GetFullPath(program.dirInput);
             toolStripStatusLabel1.Text = program.status;
+            labelTitle.Text = program.labelTitle;
 
             listBoxExcel.Items.Clear();
             foreach (string fpath in program.filesExcel)
