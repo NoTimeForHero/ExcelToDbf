@@ -6,9 +6,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.OleDb;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -74,7 +76,8 @@ namespace DomofonExcelToDbf
             odbf.WriteHeader();    
         }
 
-        public void appendRecord(Dictionary<string, object> variables)
+
+        public void appendRecord(Dictionary<string, TVariable> variables)
         {
             var orec = new DbfRecord(odbf.Header);
             //orec.AllowIntegerTruncate = true;
@@ -102,7 +105,7 @@ namespace DomofonExcelToDbf
                             continue;
                         }
 
-                        object data = variables[repvar];
+                        object data = variables[repvar].value;
                         if (data == null) data = "";
 
                         if (type == "string" || type == "numeric")
@@ -117,17 +120,17 @@ namespace DomofonExcelToDbf
                         }
                     }
 
-                } catch (Exception ex)
+                }                
+                catch (Exception ex)
                 {
                     throw new Exception(String.Format("Ошибка в переменной \"{0}\": {1}", input, ex.Message), ex);
-                }
+                }              
 
                 orec[fid] = input;
                 fid++;
             }
 
             odbf.Write(orec, true);
-            //if (i < 20) foreach (var x in variables) Logger.instance.log(x.Key + "=" + x.Value);
 
             records++;
             if (records % 100 > 0) return;
@@ -302,6 +305,7 @@ namespace DomofonExcelToDbf
         public List<string> errlog = new List<string>();
         public HashSet<string> filesExcel = new HashSet<string>();
         public HashSet<string> filesDBF = new HashSet<string>();
+        public int record_buffer;
 
         public void init()
         {
@@ -329,6 +333,8 @@ namespace DomofonExcelToDbf
             dirInput = xdoc.Root.Element("inputDirectory").Value; 
             dirOutput = xdoc.Root.Element("outputDirectory").Value;
             labelTitle = xdoc.Root.Element("title") != null ? xdoc.Root.Element("title").Value : "";
+
+            record_buffer = xdoc.Root.Element("buffer_size") != null ? Int32.Parse(xdoc.Root.Element("buffer_size").Value) : 200;
 
             onlyRules = xdoc.Root.Element("only_rules").Value == "true";
             saveMemory = xdoc.Root.Element("save_memory").Value == "true"; // экономить память, если включено то будет использоваться один инстанс COM Excel с переключением Worksheet
@@ -493,11 +499,9 @@ namespace DomofonExcelToDbf
                     RegExCache cache = new RegExCache();
 
                     stopwatch.Start();
-                    Tools.eachRecord(
-                        excel.worksheet, form, dbf.appendRecord, cache,
-                        delegate(int id) {
-                            window.updateState(false, String.Format("Обработано записей: {0}/{1}", id, total), id);
-                        }
+                    Work work = new Work(xdoc,form, record_buffer);
+                    work.IterateRecords(excel.worksheet, dbf.appendRecord, 
+                        (int id) => window.updateState(false, String.Format("Обработано записей: {0}/{1}", id, total), id)
                     );
                     stopwatch.Stop();
 
@@ -507,7 +511,7 @@ namespace DomofonExcelToDbf
 
                     int startY = Tools.startY(form);    
                     Logger.instance.log("Начиная с {0} по {1}", startY, startY + dbf.records);
-                }
+                }                                
                 catch (Exception ex)
                 {
                     if (ex is ThreadAbortException)
@@ -527,7 +531,7 @@ namespace DomofonExcelToDbf
                     skip_error_msgbox:;
                     Console.Error.WriteLine(ex);
                     deleteDbf = true;
-                }
+                } 
                 finally
                 {
                     Logger.instance.log("Закрытие COM Excel и DBF");
@@ -580,7 +584,7 @@ namespace DomofonExcelToDbf
             wmain.BeginInvoke((MethodInvoker)wmain.fillElementsData);
 
             window.mayClose();
-            MessageBox.Show(crules, "Отчёт о времени", MessageBoxButtons.OK, icon);
+            MessageBox.Show(crules, "Отчёт о времени обработки", MessageBoxButtons.OK, icon);
         }
     }
 
@@ -658,6 +662,369 @@ namespace DomofonExcelToDbf
             if (match.Groups.Count - 1 < group) return "";
             return match.Groups[group].Value;
         }
+
+        public static String MatchGroup(String input, Regex regex, int group = 1)
+        {
+            Match match = regex.Match(input);
+            if (!match.Success) return "";
+            if (match.Groups.Count - 1 < group) return "";
+            return match.Groups[group].Value;
+        }
+
+    }
+
+    public class Work
+    {
+        public Dictionary<string,TVariable> staticVars = new Dictionary<string, TVariable>();
+        public Dictionary<string, TVariable> dynamicVars  = new Dictionary<string, TVariable>();
+        public HashSet<TCondition> conditions = new HashSet<TCondition>();
+
+        protected int startY;
+        protected int endX;
+        protected int buffer;
+
+        public Dictionary<string, TVariable> stepScope = new Dictionary<string, TVariable>();
+        
+        public Work(XDocument xdocument, XElement form, int buffer)
+        {
+            InitVariables(form);
+            startY = Tools.startY(form);
+            endX = Tools.endX(form);
+            this.buffer = buffer;
+            Console.WriteLine("Hello world!!!");
+        }
+
+        public void IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
+        {
+            int begin = startY;
+            int end = startY + buffer;
+            int total = 0;
+
+            var maxY = worksheet.UsedRange.Rows.Count;
+
+            Stopwatch watch;
+            bool EOF = false;
+
+            watch = Stopwatch.StartNew();
+            stepScope.Clear();
+            foreach (var var in staticVars.Values)
+            {
+                var.Set(worksheet.Cells[var.y, var.x].Value);
+                stepScope.Add(var.name, var);
+            }
+            watch.Stop();
+            Console.WriteLine("Adding local variables: " + watch.ElapsedMilliseconds);
+
+            Stopwatch watchTotal = Stopwatch.StartNew();
+            while (!EOF)
+            {
+                var range_start = worksheet.Cells[begin, 1];
+                var range_end = worksheet.Cells[end, endX];
+                var range = worksheet.Range[range_start, range_end];
+                object[,] tmp = range.Value;
+
+                watch = Stopwatch.StartNew();
+                for (int i = 1; i <= buffer; i++)
+                {
+                    bool skipRecord = false;
+                    bool stopLoop = false;
+
+                    foreach (var var in dynamicVars.Values)
+                    {
+                        var.Set(tmp[i, var.x]);
+                        stepScope[var.name] = var;
+                    }
+
+                    foreach (TCondition cond in conditions)
+                    {
+                        if (cond.mustBe.Equals(tmp[i, cond.x]))
+                        {
+                            foreach (TAction item in cond.onTrue)
+                            {
+                                if (item is TInterrupt tinter)
+                                {
+                                    if (tinter.action == TInterrupt.Action.SKIP_RECORD) skipRecord = true;
+                                    if (tinter.action == TInterrupt.Action.STOP_LOOP) stopLoop = true;
+                                    continue;
+                                }
+                                if (item is TVariable var)
+                                {
+                                    var.Set(tmp[i, var.x]);
+                                    stepScope[var.name] = var;
+                                    continue;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            foreach (TAction item in cond.onFalse)
+                            {
+                                if (item is TInterrupt tinter)
+                                {
+                                    if (tinter.action == TInterrupt.Action.SKIP_RECORD)
+                                    {
+                                        // TODO: Писать в TRACERT условия выхода
+                                        skipRecord = true;
+                                    }
+                                    if (tinter.action == TInterrupt.Action.STOP_LOOP)
+                                    {
+                                        // TODO: Писать в TRACERT условия выхода
+                                        stopLoop = true;
+                                    }
+                                    continue;
+                                }
+                                if (item is TVariable var)
+                                {
+                                    var.Set(tmp[i, var.x]);
+                                    stepScope[var.name] = var;
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+
+                    total++;
+
+                    if (total > maxY - startY)
+                    {
+                        Console.WriteLine("Попытка выйти за пределы документа, выход из цикла");
+                        EOF = true;
+                        break;
+                    }
+
+                    if (stopLoop)
+                    {                        
+                        Console.WriteLine("Выход из цикла по условию");
+                        EOF = true;
+                        break;                        
+                    }
+
+                    if (skipRecord) continue;
+
+                    callback(stepScope);
+                    guiCallback?.Invoke(total);
+                }
+                watch.Stop();
+                Console.WriteLine(String.Format("Сегмент в {0} элементов (с {1} по {2}) обработан за {3} мс", buffer, begin, end, watch.ElapsedMilliseconds));
+
+                begin += buffer;
+                end += buffer;
+            }
+            watchTotal.Stop();
+            Console.WriteLine("Total time: " + watchTotal.ElapsedMilliseconds);
+            Console.WriteLine("Rows iterated: " + total);
+            Console.WriteLine("Buffer size:" + buffer);
+        }
+
+        protected void InitVariables(XElement form)
+        {
+            foreach (XElement xelem in form.Element("Fields").Elements())
+            {
+                if (xelem.Name == "Static") AddVar(staticVars,getVar(xelem,false));
+                if (xelem.Name == "Dynamic") AddVar(dynamicVars,getVar(xelem,true));
+                if (xelem.Name == "IF") conditions.Add(ScanCondition(xelem));
+            }
+        }
+
+        protected TCondition ScanCondition(XElement xml)
+        {
+            TCondition condition = new TCondition();
+            condition.x = Int32.Parse(xml.Attribute("X").Value);
+            condition.mustBe = xml.Attribute("VALUE").Value;
+
+            foreach (XElement elem in xml.Element("THEN").Elements()) {
+                TAction action = null;
+                if (elem.Name == "SKIP_RECORD")
+                    action = new TInterrupt(TInterrupt.Action.SKIP_RECORD);
+                if (elem.Name == "STOP_LOOP")
+                    action = new TInterrupt(TInterrupt.Action.STOP_LOOP);
+                if (elem.Name == "Dynamic")
+                    action = getVar(elem,true);
+                if (action != null) condition.onTrue.Add(action);
+            }
+
+            if (xml.Element("ELSE") != null)
+            {
+                foreach (XElement elem in xml.Element("ELSE").Elements())
+                {
+                    TAction action = null;
+                    if (elem.Name == "SKIP_RECORD")
+                        action = new TInterrupt(TInterrupt.Action.SKIP_RECORD);
+                    if (elem.Name == "STOP_LOOP")
+                        action = new TInterrupt(TInterrupt.Action.STOP_LOOP);
+                    if (elem.Name == "Dynamic")
+                        action = getVar(elem, true);
+                    if (action != null) condition.onFalse.Add(action);
+                }
+            }
+            return condition;
+        }
+
+        protected void AddVar(IDictionary<string, TVariable>  dictionary, TVariable variable)
+        {
+            dictionary.Add(variable.name, variable);
+        }
+
+        protected TVariable getVar(XElement xml, bool dynamic)
+        {
+            var name = xml.Attribute("name").Value;
+            var ctype = (xml.Attribute("type") != null) ? xml.Attribute("type").Value : "string";
+
+            TVariable.Type type = TVariable.getByString(ctype);
+            TVariable variable;
+            switch (type)
+            {
+                case TVariable.Type.EDate:
+                    variable = new TDate(name);
+                    break;
+                default:
+                    variable = new TVariable(name);
+                    break;
+            }
+
+            variable.x = Int32.Parse(xml.Attribute("X").Value);
+            if (!dynamic) variable.y = Int32.Parse(xml.Attribute("Y").Value);
+            variable.dynamic = dynamic;
+            variable.type = type;
+
+            if (type == TVariable.Type.EDate)
+            {
+                TDate tdate = variable as TDate;
+                if (xml.Attribute("lastday") != null)
+                    tdate.lastday = Boolean.Parse(xml.Attribute("lastday").Value);
+                if (xml.Attribute("language") != null)
+                    tdate.language = xml.Attribute("language").Value;
+                if (xml.Attribute("format") != null)
+                    tdate.format = xml.Attribute("format").Value;
+            }
+
+            var regex_pattern = xml.Attribute("regex_pattern");
+            if (regex_pattern != null)
+            {
+                variable.use_regex = true;
+                variable.regex_pattern = new Regex(regex_pattern.Value, RegexOptions.Compiled);
+                variable.regex_group = xml.Attribute("regex_group") != null ? Int32.Parse(xml.Attribute("regex_group").Value) : 1;
+            }
+            return variable;
+        }
+    }
+
+    /// <summary>
+    /// Универсальный класс, от которого наследуются всё возможные операции
+    /// Сюда входят: условия, переменные, прерывания цикла обработки
+    /// </summary>
+    public abstract class TAction {}
+
+    public class TInterrupt : TAction
+    {
+        public Action action;
+
+        public TInterrupt(Action action)
+        {
+            this.action = action;
+        }
+
+        public enum Action
+        {
+            SKIP_RECORD,
+            STOP_LOOP
+        }
+    }
+
+    public class TCondition : TAction
+    {
+        public int x;
+        public string mustBe;
+
+        public List<TAction> onTrue = new List<TAction>();
+        public List<TAction> onFalse = new List<TAction>();
+    }
+
+    public class TVariable : TAction
+    {
+        public enum Type : byte
+        {
+            EUnknown,
+            EString,
+            ENumeric,
+            EDate
+        }
+
+        public readonly string name;
+        public Type type;
+
+        public bool dynamic;
+        public int x;
+        public int y;
+
+        public object value;
+
+        public bool use_regex = false;
+        public Regex regex_pattern;
+        public int regex_group;
+
+        public TVariable(string name)
+        {
+            this.name = name;
+        }
+
+        public void Set(object val)
+        {
+            string str = val as String;
+            if (use_regex)
+                str = RegExCache.MatchGroup(str, regex_pattern, regex_group);
+            this.value = str;
+
+            if (this is TDate tdate) tdate.SetDate(str); 
+        }
+
+        public static Type getByString(string str)
+        {
+            if (str == "string") return Type.EString;
+            if (str == "date") return Type.EDate;
+            if (str == "numeric") return Type.ENumeric;
+            return Type.EUnknown;
+        }
+
+        public override bool Equals(object obj)
+        {
+            var item = obj as TVariable;
+            if (item == null) return false;
+            return this.name == item.name;
+        }
+
+        public override int GetHashCode()
+        {
+            return name.GetHashCode();
+        }
+    }
+
+    public class TDate : TVariable
+    {
+        public bool lastday = false;
+        public string format = "dd.MM.yyy";
+        public string language = "ru-ru";
+
+        public TDate(string name) : base(name) {
+        }
+
+        public void SetDate(object val)
+        {
+            DateTime date = DateTime.ParseExact(val as string, format, CultureInfo.GetCultureInfo(language));
+            if (lastday) date = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
+            Console.WriteLine("Trying to set...");
+            this.value = date;
+        }
+
+        public new void Set(object val)
+        {
+            base.Set(val);
+
+            DateTime date = DateTime.ParseExact(val as string, format, CultureInfo.GetCultureInfo(language));
+            if (lastday) date = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
+            Console.WriteLine("Trying to set...");
+            this.value = date;
+        }
     }
     
     class Tools {         
@@ -691,156 +1058,19 @@ namespace DomofonExcelToDbf
             return outputFilename;
         }
 
-        public static string getDirectoryName(String path)
-        {
-            if (Path.GetExtension(path) == "") return Path.GetFileName(path);
-            return new FileInfo(path).Directory.Name;
-        }
-
         public static Int32 startY(XElement form)
         {
-            return Int32.Parse(form.Element("Fields").Element("StartY").Value);
+            var val = form.Element("Fields").Element("StartY");
+            if (val == null) throw new ArgumentNullException("Required tag <StartY> in <Fields> section is null!");
+            return Int32.Parse(val.Value);
         }
 
-        public static void eachRecord(Worksheet worksheet, XElement form, Action<Dictionary<string,object>> callback, RegExCache cache, Action<int> guiCallback = null)
+        public static Int32 endX(XElement form)
         {
-            Dictionary<string, object> variables = new Dictionary<string, object>();
-
-            // Позиция с которой начинаются данные
-            var minY = startY(form);
-            var maxY = worksheet.UsedRange.Rows.Count;
-
-            // Получаем список статических переменных, которые не меняются для всех записей в данном листе
-            var staticvars = form.Element("Fields").Elements("Static");
-            foreach (XElement staticvar in staticvars)
-            {
-                var x = Int32.Parse(staticvar.Attribute("X").Value);
-                var y = Int32.Parse(staticvar.Attribute("Y").Value);
-
-                var name = staticvar.Attribute("name").Value;
-
-                var cell = worksheet.Cells[y, x].Value;
-                variables.Add(name, getVar(staticvar, cache, cell));
-            }
-
-            var dynamicvars = form.Element("Fields").Elements("Dynamic");
-            var conditions = XmlCondition.makeList(form);
-            // Начинаем обходить каждый лист
-            for (int y = minY; y < maxY; y++)
-            {
-                int id = y - minY;
-
-                // Получаем значения динамических переменных без условий
-                foreach (XElement dyvar in dynamicvars)
-                {
-                    var x = Int32.Parse(dyvar.Attribute("X").Value);
-                    var name = dyvar.Attribute("name").Value;
-
-                    var cell = worksheet.Cells[y, x].Value;
-                    variables[name] = getVar(dyvar, cache, cell);
-                }
-
-                // Проверяем каждое условие
-                foreach (XmlCondition cond in conditions)
-                {
-                    var cell = worksheet.Cells[y, cond.x].Text;
-
-                    XElement section = (cell == cond.value) ? cond.then : cond.or;
-                    if (section == null) continue;
-
-                    var condvars = section.Elements("Dynamic");
-                    foreach (XElement dyvar in condvars)
-                    {
-                        var x = Int32.Parse(dyvar.Attribute("X").Value);
-                        var name = dyvar.Attribute("name").Value;
-
-                        try
-                        {
-                            cell = worksheet.Cells[y, x].Value;
-                            variables[name] = getVar(dyvar, cache, cell);
-                        } catch (Exception)
-                        {
-                            Logger.instance.log("Ошибка в переменной {0} на Y={1},X={2}", name, y, x);
-                            throw;
-                        }
-                    }
-
-                    if (section.Element("SKIP_RECORD") != null)
-                    {
-                        Logger.instance.log("Пропускаем строку Y={0}", y);
-                        goto skip_record;
-                    }
-                    if (section.Element("STOP_LOOP") != null)
-                    {
-                        Logger.instance.log("Выходим из цикла на Y={0} по условию X[{1}]={2}", y, cond.x, cond.value);
-                        goto skip_loop;
-                    }
-                }
-
-                try
-                {
-                    callback(variables);
-                } catch (Exception ex)
-                {
-                    throw new Exception(String.Format("Исключение в коллбеке (Y={0}): {1}", y, ex.Message), ex);
-                }
-                if (id % 100 == 0) guiCallback?.Invoke(id);
-                skip_record:;
-            }
-            skip_loop:;
-
-            Logger.instance.log("Составление записей завершено?");
-
+            var val = form.Element("Fields").Element("EndX");
+            if (val == null) throw new ArgumentNullException("Required tag <EndX> in <Fields> section is null!");
+            return Int32.Parse(val.Value);
         }
-
-        // <summary>
-        // Метод считывает внутренний ресурс и записывает его в файл, возвращая статус существования ресурса
-        // </summary>
-        // <param name="var">Имя внутренного ресурса</param>
-        // <param name="obj">Имя внутренного ресурса</param>
-        // <returns>false если внутренний ресурс не был найден</returns>
-        public static object getVar(XElement var, RegExCache cache, object obj)
-        {
-            if (obj == null)
-            {
-                return null;
-            }
-
-            String type = XmlCondition.attrOrDefault(var, "type", "string");
-            String cell = obj.ToString();
-
-            String regex_pattern = XmlCondition.attr(var, "regex_pattern");
-            int regex_group = var.Attribute("regex_group") == null ? 1 : Int32.Parse(var.Attribute("regex_group").Value);
-
-            if (regex_pattern != null)
-            {
-                cell = cache.MatchGroup(cell, regex_pattern, regex_group);
-            }
-
-            if (type == "string")
-            {
-                return cell;
-            }
-            if (type == "numeric")
-            {
-                if (cell == "") cell = "0";
-                return Double.Parse(cell);
-            }
-
-            if (type == "date") {
-                var format = var.Attribute("format").Value;
-                var language = XmlCondition.attrOrDefault(var, "language", "ru-ru");
-                DateTime date = DateTime.ParseExact(cell, format, CultureInfo.GetCultureInfo(language));
-
-                // Если нам нужен последний день в месяце
-                string lastday = XmlCondition.attrOrDefault(var, "lastday", "");
-                if (lastday == "true") date = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
-                return date;
-            }
-
-            return null;
-        }
-
 
         // <summary>
         // Ищет подходящую XML форму для документа или null если ни одна не подходит
