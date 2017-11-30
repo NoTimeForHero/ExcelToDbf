@@ -489,8 +489,6 @@ namespace DomofonExcelToDbf
                     skip_error_msgbox:;
                     Console.Error.WriteLine(ex);
                     deleteDbf = true;
-
-                    if (Debugger.IsAttached) throw;
                 }                 
                 finally
                 {
@@ -642,7 +640,9 @@ namespace DomofonExcelToDbf
         protected int startY;
         protected int endX;
         protected int buffer;
+        protected int total = 0;
         protected XElement form;
+        protected TVariable exception_var;
 
         public Dictionary<string, TVariable> stepScope = new Dictionary<string, TVariable>();
         
@@ -657,9 +657,20 @@ namespace DomofonExcelToDbf
 
         public void IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
         {
+            try
+            {
+                __IterateRecords(worksheet, callback, guiCallback);
+            } catch (Exception ex)
+            {
+                string message = string.Format("Ошибка на {0} строке в переменной {1}:\n{2}", startY + total, exception_var.name, ex.Message);
+                throw new Exception(message, ex);
+            }
+        }
+
+        protected void __IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
+        {
             int begin = startY;
             int end = startY + buffer;
-            int total = 0;
 
             var maxY = worksheet.UsedRange.Rows.Count;
 
@@ -670,6 +681,7 @@ namespace DomofonExcelToDbf
             stepScope.Clear();
             foreach (var var in staticVars.Values)
             {
+                exception_var = var;
                 var.Set(worksheet.Cells[var.y, var.x].Value);
                 stepScope.Add(var.name, var);
             }
@@ -692,6 +704,7 @@ namespace DomofonExcelToDbf
 
                     foreach (var var in dynamicVars.Values)
                     {
+                        exception_var = var;
                         var.Set(tmp[i, var.x]);
                         stepScope[var.name] = var;
                     }
@@ -718,6 +731,7 @@ namespace DomofonExcelToDbf
                                 }
                                 if (item is TVariable var)
                                 {
+                                    exception_var = var;
                                     var.Set(tmp[i, var.x]);
                                     stepScope[var.name] = var;
                                     continue;
@@ -744,6 +758,7 @@ namespace DomofonExcelToDbf
                                 }
                                 if (item is TVariable var)
                                 {
+                                    exception_var = var;
                                     var.Set(tmp[i, var.x]);
                                     stepScope[var.name] = var;
                                     continue;
@@ -1034,7 +1049,7 @@ namespace DomofonExcelToDbf
 
         public new void Set(object obj)
         {
-            if ("".Equals(obj)) obj = "0"; // Иначе Conver.ToSingle упадёт с ошибкой
+            if ("".Equals(obj)) obj = "0"; // Иначе Convert.ToSingle упадёт с ошибкой
             float value = Convert.ToSingle(obj);
             switch (function)
             {
