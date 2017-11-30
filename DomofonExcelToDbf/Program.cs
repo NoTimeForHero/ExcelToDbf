@@ -133,8 +133,6 @@ namespace DomofonExcelToDbf
             odbf.Write(orec, true);
 
             records++;
-            if (records % 100 > 0) return;
-            Logger.instance.log("Записей обработано: {0}", records);
         }
 
         public void close()
@@ -279,7 +277,9 @@ namespace DomofonExcelToDbf
             xdoc = XDocument.Load(confName);
 
             var log = xdoc.Root.Element("log");
-            string log_file = (log != null && log.Value == "true") ? Path.ChangeExtension(confName, ".log") : null;
+            bool is_log = (log != null && log.Value == "true");
+            string log_file = !is_log ? null : "logs\\" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log";
+            if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
             Logger.instance = new Logger(log_file);
 
             var status = xdoc.Root.Element("status");
@@ -570,8 +570,8 @@ namespace DomofonExcelToDbf
 
         public void log(object data)
         {
-            if (console) Console.WriteLine(data.ToString());
-            else
+            Console.WriteLine(data.ToString());
+            if (!console)
             {
                 writer.WriteLine(data.ToString());
                 writer.Flush();
@@ -580,8 +580,8 @@ namespace DomofonExcelToDbf
 
         public void log(string data, object arg0, object arg1=null, object arg2=null, object arg3=null)
         {
-            if (console) Console.WriteLine(data, arg0, arg1, arg2, arg3);
-            else
+            Console.WriteLine(data, arg0, arg1, arg2, arg3);
+            if (!console)
             {
                 writer.WriteLine(data, arg0, arg1, arg2, arg3);
                 writer.Flush();
@@ -657,14 +657,16 @@ namespace DomofonExcelToDbf
 
         public void IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
         {
+            total = 0;
             try
             {
                 __IterateRecords(worksheet, callback, guiCallback);
             } catch (Exception ex)
             {
-                string message = string.Format("Ошибка на {0} строке в переменной {1}:\n{2}", startY + total, exception_var.name, ex.Message);
-                throw new Exception(message, ex);
+                string message = string.Format("Ошибка на строке {0}, ячейке {1} в переменной {2}:\n{3}", startY + total, exception_var.x, exception_var.name, ex.Message);
+                throw new MyException(message, ex);
             }
+            FinalChecks();
         }
 
         protected void __IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
@@ -702,16 +704,9 @@ namespace DomofonExcelToDbf
                     bool skipRecord = false;
                     bool stopLoop = false;
 
-                    foreach (var var in dynamicVars.Values)
-                    {
-                        exception_var = var;
-                        var.Set(tmp[i, var.x]);
-                        stepScope[var.name] = var;
-                    }
-
                     foreach (TCondition cond in conditions)
                     {
-                        if (cond.mustBe.Equals(tmp[i, cond.x]))
+                        if (cond.mustBe.Equals(tmp[i, cond.x]) || (cond.mustBe == "" && tmp[i, cond.x] == null))
                         {
                             foreach (TAction item in cond.onTrue)
                             {
@@ -785,6 +780,13 @@ namespace DomofonExcelToDbf
 
                     if (skipRecord) continue;
 
+                    foreach (var var in dynamicVars.Values)
+                    {
+                        exception_var = var;
+                        var.Set(tmp[i, var.x]);
+                        stepScope[var.name] = var;
+                    }
+
                     callback(stepScope);
                     guiCallback?.Invoke(total);
                 }
@@ -798,12 +800,13 @@ namespace DomofonExcelToDbf
             Logger.instance.log("Total time: " + watchTotal.ElapsedMilliseconds);
             Logger.instance.log("Rows iterated: " + total);
             Logger.instance.log("Buffer size:" + buffer);
-            FinalChecks();
         }
 
         protected void FinalChecks()
         {
-            int num = 1; 
+            int num = 1;
+
+            //if (form.Element("Validate") == null) return;
 
             foreach (XElement validate in form.Element("Validate").Elements())
             {
@@ -825,12 +828,37 @@ namespace DomofonExcelToDbf
                     message = message.Replace("\\n", "\n");
                 }
 
+                if (var1 == null || var2 == null || var1.value == null || var2.value == null) throw new Exception(message);
+
                 Logger.instance.log(string.Format(
                     "Проверка номер {0} : {1}({2}) сравнивается с {3}({4})",
-                    num, var1.name, value1, var2.name, value2));
+                    num, var1 != null ? var1.name : "null", value1, var2 != null ? var2.name : "null", value2));
 
-                if (var1 == null || var2 == null || var1.value == null || var2.value == null || !var1.value.Equals(var2.value))
-                    throw new Exception(message);
+                bool isEqual = false;
+                if (validate.Element("Math") is XElement math && math.Attribute("type").Value == "numeric")
+                {
+                    int count = Int32.Parse(math.Attribute("count").Value);
+                    float prec = Single.Parse(math.Attribute("precision").Value);
+
+                    float allowed_precision = (prec / count) * total;
+                    float var1fl = Convert.ToSingle(var1.value);
+                    float var2fl = Convert.ToSingle(var2.value);
+
+                    Logger.instance.log("var1 = " + var1fl.ToString("G9"));
+                    Logger.instance.log("var2 = " + var2fl.ToString("G9"));
+
+                    if (var1fl == var2fl) isEqual = true;
+                    else
+                    {
+                        float diff = Math.Abs(Math.Abs(var1fl) - Math.Abs(var2fl));
+                        isEqual = diff < allowed_precision;
+                        message += "\n" + string.Format(math.Value, allowed_precision, diff);
+                        Logger.instance.log(string.Format(math.Value, allowed_precision, diff));
+                    }
+                }
+                else isEqual = var1.value.Equals(var2.value);
+
+                if (!isEqual) throw new Exception(message);
 
                 num++;
             }
@@ -998,7 +1026,7 @@ namespace DomofonExcelToDbf
 
         public void Set(object val)
         {
-            string str = val as String;
+            string str = (val == null) ? "" : val.ToString();
             if (use_regex)
                 str = RegExCache.MatchGroup(str, regex_pattern, regex_group);
 
@@ -1345,6 +1373,24 @@ namespace DomofonExcelToDbf
             if (path.Parent != null) ret.AddRange(Split(path.Parent));
             ret.Add(path.Name);
             return ret;
+        }
+    }
+
+    public class MyException : Exception
+    {
+        private string myStackTrace;
+
+        public MyException(string message, Exception exp) : base(message)
+        {
+            this.myStackTrace = exp.StackTrace;
+        }
+
+        public override string StackTrace
+        {
+            get
+            {
+                return base.StackTrace + "\n" + myStackTrace;
+            }
         }
     }
 }
