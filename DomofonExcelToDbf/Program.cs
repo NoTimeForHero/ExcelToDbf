@@ -89,7 +89,7 @@ namespace DomofonExcelToDbf
 
                 string input = field.Value;
                 string name = field.Attribute("name").Value;
-                string type = XmlCondition.attrOrDefault(field, "type", "string");
+                string type = XmlHelper.attrOrDefault(field, "type", "string");
 
                 try
                 {
@@ -115,7 +115,7 @@ namespace DomofonExcelToDbf
                         }
                         else if (type == "date")
                         {
-                            string format = XmlCondition.attrOrDefault(field, "format", "yyyy-MM-dd");
+                            string format = XmlHelper.attrOrDefault(field, "format", "yyyy-MM-dd");
                             input = input.Replace(m.Value, ((DateTime)data).ToString(format));
                         }
                     }
@@ -203,24 +203,8 @@ namespace DomofonExcelToDbf
 
     }
 
-    class XmlCondition
+    class XmlHelper
     {
-        public int x;
-        public String value;
-
-        public XElement then;
-        public XElement or;
-
-        public override string ToString()
-        {
-            String total = "";
-            total += String.Format("X={0}",x) + "\n";
-            total += String.Format("Value={0}",value) + "\n";
-            total += String.Format("BEGIN:\n  {0}",then) + "\n";
-            total += String.Format("ELSE:\n  {0}", or) + "\n\n";
-            return total;
-        }
-
         public static string attrOrDefault(XElement element, String attr, String def)
         {
             XAttribute xattr = element.Attribute(attr);
@@ -233,32 +217,6 @@ namespace DomofonExcelToDbf
             XAttribute xattr = element.Attribute(attr);
             if (xattr == null) return null;
             return xattr.Value;
-        }
-
-        public static List<XmlCondition> makeList(XElement form)
-        {
-            var conditions = new List<XmlCondition>();
-
-            var local = form.Element("Fields").Elements("IF");
-            foreach (XElement elem in local)
-            {
-                var cond = new XmlCondition();
-
-                cond.x = Int32.Parse(elem.Attribute("X").Value);
-                cond.value = elem.Value;
-
-                // Получаем секцию THEN, так как она обязана быть следующей после IF
-                cond.then = (XElement)elem.NextNode;
-
-                // А вот секции ELSE может и не быть
-                var next = elem.NextNode.NextNode;
-
-                var nextName = ((XElement)next).Name.ToString();
-                if (nextName == "ELSE") cond.or = (XElement)next;
-
-                conditions.Add(cond);
-            }
-            return conditions;
         }
     }
 
@@ -511,7 +469,7 @@ namespace DomofonExcelToDbf
 
                     int startY = Tools.startY(form);    
                     Logger.instance.log("Начиная с {0} по {1}", startY, startY + dbf.records);
-                }                                
+                }               
                 catch (Exception ex)
                 {
                     if (ex is ThreadAbortException)
@@ -531,7 +489,9 @@ namespace DomofonExcelToDbf
                     skip_error_msgbox:;
                     Console.Error.WriteLine(ex);
                     deleteDbf = true;
-                } 
+
+                    if (Debugger.IsAttached) throw;
+                }                 
                 finally
                 {
                     Logger.instance.log("Закрытие COM Excel и DBF");
@@ -682,6 +642,7 @@ namespace DomofonExcelToDbf
         protected int startY;
         protected int endX;
         protected int buffer;
+        protected XElement form;
 
         public Dictionary<string, TVariable> stepScope = new Dictionary<string, TVariable>();
         
@@ -691,7 +652,7 @@ namespace DomofonExcelToDbf
             startY = Tools.startY(form);
             endX = Tools.endX(form);
             this.buffer = buffer;
-            Console.WriteLine("Hello world!!!");
+            this.form = form;
         }
 
         public void IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
@@ -713,7 +674,7 @@ namespace DomofonExcelToDbf
                 stepScope.Add(var.name, var);
             }
             watch.Stop();
-            Console.WriteLine("Adding local variables: " + watch.ElapsedMilliseconds);
+            Logger.instance.log("Заполнение массива локальных переменных: " + watch.ElapsedMilliseconds);
 
             Stopwatch watchTotal = Stopwatch.StartNew();
             while (!EOF)
@@ -743,8 +704,16 @@ namespace DomofonExcelToDbf
                             {
                                 if (item is TInterrupt tinter)
                                 {
-                                    if (tinter.action == TInterrupt.Action.SKIP_RECORD) skipRecord = true;
-                                    if (tinter.action == TInterrupt.Action.STOP_LOOP) stopLoop = true;
+                                    if (tinter.action == TInterrupt.Action.SKIP_RECORD)
+                                    {
+                                        Console.WriteLine(String.Format("Пропуск записи по условию: значение в ячейке x={0} равно {1}", cond.x, cond.mustBe));
+                                        skipRecord = true;
+                                    }
+                                    if (tinter.action == TInterrupt.Action.STOP_LOOP)
+                                    {
+                                        Console.WriteLine(String.Format("Выход из цикла по условию: значение в ячейке x={0} равно {1}", cond.x, cond.mustBe));
+                                        stopLoop = true;
+                                    }
                                     continue;
                                 }
                                 if (item is TVariable var)
@@ -763,12 +732,12 @@ namespace DomofonExcelToDbf
                                 {
                                     if (tinter.action == TInterrupt.Action.SKIP_RECORD)
                                     {
-                                        // TODO: Писать в TRACERT условия выхода
+                                        Console.WriteLine(String.Format("Пропуск записи по условию: значение в ячейке x={0} равно {1}", cond.x, cond.mustBe));
                                         skipRecord = true;
                                     }
                                     if (tinter.action == TInterrupt.Action.STOP_LOOP)
                                     {
-                                        // TODO: Писать в TRACERT условия выхода
+                                        Console.WriteLine(String.Format("Выход из цикла по условию: значение в ячейке x={0} равно {1}", cond.x, cond.mustBe));
                                         stopLoop = true;
                                     }
                                     continue;
@@ -787,14 +756,14 @@ namespace DomofonExcelToDbf
 
                     if (total > maxY - startY)
                     {
-                        Console.WriteLine("Попытка выйти за пределы документа, выход из цикла");
+                        Logger.instance.log("Попытка выйти за пределы документа, выход из цикла");
                         EOF = true;
                         break;
                     }
 
                     if (stopLoop)
-                    {                        
-                        Console.WriteLine("Выход из цикла по условию");
+                    {
+                        Logger.instance.log("Выход из цикла по условию");
                         EOF = true;
                         break;                        
                     }
@@ -805,15 +774,51 @@ namespace DomofonExcelToDbf
                     guiCallback?.Invoke(total);
                 }
                 watch.Stop();
-                Console.WriteLine(String.Format("Сегмент в {0} элементов (с {1} по {2}) обработан за {3} мс", buffer, begin, end, watch.ElapsedMilliseconds));
+                Logger.instance.log(String.Format("Сегмент в {0} элементов (с {1} по {2}) обработан за {3} мс", buffer, begin, end, watch.ElapsedMilliseconds));
 
                 begin += buffer;
                 end += buffer;
             }
             watchTotal.Stop();
-            Console.WriteLine("Total time: " + watchTotal.ElapsedMilliseconds);
-            Console.WriteLine("Rows iterated: " + total);
-            Console.WriteLine("Buffer size:" + buffer);
+            Logger.instance.log("Total time: " + watchTotal.ElapsedMilliseconds);
+            Logger.instance.log("Rows iterated: " + total);
+            Logger.instance.log("Buffer size:" + buffer);
+            FinalChecks();
+        }
+
+        protected void FinalChecks()
+        {
+            int num = 1; 
+
+            foreach (XElement validate in form.Element("Validate").Elements())
+            {
+                stepScope.TryGetValue(validate.Attribute("var1").Value, out TVariable var1);
+                stepScope.TryGetValue(validate.Attribute("var2").Value, out TVariable var2);
+
+                string value1 = (var1 == null || var1.value == null) ? "[неизвестно]" : var1.value.ToString();
+                string value2 = (var2 == null || var2.value == null) ? "[неизвестно]" : var2.value.ToString();
+
+                var elemMsg = validate.Element("Message");
+                string message = "";
+
+                if (elemMsg == null)
+                {
+                    message = string.Format("Финальная проверка №{0} провалена!", num);
+                } else
+                {
+                    message = string.Format(elemMsg.Value, value1, value2, num);
+                    message = message.Replace("\\n", "\n");
+                }
+
+                Logger.instance.log(string.Format(
+                    "Проверка номер {0} : {1}({2}) сравнивается с {3}({4})",
+                    num, var1.name, value1, var2.name, value2));
+
+                if (var1 == null || var2 == null || var1.value == null || var2.value == null || !var1.value.Equals(var2.value))
+                    throw new Exception(message);
+
+                num++;
+            }
         }
 
         protected void InitVariables(XElement form)
@@ -874,6 +879,9 @@ namespace DomofonExcelToDbf
             TVariable variable;
             switch (type)
             {
+                case TVariable.Type.ENumeric:
+                    variable = new TNumeric(name);
+                    break;
                 case TVariable.Type.EDate:
                     variable = new TDate(name);
                     break;
@@ -887,9 +895,14 @@ namespace DomofonExcelToDbf
             variable.dynamic = dynamic;
             variable.type = type;
 
-            if (type == TVariable.Type.EDate)
+            if (variable is TNumeric tnumeric)
             {
-                TDate tdate = variable as TDate;
+                if (xml.Attribute("function") != null)
+                    tnumeric.function = TNumeric.getFuncByString(xml.Attribute("function").Value);
+            }
+
+            if (variable is TDate tdate)
+            {
                 if (xml.Attribute("lastday") != null)
                     tdate.lastday = Boolean.Parse(xml.Attribute("lastday").Value);
                 if (xml.Attribute("language") != null)
@@ -973,9 +986,11 @@ namespace DomofonExcelToDbf
             string str = val as String;
             if (use_regex)
                 str = RegExCache.MatchGroup(str, regex_pattern, regex_group);
-            this.value = str;
 
-            if (this is TDate tdate) tdate.SetDate(str); 
+            if (false) ;
+            else if (this is TDate tdate) tdate.Set(str);
+            else if (this is TNumeric tnum) tnum.Set(str);
+            else this.value = str;
         }
 
         public static Type getByString(string str)
@@ -988,7 +1003,7 @@ namespace DomofonExcelToDbf
 
         public override bool Equals(object obj)
         {
-            var item = obj as TVariable;
+            var item = obj as TVariable; 
             if (item == null) return false;
             return this.name == item.name;
         }
@@ -999,30 +1014,52 @@ namespace DomofonExcelToDbf
         }
     }
 
+    public class TNumeric : TVariable
+    {
+        public Func function = Func.NONE;
+
+        public enum Func : byte
+        {
+            NONE,
+            SUM
+        }
+
+        public static Func getFuncByString(string str)
+        {
+            if (str == "SUM") return Func.SUM;
+            return Func.NONE;
+        }
+
+        public TNumeric(string name) : base(name) { }
+
+        public new void Set(object obj)
+        {
+            if ("".Equals(obj)) obj = "0"; // Иначе Conver.ToSingle упадёт с ошибкой
+            float value = Convert.ToSingle(obj);
+            switch (function)
+            {
+                case Func.SUM:
+                    this.value = Convert.ToSingle(this.value) + value;
+                    break;
+                default:
+                    this.value = value;
+                    break;
+            }
+        }
+    }
+
     public class TDate : TVariable
     {
         public bool lastday = false;
         public string format = "dd.MM.yyy";
         public string language = "ru-ru";
 
-        public TDate(string name) : base(name) {
-        }
-
-        public void SetDate(object val)
-        {
-            DateTime date = DateTime.ParseExact(val as string, format, CultureInfo.GetCultureInfo(language));
-            if (lastday) date = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
-            Console.WriteLine("Trying to set...");
-            this.value = date;
-        }
+        public TDate(string name) : base(name) {}
 
         public new void Set(object val)
         {
-            base.Set(val);
-
             DateTime date = DateTime.ParseExact(val as string, format, CultureInfo.GetCultureInfo(language));
             if (lastday) date = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
-            Console.WriteLine("Trying to set...");
             this.value = date;
         }
     }
