@@ -159,7 +159,7 @@ namespace DomofonExcelToDbf.Properties {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на 2.1.5.
+        ///   Ищет локализованную строку, похожую на 2.1.6.
         /// </summary>
         internal static string version {
             get {

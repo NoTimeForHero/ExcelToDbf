@@ -41,6 +41,12 @@ namespace DomofonExcelToDbf
                 if (ask == DialogResult.Cancel) return;
             }
 
+            if (selectedfiles.Count == 0 && files.Count == 0)
+            {
+                MessageBox.Show(string.Format("В директории нет Excel файлов для обработки!\nВыберите другую директорию!\n\n{0}",program.dirInput), "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             program.action(this,files);
         }
 

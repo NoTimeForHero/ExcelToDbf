@@ -102,6 +102,8 @@ namespace DomofonExcelToDbf
             onlyRules = xdoc.Root.Element("only_rules").Value == "true";
             saveMemory = xdoc.Root.Element("save_memory").Value == "true"; // экономить память, если включено то будет использоваться один инстанс COM Excel с переключением Worksheet
             updateDirectory();
+
+            Logger.instance.log("Версия программы: " + Properties.Resources.version);
         }
 
         public void updateDirectory()
@@ -121,7 +123,8 @@ namespace DomofonExcelToDbf
             foreach (var extension in xdoc.Root.Element("extensions").Elements("ext"))
             {
                 fbyext = Directory.GetFiles(dirInput, extension.Value, SearchOption.TopDirectoryOnly);
-                fbyext = fbyext.Where(path => !Path.GetFileName(path).StartsWith("~$")).ToArray(); // Игнорируем временные файлы Excel вида ~$Document.xls[x]
+                fbyext = fbyext.Where(path => !Path.GetFileName(path).StartsWith("~$")) // Игнорируем временные файлы Excel вида ~$Document.xls[x]
+                               .Where(path => !Path.GetFileName(path).Equals(confName)).ToArray(); // А также наш конфигурационный файл %EXE_NAME%.xml
                 filesExcel.UnionWith(fbyext);
             }
         }
@@ -273,7 +276,7 @@ namespace DomofonExcelToDbf
 
                     Logger.instance.log("Времени потрачено на обработку данных: {0}", stopwatch.Elapsed);
                     Logger.instance.log("Обработано записей: {0} ", dbf.records);
-                    outlog.Add(String.Format("{0} в {1} строк за {2}",Path.GetFileNameWithoutExtension(finput),dbf.records,stopwatch.Elapsed.ToString("hh\\:mm\\:ss\\.ff")));
+                    outlog.Add(String.Format("{0} в {1} строк за {2}",Path.GetFileName(finput),dbf.records,stopwatch.Elapsed.ToString("hh\\:mm\\:ss\\.ff")));
 
                     int startY = Tools.startY(form);    
                     Logger.instance.log("Начиная с {0} по {1}", startY, startY + dbf.records);
@@ -339,7 +342,7 @@ namespace DomofonExcelToDbf
             Logger.instance.log(coutlog);
 
             Logger.instance.log("Времени затрачено суммарно: {0}", totalwatch.Elapsed);
-            crules += String.Format("Времени затрачено суммарно: {0}", totalwatch.Elapsed.ToString("hh\\:mm\\:ss\\.ff"));
+            crules += String.Format("\nВремени затрачено суммарно: {0}", totalwatch.Elapsed.ToString("hh\\:mm\\:ss\\.ff"));
 
             var icon = MessageBoxIcon.Information;
 
