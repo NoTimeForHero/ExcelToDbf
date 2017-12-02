@@ -108,13 +108,21 @@
     <Compile Include="MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Program.cs" />
+    <Compile Include="Sources\DBF.cs" />
+    <Compile Include="Sources\Excel.cs" />
+    <Compile Include="Sources\Helpers.cs" />
+    <Compile Include="Sources\JS.cs" />
+    <Compile Include="Sources\Logger.cs" />
+    <Compile Include="Sources\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Sources\TAction.cs" />
+    <Compile Include="Sources\Tools.cs" />
+    <Compile Include="Sources\Work.cs" />
     <Compile Include="StatusWindow.cs">
       <SubType>Form</SubType>
     </Compile>
