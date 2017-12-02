@@ -6,7 +6,7 @@ using System.Text;
 
 namespace DomofonExcelToDbf.Sources
 {
-    class Logger
+    public class Logger
     {
         bool console = false;
         StreamWriter writer;

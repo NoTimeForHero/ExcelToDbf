@@ -231,8 +231,10 @@ namespace DomofonExcelToDbf.Sources
                     {
                         float diff = Math.Abs(Math.Abs(var1fl) - Math.Abs(var2fl));
                         isEqual = diff < allowed_precision;
-                        message += "\n" + string.Format(math.Value, allowed_precision, diff);
-                        Logger.instance.log(string.Format(math.Value, allowed_precision, diff));
+
+                        string message_diff = string.Format(math.Value, allowed_precision, diff).Replace("\\n","\n");
+                        message += "\n" + message_diff;
+                        Logger.instance.log(message_diff);
                     }
                 }
                 else isEqual = var1.value.Equals(var2.value);

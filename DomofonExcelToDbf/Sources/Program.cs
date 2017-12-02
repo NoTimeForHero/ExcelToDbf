@@ -133,10 +133,6 @@ namespace DomofonExcelToDbf
             xdoc.Root.Element("inputDirectory").Value = dirInput;
             xdoc.Root.Element("outputDirectory").Value = dirOutput;
             xdoc.Save(confName);
-
-            #if !DEBUG
-                File.Delete("Microsoft.WindowsAPICodePack.dll");
-            #endif
         }
 
         private void onCloseCheckProcess(FormClosingEventArgs e)
@@ -297,11 +293,11 @@ namespace DomofonExcelToDbf
                         goto skip_error_msgbox;
                     }
 
-                    errlog.Add(String.Format("Документ \"{0}\" был пропущен!",Path.GetFileNameWithoutExtension(finput)));
+                    errlog.Add(String.Format("Документ \"{0}\" был пропущен!",Path.GetFileName(finput)));
 
                     string stacktrace = (showStacktrace) ? ex.StackTrace : "";
 
-                    var message = String.Format("Ошибка! Документ \"{0}\" будет пропущен!\n\n{1}\n\n{2}", Path.GetFileNameWithoutExtension(finput), ex.Message, stacktrace);
+                    var message = String.Format("Ошибка! Документ \"{0}\" будет пропущен!\n\n{1}\n\n{2}", Path.GetFileName(finput), ex.Message, stacktrace);
                     Logger.instance.log(message + "\n" + ex.StackTrace);
                     MessageBox.Show(message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
