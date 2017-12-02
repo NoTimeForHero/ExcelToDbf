@@ -220,6 +220,7 @@ namespace DomofonExcelToDbf
 
     public class Program
     {
+
         [STAThread]
         static void Main(string[] args)
         {
@@ -318,7 +319,6 @@ namespace DomofonExcelToDbf
                 fbyext = Directory.GetFiles(dirInput, extension.Value, SearchOption.TopDirectoryOnly);
                 fbyext = fbyext.Where(path => !Path.GetFileName(path).StartsWith("~$")).ToArray(); // Игнорируем временные файлы Excel вида ~$Document.xls[x]
                 filesExcel.UnionWith(fbyext);
-                Logger.instance.log("Файлов найдено {1} по маске {0}", extension.Value, fbyext.Length);
             }
         }
 
@@ -329,6 +329,10 @@ namespace DomofonExcelToDbf
             xdoc.Root.Element("inputDirectory").Value = dirInput;
             xdoc.Root.Element("outputDirectory").Value = dirOutput;
             xdoc.Save(confName);
+
+            #if !DEBUG
+                File.Delete("Microsoft.WindowsAPICodePack.dll");
+            #endif
         }
 
         private void onCloseCheckProcess(FormClosingEventArgs e)
@@ -444,12 +448,14 @@ namespace DomofonExcelToDbf
                         throw new NoNullAllowedException("Не найдено подходящих форм для обработки документа work.xml!");
                     }
 
-                    string foutput = Path.Combine(dirOutput, Tools.getOutputFilename(excel.worksheet, xdoc, dirInput, finput));
+                    string fileName = Tools.getOutputFilename(excel.worksheet, xdoc, dirInput, finput);
+                    string pathTemp = Path.GetTempFileName();
+                    string pathOutput = Path.Combine(dirOutput, fileName);
 
                     var total = excel.worksheet.UsedRange.Rows.Count - Tools.startY(form);
                     window.setState(false, String.Format("Обработано записей: {0}/{1}", 0, total), 0, total);
 
-                    dbf = new DBF(foutput);
+                    dbf = new DBF(pathTemp);
                     dbf.writeHeader(form);
 
                     var stopwatch = new System.Diagnostics.Stopwatch();
@@ -463,12 +469,21 @@ namespace DomofonExcelToDbf
                     );
                     stopwatch.Stop();
 
+                    dbf.close();
+
                     Logger.instance.log("Времени потрачено на обработку данных: {0}", stopwatch.Elapsed);
                     Logger.instance.log("Обработано записей: {0} ", dbf.records);
                     outlog.Add(String.Format("{0} в {1} строк за {2}",Path.GetFileNameWithoutExtension(finput),dbf.records,stopwatch.Elapsed.ToString("hh\\:mm\\:ss\\.ff")));
 
                     int startY = Tools.startY(form);    
                     Logger.instance.log("Начиная с {0} по {1}", startY, startY + dbf.records);
+
+                    // Перемещение файла
+                    if (File.Exists(pathOutput)) File.Delete(pathOutput);
+                    File.Move(pathTemp, pathOutput);
+                    Logger.instance.log(string.Format("Перемещение файла с {0} в {1}", pathTemp, pathOutput));
+
+                    Logger.instance.log(string.Format("=============== Документ {0} успешно обработан! ===============", Path.GetFileName(finput)));
                 }               
                 catch (Exception ex)
                 {
@@ -806,8 +821,7 @@ namespace DomofonExcelToDbf
         {
             int num = 1;
 
-            //if (form.Element("Validate") == null) return;
-
+            if (form.Element("Validate") == null) return;
             foreach (XElement validate in form.Element("Validate").Elements())
             {
                 stepScope.TryGetValue(validate.Attribute("var1").Value, out TVariable var1);
