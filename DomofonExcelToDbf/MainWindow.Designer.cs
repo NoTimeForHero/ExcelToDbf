@@ -43,17 +43,13 @@
             this.settings_version = new System.Windows.Forms.ToolStripStatusLabel();
             this.listBoxExcel = new System.Windows.Forms.ListBox();
             this.listBoxDBF = new System.Windows.Forms.ListBox();
-            this.pictureBox4 = new System.Windows.Forms.PictureBox();
             this.pictureBox3 = new System.Windows.Forms.PictureBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.labelTitle = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // panel1
@@ -198,7 +194,7 @@
             this.listBoxExcel.Name = "listBoxExcel";
             this.listBoxExcel.ScrollAlwaysVisible = true;
             this.listBoxExcel.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
-            this.listBoxExcel.Size = new System.Drawing.Size(226, 304);
+            this.listBoxExcel.Size = new System.Drawing.Size(307, 304);
             this.listBoxExcel.TabIndex = 3;
             // 
             // listBoxDBF
@@ -207,27 +203,17 @@
             this.listBoxDBF.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
             this.listBoxDBF.FormattingEnabled = true;
             this.listBoxDBF.ItemHeight = 20;
-            this.listBoxDBF.Location = new System.Drawing.Point(452, 72);
+            this.listBoxDBF.Location = new System.Drawing.Point(361, 72);
             this.listBoxDBF.Name = "listBoxDBF";
             this.listBoxDBF.ScrollAlwaysVisible = true;
-            this.listBoxDBF.Size = new System.Drawing.Size(226, 304);
+            this.listBoxDBF.Size = new System.Drawing.Size(317, 304);
             this.listBoxDBF.TabIndex = 4;
             this.listBoxDBF.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listBoxDBF_MouseDoubleClick);
-            // 
-            // pictureBox4
-            // 
-            this.pictureBox4.Image = global::DomofonExcelToDbf.Properties.Resources.zStrelka1;
-            this.pictureBox4.Location = new System.Drawing.Point(327, 101);
-            this.pictureBox4.Name = "pictureBox4";
-            this.pictureBox4.Size = new System.Drawing.Size(37, 33);
-            this.pictureBox4.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox4.TabIndex = 5;
-            this.pictureBox4.TabStop = false;
             // 
             // pictureBox3
             // 
             this.pictureBox3.Image = global::DomofonExcelToDbf.Properties.Resources.oDBF2;
-            this.pictureBox3.Location = new System.Drawing.Point(393, 92);
+            this.pictureBox3.Location = new System.Drawing.Point(624, 12);
             this.pictureBox3.Name = "pictureBox3";
             this.pictureBox3.Size = new System.Drawing.Size(53, 50);
             this.pictureBox3.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -237,20 +223,11 @@
             // pictureBox2
             // 
             this.pictureBox2.Image = global::DomofonExcelToDbf.Properties.Resources.zXls;
-            this.pictureBox2.Location = new System.Drawing.Point(244, 92);
+            this.pictureBox2.Location = new System.Drawing.Point(12, 12);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(53, 50);
             this.pictureBox2.TabIndex = 3;
             this.pictureBox2.TabStop = false;
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Image = global::DomofonExcelToDbf.Properties.Resources.Moscow;
-            this.pictureBox1.Location = new System.Drawing.Point(244, 172);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(202, 204);
-            this.pictureBox1.TabIndex = 6;
-            this.pictureBox1.TabStop = false;
             // 
             // labelTitle
             // 
@@ -268,12 +245,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(693, 561);
-            this.Controls.Add(this.labelTitle);
-            this.Controls.Add(this.pictureBox1);
-            this.Controls.Add(this.pictureBox4);
-            this.Controls.Add(this.pictureBox3);
-            this.Controls.Add(this.listBoxDBF);
             this.Controls.Add(this.pictureBox2);
+            this.Controls.Add(this.pictureBox3);
+            this.Controls.Add(this.labelTitle);
+            this.Controls.Add(this.listBoxDBF);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.listBoxExcel);
@@ -289,10 +264,8 @@
             this.panel1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -309,10 +282,8 @@
         private System.Windows.Forms.PictureBox pictureBox3;
         private System.Windows.Forms.ListBox listBoxExcel;
         private System.Windows.Forms.ListBox listBoxDBF;
-        private System.Windows.Forms.PictureBox pictureBox4;
         private System.Windows.Forms.Button buttonDirectory;
         private System.Windows.Forms.TextBox textBoxPath;
-        private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.ToolStripDropDownButton menu_settings;
         private System.Windows.Forms.ToolStripMenuItem settings_only_rules;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;

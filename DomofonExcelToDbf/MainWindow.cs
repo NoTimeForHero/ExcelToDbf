@@ -32,7 +32,7 @@ namespace DomofonExcelToDbf
             HashSet<string> selectedfiles = new HashSet<string>();
 
             foreach (string filename in listBoxExcel.SelectedItems)
-                selectedfiles.Add(Path.Combine(program.dirInput, filename));
+                selectedfiles.Add(Path.Combine(program.config.inputDirectory, filename));
 
             if (selectedfiles.Count > 0)
             {
@@ -43,7 +43,7 @@ namespace DomofonExcelToDbf
 
             if (selectedfiles.Count == 0 && files.Count == 0)
             {
-                MessageBox.Show(string.Format("В директории нет Excel файлов для обработки!\nВыберите другую директорию!\n\n{0}",program.dirInput), "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(string.Format("В директории нет Excel файлов для обработки!\nВыберите другую директорию!\n\n{0}",program.config.inputDirectory), "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -58,9 +58,9 @@ namespace DomofonExcelToDbf
 
         public void fillElementsData()
         {
-            textBoxPath.Text = Path.GetFullPath(program.dirInput);
-            toolStripStatusLabel1.Text = program.status;
-            labelTitle.Text = program.labelTitle;
+            textBoxPath.Text = Path.GetFullPath(program.config.inputDirectory);
+            toolStripStatusLabel1.Text = program.config.status;
+            labelTitle.Text = program.config.title;
 
             listBoxExcel.Items.Clear();
             foreach (string fpath in program.filesExcel)
@@ -82,14 +82,14 @@ namespace DomofonExcelToDbf
             }
 
             var dialog = new CommonOpenFileDialog();
-            dialog.InitialDirectory = Path.GetFullPath(Path.GetDirectoryName(program.dirInput));
+            dialog.InitialDirectory = Path.GetFullPath(Path.GetDirectoryName(program.config.inputDirectory));
             dialog.IsFolderPicker = true;
             CommonFileDialogResult result = dialog.ShowDialog();
 
             if (result == CommonFileDialogResult.Ok)
             {
-                program.dirInput = dialog.FileName;
-                program.dirOutput = dialog.FileName;
+                program.config.inputDirectory = dialog.FileName;
+                program.config.outputDirectory = dialog.FileName;
                 program.updateDirectory();
                 fillElementsData();
             }
@@ -97,7 +97,7 @@ namespace DomofonExcelToDbf
 
         private void menu_settings_DropDownOpening(object sender, EventArgs e)
         {
-            settings_only_rules.Checked = program.onlyRules;
+            settings_only_rules.Checked = program.config.only_rules;
             settings_only_rules_CheckStateChanged(null, null);
 
             settings_stack_trace.Checked = program.showStacktrace;
@@ -109,7 +109,7 @@ namespace DomofonExcelToDbf
         private void settings_only_rules_CheckStateChanged(object sender, EventArgs e)
         {
             settings_only_rules.Image = (settings_only_rules.Checked) ? Properties.Resources.smallcheck : null;
-            program.onlyRules = settings_only_rules.Checked;
+            program.config.only_rules = settings_only_rules.Checked;
         }
 
         private void settings_stack_trace_CheckStateChanged(object sender, EventArgs e)
@@ -124,7 +124,7 @@ namespace DomofonExcelToDbf
             if (index == System.Windows.Forms.ListBox.NoMatches) return;
 
             var item = listBoxDBF.Items[index];
-            string path = Path.Combine(program.dirInput, item.ToString());
+            string path = Path.Combine(program.config.inputDirectory, item.ToString());
 
             var psi = new System.Diagnostics.ProcessStartInfo(path);
             psi.UseShellExecute = true;

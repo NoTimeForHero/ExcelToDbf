@@ -123,6 +123,7 @@
     <Compile Include="Sources\TAction.cs" />
     <Compile Include="Sources\Tools.cs" />
     <Compile Include="Sources\Work.cs" />
+    <Compile Include="Sources\Xml.cs" />
     <Compile Include="StatusWindow.cs">
       <SubType>Form</SubType>
     </Compile>

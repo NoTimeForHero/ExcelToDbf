@@ -1,4 +1,5 @@
 ﻿using DomofonExcelToDbf.Sources;
+using DomofonExcelToDbf.Sources.Xml;
 using Microsoft.Office.Interop.Excel;
 using NickBuhro.Translit;
 using SocialExplorer.IO.FastDBF;
@@ -19,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 
 namespace DomofonExcelToDbf
 {
@@ -51,14 +53,8 @@ namespace DomofonExcelToDbf
 
         string confName;
         public XDocument xdoc;
-        public bool onlyRules;
-        public bool showStacktrace;
-        public bool saveMemory;
-        public String dirInput;
-        public String dirOutput;
-        public String status;
-        public String labelTitle;
-
+        public Xml_Config config;
+        public bool showStacktrace = false;
         Thread process = null;
 
         public Dictionary<string, string> formToFile = new Dictionary<string, string>();
@@ -79,28 +75,12 @@ namespace DomofonExcelToDbf
                 Tools.WriteResourceToFile("xConfig", confName);
             }
 
+            config = Xml_Config.Load(confName);
             xdoc = XDocument.Load(confName);
 
-            var log = xdoc.Root.Element("log");
-            bool is_log = (log != null && log.Value == "true");
-            string log_file = !is_log ? null : "logs\\" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log";
             if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
-            Logger.instance = new Logger(log_file);
+            Logger.instance = new Logger(config.log ? "logs\\" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log" : null);
 
-            var status = xdoc.Root.Element("status");
-            this.status = (status != null) ? status.Value : "";
-
-            var xStackTrace = xdoc.Root.Element("show_stacktrace");
-            this.showStacktrace = (xStackTrace != null && xStackTrace.Value == "true");
-
-            dirInput = xdoc.Root.Element("inputDirectory").Value; 
-            dirOutput = xdoc.Root.Element("outputDirectory").Value;
-            labelTitle = xdoc.Root.Element("title") != null ? xdoc.Root.Element("title").Value : "";
-
-            record_buffer = xdoc.Root.Element("buffer_size") != null ? Int32.Parse(xdoc.Root.Element("buffer_size").Value) : 200;
-
-            onlyRules = xdoc.Root.Element("only_rules").Value == "true";
-            saveMemory = xdoc.Root.Element("save_memory").Value == "true"; // экономить память, если включено то будет использоваться один инстанс COM Excel с переключением Worksheet
             updateDirectory();
 
             Logger.instance.log("Версия программы: " + Properties.Resources.version);
@@ -108,21 +88,21 @@ namespace DomofonExcelToDbf
 
         public void updateDirectory()
         {
-            Logger.instance.log("Директория чтения: {0}", dirInput);
-            Logger.instance.log("Директория записи: {0}", dirOutput);
+            Logger.instance.log("Директория чтения: {0}", config.inputDirectory);
+            Logger.instance.log("Директория записи: {0}", config.outputDirectory);
 
-            if (!Directory.Exists(dirInput)) dirInput = Directory.GetCurrentDirectory();
-            if (!Directory.Exists(dirOutput)) dirOutput = Directory.GetCurrentDirectory();
+            if (!Directory.Exists(config.inputDirectory)) config.inputDirectory = Directory.GetCurrentDirectory();
+            if (!Directory.Exists(config.outputDirectory)) config.outputDirectory = Directory.GetCurrentDirectory();
 
             filesDBF.Clear();
             filesExcel.Clear();
 
-            string[] fbyext = Directory.GetFiles(dirOutput, "*.dbf", SearchOption.TopDirectoryOnly);
+            string[] fbyext = Directory.GetFiles(config.outputDirectory, "*.dbf", SearchOption.TopDirectoryOnly);
             filesDBF.UnionWith(fbyext);
 
             foreach (var extension in xdoc.Root.Element("extensions").Elements("ext"))
             {
-                fbyext = Directory.GetFiles(dirInput, extension.Value, SearchOption.TopDirectoryOnly);
+                fbyext = Directory.GetFiles(config.inputDirectory, extension.Value, SearchOption.TopDirectoryOnly);
                 fbyext = fbyext.Where(path => !Path.GetFileName(path).StartsWith("~$")) // Игнорируем временные файлы Excel вида ~$Document.xls[x]
                                .Where(path => !Path.GetFileName(path).Equals(confName)).ToArray(); // А также наш конфигурационный файл %EXE_NAME%.xml
                 filesExcel.UnionWith(fbyext);
@@ -133,8 +113,8 @@ namespace DomofonExcelToDbf
         {
             onCloseCheckProcess(e);
 
-            xdoc.Root.Element("inputDirectory").Value = dirInput;
-            xdoc.Root.Element("outputDirectory").Value = dirOutput;
+            xdoc.Root.Element("inputDirectory").Value = config.inputDirectory;
+            xdoc.Root.Element("outputDirectory").Value = config.outputDirectory;
             xdoc.Save(confName);
         }
 
@@ -212,7 +192,7 @@ namespace DomofonExcelToDbf
             window.setState(true, "Подготовка файлов", 0, files.Count);
             int idoc = 1;
 
-            Excel excel = new Excel(saveMemory);
+            Excel excel = new Excel(config.save_memory);
             DBF dbf = null;
 
             var totalwatch = new System.Diagnostics.Stopwatch();
@@ -238,7 +218,7 @@ namespace DomofonExcelToDbf
 
                     var form = Tools.findCorrectForm(excel.worksheet, xdoc);
 
-                    if (onlyRules)
+                    if (config.only_rules)
                     {
                         var formname = (form == null) ? "null" : form.Element("Name").Value;
                         formToFile.Add(Path.GetFileName(finput), formname);
@@ -251,9 +231,9 @@ namespace DomofonExcelToDbf
                         throw new NoNullAllowedException("Не найдено подходящих форм для обработки документа work.xml!");
                     }
 
-                    string fileName = Tools.getOutputFilename(excel.worksheet, xdoc, dirInput, finput);
+                    string fileName = Tools.getOutputFilename(excel.worksheet, xdoc, config.inputDirectory, finput);
                     string pathTemp = Path.GetTempFileName();
-                    string pathOutput = Path.Combine(dirOutput, fileName);
+                    string pathOutput = Path.Combine(config.outputDirectory, fileName);
 
                     var total = excel.worksheet.UsedRange.Rows.Count - Tools.startY(form);
                     window.setState(false, String.Format("Обработано записей: {0}/{1}", 0, total), 0, total);
@@ -323,7 +303,7 @@ namespace DomofonExcelToDbf
 
             string crules = "";
 
-            if (onlyRules)
+            if (config.only_rules)
             {
                 for (int i = 0; i < 3; i++) Logger.instance.log();
                 foreach (var tup in formToFile)
@@ -363,4 +343,5 @@ namespace DomofonExcelToDbf
             MessageBox.Show(crules, "Отчёт о времени обработки", MessageBoxButtons.OK, icon);
         }
     }   
+
 }
