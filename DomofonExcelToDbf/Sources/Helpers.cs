@@ -49,23 +49,6 @@ namespace DomofonExcelToDbf.Sources
         }
     }
 
-    class XmlHelper
-    {
-        public static string attrOrDefault(XElement element, String attr, String def)
-        {
-            XAttribute xattr = element.Attribute(attr);
-            if (xattr == null) return def;
-            return xattr.Value;
-        }
-
-        public static String attr(XElement element, String attr)
-        {
-            XAttribute xattr = element.Attribute(attr);
-            if (xattr == null) return null;
-            return xattr.Value;
-        }
-    }
-
     class RegExCache
     {
         protected Dictionary<String, Regex> regexes = new Dictionary<String, Regex>();

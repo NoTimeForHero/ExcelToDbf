@@ -55,23 +55,22 @@ namespace DomofonExcelToDbf
         public XDocument xdoc;
         public Xml_Config config;
         public bool showStacktrace = false;
-        Thread process = null;
+        Thread process;
 
         public Dictionary<string, string> formToFile = new Dictionary<string, string>();
         public List<string> outlog = new List<string>();
         public List<string> errlog = new List<string>();
         public HashSet<string> filesExcel = new HashSet<string>();
         public HashSet<string> filesDBF = new HashSet<string>();
-        public int record_buffer;
 
         public void init()
         {
-            confName = Path.ChangeExtension(System.AppDomain.CurrentDomain.FriendlyName, ".xml");
+            confName = Path.ChangeExtension(AppDomain.CurrentDomain.FriendlyName, ".xml");
 
             if (!File.Exists(confName))
             {
-                Console.WriteLine("Не найден конфигурационный файл!");
-                Console.WriteLine("Распаковываем его из внутренних ресурсов...");
+                Console.WriteLine(@"Не найден конфигурационный файл!");
+                Console.WriteLine(@"Распаковываем его из внутренних ресурсов...");
                 Tools.WriteResourceToFile("xConfig", confName);
             }
 
@@ -100,11 +99,12 @@ namespace DomofonExcelToDbf
             string[] fbyext = Directory.GetFiles(config.outputDirectory, "*.dbf", SearchOption.TopDirectoryOnly);
             filesDBF.UnionWith(fbyext);
 
-            foreach (var extension in xdoc.Root.Element("extensions").Elements("ext"))
+            foreach (string extension in config.extensions)
             {
-                fbyext = Directory.GetFiles(config.inputDirectory, extension.Value, SearchOption.TopDirectoryOnly);
-                fbyext = fbyext.Where(path => !Path.GetFileName(path).StartsWith("~$")) // Игнорируем временные файлы Excel вида ~$Document.xls[x]
-                               .Where(path => !Path.GetFileName(path).Equals(confName)).ToArray(); // А также наш конфигурационный файл %EXE_NAME%.xml
+                fbyext = Directory.GetFiles(config.inputDirectory, extension, SearchOption.TopDirectoryOnly);
+                fbyext = fbyext.Where(path => path != null
+                        && !Path.GetFileName(path).Equals(confName) // А также наш конфигурационный файл %EXE_NAME%.xml
+                        && !Path.GetFileName(path).StartsWith("~$")).ToArray(); // Игнорируем временные файлы Excel вида ~$Document.xls[x]
                 filesExcel.UnionWith(fbyext);
             }
         }
@@ -177,11 +177,6 @@ namespace DomofonExcelToDbf
             process.Start(data);
         }
 
-        private void Wstatus_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
         protected void delegate_action(object obj)
         {
             object [] data = (object[])obj;
@@ -216,11 +211,11 @@ namespace DomofonExcelToDbf
 
                     excel.OpenWorksheet(finput);
 
-                    var form = Tools.findCorrectForm(excel.worksheet, xdoc);
+                    var form = Tools.findCorrectForm(excel.worksheet, xdoc, config);
 
                     if (config.only_rules)
                     {
-                        var formname = (form == null) ? "null" : form.Element("Name").Value;
+                        var formname = (form != null) ? form.Name : "null";
                         formToFile.Add(Path.GetFileName(finput), formname);
                         continue;
                     }
@@ -235,18 +230,18 @@ namespace DomofonExcelToDbf
                     string pathTemp = Path.GetTempFileName();
                     string pathOutput = Path.Combine(config.outputDirectory, fileName);
 
-                    var total = excel.worksheet.UsedRange.Rows.Count - Tools.startY(form);
+                    var total = excel.worksheet.UsedRange.Rows.Count - form.Fields.StartY;
                     window.setState(false, String.Format("Обработано записей: {0}/{1}", 0, total), 0, total);
 
-                    dbf = new DBF(pathTemp);
-                    dbf.writeHeader(form);
+                    dbf = new DBF(pathTemp,form.DBF);
+                    dbf.writeHeader();
 
                     var stopwatch = new System.Diagnostics.Stopwatch();
 
                     RegExCache cache = new RegExCache();
 
-                    stopwatch.Start();
-                    Work work = new Work(xdoc,form, record_buffer);
+                    stopwatch.Start();                    
+                    Work work = new Work(xdoc,form, config.buffer_size);
                     work.IterateRecords(excel.worksheet, dbf.appendRecord, 
                         (int id) => window.updateState(false, String.Format("Обработано записей: {0}/{1}", id, total), id)
                     );
@@ -258,7 +253,7 @@ namespace DomofonExcelToDbf
                     Logger.instance.log("Обработано записей: {0} ", dbf.records);
                     outlog.Add(String.Format("{0} в {1} строк за {2}",Path.GetFileName(finput),dbf.records,stopwatch.Elapsed.ToString("hh\\:mm\\:ss\\.ff")));
 
-                    int startY = Tools.startY(form);    
+                    int startY = form.Fields.StartY; 
                     Logger.instance.log("Начиная с {0} по {1}", startY, startY + dbf.records);
 
                     // Перемещение файла
@@ -268,6 +263,7 @@ namespace DomofonExcelToDbf
 
                     Logger.instance.log(string.Format("=============== Документ {0} успешно обработан! ===============", Path.GetFileName(finput)));
                 }               
+                /*
                 catch (Exception ex)
                 {
                     if (ex is ThreadAbortException)
@@ -287,7 +283,8 @@ namespace DomofonExcelToDbf
                     skip_error_msgbox:;
                     Console.Error.WriteLine(ex);
                     deleteDbf = true;
-                }                 
+                } 
+                */
                 finally
                 {
                     Logger.instance.log("Закрытие COM Excel и DBF");

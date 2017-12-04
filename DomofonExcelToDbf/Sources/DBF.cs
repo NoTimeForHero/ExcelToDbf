@@ -5,24 +5,24 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
+using DomofonExcelToDbf.Sources.Xml;
 
 namespace DomofonExcelToDbf.Sources
 {
     class DBF
     {
         public DbfFile odbf;
-        public IEnumerable<XElement> dbfields;
-        public int records = 0;
-        public bool closed = false;
+        public List<Xml_DbfField> dbfFields;
+        public int records;
+        protected bool closed;
+        protected bool headersWrited;
         protected string path;
 
-        public DBF(String path, Encoding encoding = null)
+        public DBF(String path, List<Xml_DbfField> dbfFields, Encoding encoding = null)
         {
+            this.dbfFields = dbfFields;
             this.path = path;
-            // Если мы не передали кодировку, то используем DOS (=866)
-            // Нельзя писать DBF(xxx, Encoding encoding = Encoding.GetEncoding(866)) так как аргументы метода должны вычисляться на этапе компиляции
-            // А Encoding.GetEncoding(866) можно высчитать только при запуске приложения
+
             if (encoding == null) encoding = Encoding.GetEncoding(866);
 
             odbf = new DbfFile(encoding);
@@ -30,18 +30,15 @@ namespace DomofonExcelToDbf.Sources
             Logger.instance.log("Создаём DBF с именем {0} и\nкодировкой: {1}", path, encoding);
         }
 
-        // Эту функцию нельзя вызвать за пределами данного класса
-        public void writeHeader(XElement form)
+        public void writeHeader()
         {
-            dbfields = form.Element("DBF").Elements("field");
-            Logger.instance.log("Записываем в DBF {0} полей", dbfields.Count());
-            foreach (XElement field in dbfields)
+            Logger.instance.log("Записываем в DBF {0} полей", dbfFields.Count());
+            foreach (var field in dbfFields)
             {
-                string input = field.Value;
-                string name = field.Attribute("name").Value;
-                string type = field.Attribute("type").Value;
+                string name = field.name;
+                string type = field.type;
 
-                XAttribute attrlen = field.Attribute("length");
+                string attrlen = field.length;
 
                 DbfColumn.DbfColumnType column = DbfColumn.DbfColumnType.Character;
                 if (type == "string") column = DbfColumn.DbfColumnType.Character;
@@ -50,7 +47,7 @@ namespace DomofonExcelToDbf.Sources
 
                 if (attrlen != null)
                 {
-                    var length = attrlen.Value.Split(',');
+                    var length = attrlen.Split(',');
                     int nlen = Int32.Parse(length[0]);
                     int ndec = (length.Length > 1) ? Int32.Parse(length[1]) : 0;
                     odbf.Header.AddColumn(new DbfColumn(name, column, nlen, ndec));
@@ -63,22 +60,22 @@ namespace DomofonExcelToDbf.Sources
                 }
             }
             odbf.WriteHeader();
+            headersWrited = true;
         }
-
 
         public void appendRecord(Dictionary<string, TVariable> variables)
         {
+            if (!headersWrited) throw new Exception("Невозможно вставить запись в DBF раньше записи заголовков!");
+
             var orec = new DbfRecord(odbf.Header);
             //orec.AllowIntegerTruncate = true;
             orec.AllowStringTurncate = true;
 
             int fid = 0;
-            foreach (XElement field in dbfields)
+            foreach (var field in dbfFields)
             {
-
-                string input = field.Value;
-                string name = field.Attribute("name").Value;
-                string type = XmlHelper.attrOrDefault(field, "type", "string");
+                string input = field.text;
+                string type = field.type ?? "string";
 
                 try
                 {
@@ -94,8 +91,7 @@ namespace DomofonExcelToDbf.Sources
                             continue;
                         }
 
-                        object data = variables[repvar].value;
-                        if (data == null) data = "";
+                        object data = variables[repvar].value ?? "";
 
                         if (type == "string" || type == "numeric")
                         {
@@ -104,7 +100,7 @@ namespace DomofonExcelToDbf.Sources
                         }
                         else if (type == "date")
                         {
-                            string format = XmlHelper.attrOrDefault(field, "format", "yyyy-MM-dd");
+                            string format = field.format ?? "yyyy-MM-dd";
                             input = input.Replace(m.Value, ((DateTime)data).ToString(format));
                         }
                     }
@@ -112,7 +108,7 @@ namespace DomofonExcelToDbf.Sources
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception(String.Format("Ошибка в переменной \"{0}\": {1}", input, ex.Message), ex);
+                    throw new Exception($"Ошибка в переменной \"{input}\": {ex.Message}", ex);
                 }
 
                 orec[fid] = input;
@@ -133,10 +129,8 @@ namespace DomofonExcelToDbf.Sources
 
         public void delete()
         {
-            if (closed) return;
             close();
-
-            File.Delete(this.path);
+            File.Delete(path);
         }
 
     }

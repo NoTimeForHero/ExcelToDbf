@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using DomofonExcelToDbf.Sources.Xml;
 
 namespace DomofonExcelToDbf.Sources
 {
@@ -58,41 +59,33 @@ namespace DomofonExcelToDbf.Sources
         // <summary>
         // Ищет подходящую XML форму для документа или null если ни одна не подходит
         // </summary>
-        public static XElement findCorrectForm(Worksheet worksheet, XDocument xdoc)
+        public static Xml_Form findCorrectForm(Worksheet worksheet, XDocument xdoc, Xml_Config config)
         {
             var forms = xdoc.Root.Element("Forms").Elements("Form").ToList();
             RegExCache regExCache = new RegExCache();
 
-            foreach (XElement form in forms)
+            foreach (Xml_Form form in config.Forms)
             {
                 bool correct = true;
-                String name = form.Element("Name").Value;
-                Logger.instance.log(String.Format("\nПроверяем форму \"{0}\"", name));
+                Logger.instance.log($"\nПроверяем форму \"{form.Name}\"");
                 Logger.instance.log("==========================================");
 
-                var equals = form.Element("Rules").Elements("Equal");
-                foreach (XElement equal in equals)
+                foreach (Xml_Equal rule in form.Rules)
                 {
-                    var x = Int32.Parse(equal.Attribute("X").Value);
-                    var y = Int32.Parse(equal.Attribute("Y").Value);
-                    var mustbe = equal.Value;
-
-                    bool useRegex = equal.Attribute("regex_pattern") != null;
-                    string regex_pattern = useRegex ? equal.Attribute("regex_pattern").Value.ToString() : "";
-                    int regex_group = equal.Attribute("regex_group") != null ? Int32.Parse(equal.Attribute("regex_group").Value) : 1;
-                    bool validateRegex = equal.Attribute("validate") != null && equal.Attribute("validate").Value.ToString() == "regex";
+                    bool useRegex = rule.regex_pattern != null;
+                    bool validateRegex = rule.validate == "regex";
 
                     string cell = null;
                     string origcell = null;
 
                     try
                     {
-                        cell = worksheet.Cells[y, x].Value.ToString();
+                        cell = worksheet.Cells[rule.Y, rule.X].Value.ToString();
                     }
                     catch (Exception ex)
                     {
-                        Logger.instance.log(String.Format("Произошла ошибка при чтении ячейки Y={0},X={1}!", y, x));
-                        Logger.instance.log(String.Format("Ожидалось: {0}", mustbe));
+                        Logger.instance.log($"Произошла ошибка при чтении ячейки Y={rule.Y},X={rule.X}!");
+                        Logger.instance.log($"Ожидалось: {rule.Text}");
                         Logger.instance.log("Ошибка: {0}", ex.Message);
                         correct = false;
                         break;
@@ -101,29 +94,29 @@ namespace DomofonExcelToDbf.Sources
                     origcell = cell;
                     if (useRegex && !validateRegex)
                     {
-                        cell = regExCache.MatchGroup(cell, regex_pattern, regex_group);
+                        cell = regExCache.MatchGroup(cell, rule.regex_pattern, rule.regex_group);
                     }
 
                     bool failed = false;
-                    if (mustbe != cell && !validateRegex) failed = true;
-                    if (validateRegex && !regExCache.IsMatch(cell, mustbe)) failed = true;
+                    if (rule.Text != cell && !validateRegex) failed = true;
+                    if (validateRegex && !regExCache.IsMatch(cell, rule.Text)) failed = true;
 
                     if (failed)
                     {
                         if (validateRegex || useRegex) Logger.instance.log("Провалена проверка по регулярному выражению!");
-                        Logger.instance.log(String.Format("Проверка провалена (Y={0},X={1})", y, x));
-                        Logger.instance.log(String.Format("Ожидалось: {0}", mustbe));
-                        Logger.instance.log(String.Format("Найдено: {0}", cell));
+                        Logger.instance.log($"Проверка провалена (Y={rule.Y},X={rule.X})");
+                        Logger.instance.log($"Ожидалось: {rule.Text}");
+                        Logger.instance.log($"Найдено: {cell}");
                         if (useRegex)
                         {
-                            Logger.instance.log(String.Format("Оригинальная ячейка: {0}", origcell));
-                            Logger.instance.log(String.Format("Регулярное выражение: {0}", regex_pattern));
-                            Logger.instance.log(String.Format("Группа для поиска: {0}", regex_group));
+                            Logger.instance.log($"Оригинальная ячейка: {origcell}");
+                            Logger.instance.log($"Регулярное выражение: {rule.regex_pattern}");
+                            Logger.instance.log($"Группа для поиска: {rule.regex_group}");
                         }
                         correct = false;
                         break;
                     }
-                    Logger.instance.log(String.Format("Y={0},X={1}: {2}{4}{3}", y, x, mustbe, cell, (validateRegex ? " is match" : "==")));
+                    Logger.instance.log($"Y={rule.Y},X={rule.X}: {rule.Text}{(validateRegex ? " is match" : "==")}{cell}");
                 }
                 if (correct) return form;
             }

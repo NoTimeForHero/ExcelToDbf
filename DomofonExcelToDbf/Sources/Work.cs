@@ -2,10 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml;
 using System.Xml.Linq;
+using DomofonExcelToDbf.Sources.Xml;
 
 namespace DomofonExcelToDbf.Sources
 {
@@ -19,22 +22,23 @@ namespace DomofonExcelToDbf.Sources
         protected int endX;
         protected int buffer;
         protected int total = 0;
-        protected XElement form;
+        protected Xml_Form form;
         protected TVariable exception_var;
 
         public Dictionary<string, TVariable> stepScope = new Dictionary<string, TVariable>();
 
-        public Work(XDocument xdocument, XElement form, int buffer)
+        public Work(XDocument xdocument, Xml_Form form, int buffer)
         {
             InitVariables(form);
-            startY = Tools.startY(form);
-            endX = Tools.endX(form);
+            startY = form.Fields.StartY;
+            endX = form.Fields.EndX;
             this.buffer = buffer;
             this.form = form;
         }
 
         public void IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
         {
+            if (buffer <= 0) throw new ArgumentException("Буфер обработки должен быть больше ноля!");
             total = 0;
             try
             {
@@ -185,16 +189,16 @@ namespace DomofonExcelToDbf.Sources
         {
             int num = 1;
 
-            if (form.Element("Validate") == null) return;
-            foreach (XElement validate in form.Element("Validate").Elements())
+            if (form.Validate == null) return;
+            foreach (var validate in form.Validate)
             {
-                stepScope.TryGetValue(validate.Attribute("var1").Value, out TVariable var1);
-                stepScope.TryGetValue(validate.Attribute("var2").Value, out TVariable var2);
+                stepScope.TryGetValue(validate.var1, out TVariable var1);
+                stepScope.TryGetValue(validate.var2, out TVariable var2);
 
-                string value1 = (var1 == null || var1.value == null) ? "[неизвестно]" : var1.value.ToString();
-                string value2 = (var2 == null || var2.value == null) ? "[неизвестно]" : var2.value.ToString();
+                string value1 = var1?.value?.ToString() ?? "[неизвестно]";
+                string value2 = var2?.value?.ToString() ?? "[неизвестно]";
 
-                var elemMsg = validate.Element("Message");
+                var elemMsg = validate.Message;
                 string message = "";
 
                 if (elemMsg == null)
@@ -203,7 +207,7 @@ namespace DomofonExcelToDbf.Sources
                 }
                 else
                 {
-                    message = string.Format(elemMsg.Value, value1, value2, num);
+                    message = string.Format(elemMsg, value1, value2, num);
                     message = message.Replace("\\n", "\n");
                 }
 
@@ -214,10 +218,10 @@ namespace DomofonExcelToDbf.Sources
                     num, var1 != null ? var1.name : "null", value1, var2 != null ? var2.name : "null", value2));
 
                 bool isEqual = false;
-                if (validate.Element("Math") is XElement math && math.Attribute("type").Value == "numeric")
+                if (validate.Math != null)
                 {
-                    int count = Int32.Parse(math.Attribute("count").Value);
-                    float prec = Single.Parse(math.Attribute("precision").Value);
+                    int count = validate.Math.count;
+                    float prec = Single.Parse(validate.Math.precision);
 
                     float allowed_precision = (prec / count) * total;
                     float var1fl = Convert.ToSingle(var1.value);
@@ -226,13 +230,13 @@ namespace DomofonExcelToDbf.Sources
                     Logger.instance.log("var1 = " + var1fl.ToString("G9"));
                     Logger.instance.log("var2 = " + var2fl.ToString("G9"));
 
-                    if (var1fl == var2fl) isEqual = true;
+                    if (Equals(var1fl, var2fl)) isEqual = true;
                     else
                     {
                         float diff = Math.Abs(Math.Abs(var1fl) - Math.Abs(var2fl));
                         isEqual = diff < allowed_precision;
 
-                        string message_diff = string.Format(math.Value, allowed_precision, diff).Replace("\\n","\n");
+                        string message_diff = string.Format(validate.Math.message, allowed_precision, diff).Replace("\\n","\n");
                         message += "\n" + message_diff;
                         Logger.instance.log(message_diff);
                     }
@@ -245,21 +249,38 @@ namespace DomofonExcelToDbf.Sources
             }
         }
 
-        protected void InitVariables(XElement form)
+        protected void InitVariables(Xml_Form lForm)
         {
-            foreach (XElement xelem in form.Element("Fields").Elements())
+            foreach (var xmlelem in lForm.Fields.IF)
             {
-                if (xelem.Name == "Static") AddVar(staticVars, getVar(xelem, false));
-                if (xelem.Name == "Dynamic") AddVar(dynamicVars, getVar(xelem, true));
-                if (xelem.Name == "IF") conditions.Add(ScanCondition(xelem));
+                XElement xelem = XElement.Parse(xmlelem.OuterXml);
+                conditions.Add(ScanCondition(xelem));
+            }
+
+            foreach (var xmlelem in lForm.Fields.Static)
+            {
+                XElement xelem = XElement.Parse(xmlelem.OuterXml);
+                AddVar(staticVars, getVar(xelem, false));
+            }
+
+            foreach (var xmlelem in lForm.Fields.Dynamic)
+            {
+                XElement xelem = XElement.Parse(xmlelem.OuterXml);
+                AddVar(dynamicVars, getVar(xelem, true));
             }
         }
 
         protected TCondition ScanCondition(XElement xml)
         {
-            TCondition condition = new TCondition();
-            condition.x = Int32.Parse(xml.Attribute("X").Value);
-            condition.mustBe = xml.Attribute("VALUE").Value;
+            if (xml.Element("X") == null) throw new NullReferenceException("Attribute \"X\" can't be null!");
+            if (xml.Element("VALUE") == null) throw new NullReferenceException("Attribute \"VALUE\" can't be null!");
+            if (xml.Element("THEN") == null) throw new NullReferenceException("Element <THEN> can't be null!");
+
+            TCondition condition = new TCondition
+            {
+                x = Int32.Parse(xml.Attribute("X").Value),
+                mustBe = xml.Attribute("VALUE").Value
+            };
 
             foreach (XElement elem in xml.Element("THEN").Elements())
             {
