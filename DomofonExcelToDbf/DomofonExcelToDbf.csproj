@@ -121,7 +121,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Sources\Core\Data\TAction.cs" />
-    <Compile Include="Sources\Work.cs" />
+    <Compile Include="Sources\Core\Work.cs" />
     <Compile Include="Sources\Core\Data\Xml.cs" />
     <Compile Include="Sources\View\StatusWindow.cs">
       <SubType>Form</SubType>

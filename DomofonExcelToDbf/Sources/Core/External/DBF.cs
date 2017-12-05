@@ -28,12 +28,14 @@ namespace DomofonExcelToDbf.Sources
 
             odbf = new DbfFile(encoding);
             odbf.Open(path, FileMode.Create); // FileMode.Create = файл будет перезаписан если уже существует
-            Logger.instance.log("Создаём DBF с именем {0} и\nкодировкой: {1}", path, encoding);
+            Logger.info($"Создаём DBF по пути: {path}");
+            Logger.debug("и кодировкой: {encoding}");
         }
 
         public void writeHeader()
         {
-            Logger.instance.log("Записываем в DBF {0} полей", dbfFields.Count());
+            Logger.info($"Записываем в DBF {dbfFields.Count} полей:");
+            Logger.info(string.Join(", ", dbfFields.Select(x => x.name).ToArray()));
             foreach (var field in dbfFields)
             {
                 string name = field.name;
@@ -52,12 +54,12 @@ namespace DomofonExcelToDbf.Sources
                     int nlen = Int32.Parse(length[0]);
                     int ndec = (length.Length > 1) ? Int32.Parse(length[1]) : 0;
                     odbf.Header.AddColumn(new DbfColumn(name, column, nlen, ndec));
-                    Logger.instance.log("Записываем поле '{0}' типа '{1}' длиной {2},{3}", name, type, nlen, ndec);
+                    Logger.debug($"Записываем поле '{name}' типа '{type}' длиной {nlen},{ndec}");
                 }
                 else
                 {
                     odbf.Header.AddColumn(new DbfColumn(name, column));
-                    Logger.instance.log("Записываем поле '{0}' типа '{1}'", name, type);
+                    Logger.debug($"Записываем поле '{name}' типа '{type}'");
                 }
             }
             odbf.WriteHeader();

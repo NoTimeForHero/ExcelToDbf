@@ -7,43 +7,79 @@ namespace DomofonExcelToDbf.Sources.Core
     {
         readonly bool console;
         readonly StreamWriter writer;
+        protected LogLevel level;
 
         public static Logger instance;
 
-        public Logger(string file = null)
+        public Logger(string file = null, LogLevel level = LogLevel.INFO)
         {
+            this.level = level;
+
             console = (file == null);
             if (file != null)
             {
-                writer = new StreamWriter(file, false);
-                writer.AutoFlush = true;
+                writer = new StreamWriter(file, false) {AutoFlush = true};
             }
         }
 
-        public void log()
+        protected void _log(object data, LogLevel curLevel)
         {
-            log("");
-        }
+            if (curLevel > level) return;
 
-        public void log(object data)
-        {
-            Console.WriteLine(data.ToString());
+            string msg = $"[{curLevel}][{DateTime.Now:HH:mm:ss}] {data}";
+
+            Console.WriteLine(msg);
             if (!console)
             {
-                writer.WriteLine(data.ToString());
+                writer.WriteLine(msg);
                 writer.Flush();
             }
         }
 
-        public void log(string data, object arg0, object arg1 = null, object arg2 = null, object arg3 = null)
+        public enum LogLevel : byte
         {
-            Console.WriteLine(data, arg0, arg1, arg2, arg3);
-            if (!console)
-            {
-                writer.WriteLine(data, arg0, arg1, arg2, arg3);
-                writer.Flush();
-            }
+            CRITICAL,
+            ERROR,
+            WARN,
+            INFO,
+            DEBUG,
+            TRACER
         }
 
+        public static void SetLevel(LogLevel newLevel)
+        {
+            instance.level = newLevel;
+        }
+
+        public static void tracer(object data)
+        {
+            instance._log(data, LogLevel.TRACER);
+        }
+
+        public static void error(object data)
+        {
+            instance._log(data, LogLevel.ERROR);
+        }
+
+        public static void warn(object data)
+        {
+            instance._log(data, LogLevel.WARN);
+        }
+
+        public static void info(object data)
+        {
+            instance._log(data,LogLevel.INFO);
+        }
+
+        public static void debug(object data)
+        {
+            instance._log(data,LogLevel.DEBUG);
+        }
+
+        public static void log(object data, LogLevel level = LogLevel.INFO)
+        {
+            instance._log(data,level);
+        }
     }
+
 }

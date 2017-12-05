@@ -11,15 +11,17 @@ namespace DomofonExcelToDbf.Sources
 {
     public class Work
     {
-        public Dictionary<string, TVariable> staticVars = new Dictionary<string, TVariable>();
-        public Dictionary<string, TVariable> dynamicVars = new Dictionary<string, TVariable>();
-        public HashSet<TCondition> conditions = new HashSet<TCondition>();
+        protected Dictionary<string, TVariable> staticVars = new Dictionary<string, TVariable>();
+        protected Dictionary<string, TVariable> dynamicVars = new Dictionary<string, TVariable>();
+        protected HashSet<TCondition> conditions = new HashSet<TCondition>();
 
+        protected int buffer;
         protected int startY;
         protected int endX;
-        protected int buffer;
-        protected int total;
         protected List<Xml_Validator> validators;
+
+        // Переменные для нахождения номера строки и переменной исключения
+        protected int total;
         protected TVariable exception_var;
 
         public Dictionary<string, TVariable> stepScope = new Dictionary<string, TVariable>();
@@ -41,7 +43,7 @@ namespace DomofonExcelToDbf.Sources
             {
                 __IterateRecords(worksheet, callback, guiCallback);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!Debugger.IsAttached)
             {
                 string message = $"Ошибка на строке {startY + total}, ячейке {exception_var.x} в переменной {exception_var.name}:\n{ex.Message}";
                 throw new MyException(message, ex);
@@ -67,7 +69,7 @@ namespace DomofonExcelToDbf.Sources
                 stepScope.Add(var.name, var);
             }
             watch.Stop();
-            Logger.instance.log("Заполнение массива локальных переменных: " + watch.ElapsedMilliseconds);
+            Logger.debug("Заполнение массива локальных переменных: " + watch.ElapsedMilliseconds);
 
             Stopwatch watchTotal = Stopwatch.StartNew();
             while (!EOF)
@@ -95,11 +97,11 @@ namespace DomofonExcelToDbf.Sources
                                         switch (tinter.action)
                                         {
                                             case TInterrupt.Action.SKIP_RECORD:
-                                                Logger.instance.log($"Пропуск записи по условию: значение в ячейке x={cond.x} равно {cond.mustBe}");
+                                                Logger.tracer($"Пропуск записи по условию: значение в ячейке x={cond.x} равно {cond.mustBe}");
                                                 skipRecord = true;
                                                 break;
                                             case TInterrupt.Action.STOP_LOOP:
-                                                Logger.instance.log($"Выход из цикла по условию: значение в ячейке x={cond.x} равно {cond.mustBe}");
+                                                Logger.tracer($"Выход из цикла по условию: значение в ячейке x={cond.x} равно {cond.mustBe}");
                                                 stopLoop = true;
                                                 break;
                                         }
@@ -122,11 +124,11 @@ namespace DomofonExcelToDbf.Sources
                                         switch (tinter.action)
                                         {
                                             case TInterrupt.Action.SKIP_RECORD:
-                                                Logger.instance.log($"Пропуск записи по условию: значение в ячейке x={cond.x} равно {cond.mustBe}");
+                                                Logger.tracer($"Пропуск записи по условию: значение в ячейке x={cond.x} равно {cond.mustBe}");
                                                 skipRecord = true;
                                                 break;
                                             case TInterrupt.Action.STOP_LOOP:
-                                                Logger.instance.log($"Выход из цикла по условию: значение в ячейке x={cond.x} равно {cond.mustBe}");
+                                                Logger.tracer($"Выход из цикла по условию: значение в ячейке x={cond.x} равно {cond.mustBe}");
                                                 stopLoop = true;
                                                 break;
                                         }
@@ -145,14 +147,14 @@ namespace DomofonExcelToDbf.Sources
 
                     if (total > maxY - startY)
                     {
-                        Logger.instance.log("Попытка выйти за пределы документа, выход из цикла");
+                        Logger.warn("Попытка выйти за пределы документа, выход из цикла");
                         EOF = true;
                         break;
                     }
 
                     if (stopLoop)
                     {
-                        Logger.instance.log("Выход из цикла по условию");
+                        Logger.debug("Выход из цикла по условию");
                         EOF = true;
                         break;
                     }
@@ -170,15 +172,15 @@ namespace DomofonExcelToDbf.Sources
                     guiCallback?.Invoke(total);
                 }
                 watch.Stop();
-                Logger.instance.log($"Сегмент в {buffer} элементов (с {begin} по {end}) обработан за {watch.ElapsedMilliseconds} мс");
+                Logger.debug($"Сегмент в {buffer} элементов (с {begin} по {end}) обработан за {watch.ElapsedMilliseconds} мс");
 
                 begin += buffer;
                 end += buffer;
             }
             watchTotal.Stop();
-            Logger.instance.log("Total time: " + watchTotal.ElapsedMilliseconds);
-            Logger.instance.log("Rows iterated: " + total);
-            Logger.instance.log("Buffer size:" + buffer);
+            Logger.debug("Времени всего: " + watchTotal.ElapsedMilliseconds);
+            Logger.debug("Строк обработано: " + total);
+            Logger.debug("Размер буффера:" + buffer);
         }
 
         protected void FinalChecks()
@@ -209,7 +211,7 @@ namespace DomofonExcelToDbf.Sources
 
                 if (var1 == null || var2 == null || var1.value == null || var2.value == null) throw new Exception(message);
 
-                Logger.instance.log($"Проверка номер {num} : {var1.name}({value1}) сравнивается с {var2.name}({value2})");
+                Logger.info($"Проверка номер {num} : {var1.name}({value1}) сравнивается с {var2.name}({value2})");
 
                 bool isEqual;
                 if (validate.Math != null)
@@ -221,8 +223,8 @@ namespace DomofonExcelToDbf.Sources
                     float var1fl = Convert.ToSingle(var1.value);
                     float var2fl = Convert.ToSingle(var2.value);
 
-                    Logger.instance.log("var1 = " + var1fl.ToString("G9"));
-                    Logger.instance.log("var2 = " + var2fl.ToString("G9"));
+                    Logger.info("var1 = " + var1fl.ToString("G9"));
+                    Logger.info("var2 = " + var2fl.ToString("G9"));
 
                     if (Equals(var1fl, var2fl)) isEqual = true;
                     else
@@ -232,7 +234,7 @@ namespace DomofonExcelToDbf.Sources
 
                         string message_diff = string.Format(validate.Math.message, allowed_precision, diff).Replace("\\n","\n");
                         message += "\n" + message_diff;
-                        Logger.instance.log(message_diff);
+                        Logger.info(message_diff);
                     }
                 }
                 else isEqual = var1.value.Equals(var2.value);
@@ -386,4 +388,15 @@ namespace DomofonExcelToDbf.Sources
             return variable;
         }
     }
+
+    public class MyException : Exception
+    {
+        public MyException(string message, Exception exp) : base(message)
+        {
+            StackTrace = exp.StackTrace;
+        }
+
+        public override string StackTrace { get; }
+    }
+
 }
