@@ -26,6 +26,8 @@ namespace DomofonExcelToDbf.Sources.Xml
         public string status;
         public string warning;
 
+        public Xml_OutFile outfile;
+
         [XmlArray]
         [XmlArrayItem("ext")]
         public List<string> extensions;
@@ -42,6 +44,12 @@ namespace DomofonExcelToDbf.Sources.Xml
             stream.Close();
             return container;
         }
+    }
+
+    public class Xml_OutFile
+    {
+        public bool simple;
+        public string script;
     }
 
     public class Xml_Form
@@ -123,7 +131,7 @@ namespace DomofonExcelToDbf.Sources.Xml
 
         public Xml_DbfField()
         {
-            format = "***REMOVED***";
+            format = "yyyy-MM-dd";
         }
     }
 

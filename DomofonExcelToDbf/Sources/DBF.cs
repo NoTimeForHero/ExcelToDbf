@@ -9,7 +9,7 @@ using DomofonExcelToDbf.Sources.Xml;
 
 namespace DomofonExcelToDbf.Sources
 {
-    class DBF
+    public class DBF
     {
         public DbfFile odbf;
         public List<Xml_DbfField> dbfFields;
@@ -79,7 +79,6 @@ namespace DomofonExcelToDbf.Sources
 
                 try
                 {
-
                     var matches = Regex.Matches(input, "\\$([0-9a-zA-Z]+)", RegexOptions.Compiled);
                     foreach (Match m in matches)
                     {

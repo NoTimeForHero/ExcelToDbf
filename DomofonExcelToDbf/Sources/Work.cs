@@ -22,7 +22,7 @@ namespace DomofonExcelToDbf.Sources
         protected int endX;
         protected int buffer;
         protected int total = 0;
-        protected Xml_Form form;
+        protected List<Xml_Validator> validators;
         protected TVariable exception_var;
 
         public Dictionary<string, TVariable> stepScope = new Dictionary<string, TVariable>();
@@ -32,8 +32,8 @@ namespace DomofonExcelToDbf.Sources
             InitVariables(form);
             startY = form.Fields.StartY;
             endX = form.Fields.EndX;
+            validators = form.Validate;
             this.buffer = buffer;
-            this.form = form;
         }
 
         public void IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
@@ -189,8 +189,8 @@ namespace DomofonExcelToDbf.Sources
         {
             int num = 1;
 
-            if (form.Validate == null) return;
-            foreach (var validate in form.Validate)
+            if (validators == null) return;
+            foreach (var validate in validators)
             {
                 stepScope.TryGetValue(validate.var1, out TVariable var1);
                 stepScope.TryGetValue(validate.var2, out TVariable var2);
@@ -272,8 +272,8 @@ namespace DomofonExcelToDbf.Sources
 
         protected TCondition ScanCondition(XElement xml)
         {
-            if (xml.Element("X") == null) throw new NullReferenceException("Attribute \"X\" can't be null!");
-            if (xml.Element("VALUE") == null) throw new NullReferenceException("Attribute \"VALUE\" can't be null!");
+            if (xml.Attribute("X") == null) throw new NullReferenceException("Attribute \"X\" can't be null!");
+            if (xml.Attribute("VALUE") == null) throw new NullReferenceException("Attribute \"VALUE\" can't be null!");
             if (xml.Element("THEN") == null) throw new NullReferenceException("Element <THEN> can't be null!");
 
             TCondition condition = new TCondition
@@ -319,7 +319,7 @@ namespace DomofonExcelToDbf.Sources
         protected TVariable getVar(XElement xml, bool dynamic)
         {
             var name = xml.Attribute("name").Value;
-            var ctype = (xml.Attribute("type") != null) ? xml.Attribute("type").Value : "string";
+            var ctype = xml.Attribute("type")?.Value ?? "string";
 
             TVariable.Type type = TVariable.getByString(ctype);
             TVariable variable;

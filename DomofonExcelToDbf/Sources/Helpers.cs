@@ -18,13 +18,7 @@ namespace DomofonExcelToDbf.Sources
 
         public List<string> components;
 
-        public int Count
-        {
-            get
-            {
-                return components.Count;
-            }
-        }
+        public int Count => components.Count;
 
         public PathHelper(DirectoryInfo input)
         {
@@ -41,7 +35,7 @@ namespace DomofonExcelToDbf.Sources
 
         protected List<string> Split(DirectoryInfo path)
         {
-            if (path == null) throw new ArgumentNullException("path");
+            if (path == null) throw new ArgumentNullException(nameof(path));
             var ret = new List<string>();
             if (path.Parent != null) ret.AddRange(Split(path.Parent));
             ret.Add(path.Name);
