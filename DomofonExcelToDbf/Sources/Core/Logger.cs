@@ -3,6 +3,7 @@ using System.IO;
 
 namespace DomofonExcelToDbf.Sources.Core
 {
+
     public class Logger
     {
         readonly bool console;
@@ -10,6 +11,8 @@ namespace DomofonExcelToDbf.Sources.Core
         protected LogLevel level;
 
         public static Logger instance;
+
+        public static LogLevel Level => instance.level;
 
         public Logger(string file = null, LogLevel level = LogLevel.INFO)
         {
@@ -49,6 +52,18 @@ namespace DomofonExcelToDbf.Sources.Core
         public static void SetLevel(LogLevel newLevel)
         {
             instance.level = newLevel;
+        }
+
+        public static void ParseLevel(string newLevel, LogLevel onErrorSet = LogLevel.INFO)
+        {
+            try
+            {
+                instance.level = (Logger.LogLevel) Enum.Parse(typeof(Logger.LogLevel), newLevel);
+            }
+            catch (ArgumentException)
+            {
+                instance.level = onErrorSet;
+            }
         }
 
         public static void tracer(object data)

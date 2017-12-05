@@ -72,11 +72,14 @@ namespace DomofonExcelToDbf.Sources
             xdoc = XDocument.Load(confName);
 
             if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
-            Logger.instance = new Logger(config.log ? "logs\\" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log" : null, Logger.LogLevel.TRACER);
+
+            Logger.instance = new Logger(config.log ? "logs\\" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log" : null);
+            Logger.ParseLevel(config.LogLevel);
 
             updateDirectory();
 
             Logger.info("Версия программы: " + Resources.version);
+            Logger.info("Уровень логирования: " + Logger.Level);
         }
 
         public void updateDirectory()

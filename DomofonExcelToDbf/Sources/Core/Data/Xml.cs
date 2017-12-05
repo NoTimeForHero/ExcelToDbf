@@ -14,6 +14,7 @@ namespace DomofonExcelToDbf.Sources.Xml
         public string outputDirectory;
 
         public bool log;
+        public string LogLevel;
 
         public bool only_rules;
         public bool save_memory;
