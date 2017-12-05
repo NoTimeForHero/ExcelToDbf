@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace DomofonExcelToDbf
+namespace DomofonExcelToDbf.Sources.View
 {
     public partial class StatusWindow : Form
     {

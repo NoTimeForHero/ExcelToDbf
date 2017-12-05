@@ -1,4 +1,4 @@
-﻿namespace DomofonExcelToDbf
+﻿namespace DomofonExcelToDbf.Sources.View
 {
     partial class StatusWindow
     {

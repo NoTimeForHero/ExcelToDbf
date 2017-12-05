@@ -2,12 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml;
 using System.Xml.Linq;
+using DomofonExcelToDbf.Sources.Core;
 using DomofonExcelToDbf.Sources.Xml;
 
 namespace DomofonExcelToDbf.Sources
@@ -21,13 +18,13 @@ namespace DomofonExcelToDbf.Sources
         protected int startY;
         protected int endX;
         protected int buffer;
-        protected int total = 0;
+        protected int total;
         protected List<Xml_Validator> validators;
         protected TVariable exception_var;
 
         public Dictionary<string, TVariable> stepScope = new Dictionary<string, TVariable>();
 
-        public Work(XDocument xdocument, Xml_Form form, int buffer)
+        public Work(Xml_Form form, int buffer)
         {
             InitVariables(form);
             startY = form.Fields.StartY;
@@ -46,7 +43,7 @@ namespace DomofonExcelToDbf.Sources
             }
             catch (Exception ex)
             {
-                string message = string.Format("Ошибка на строке {0}, ячейке {1} в переменной {2}:\n{3}", startY + total, exception_var.x, exception_var.name, ex.Message);
+                string message = $"Ошибка на строке {startY + total}, ячейке {exception_var.x} в переменной {exception_var.name}:\n{ex.Message}";
                 throw new MyException(message, ex);
             }
             FinalChecks();
@@ -59,10 +56,9 @@ namespace DomofonExcelToDbf.Sources
 
             var maxY = worksheet.UsedRange.Rows.Count;
 
-            Stopwatch watch;
             bool EOF = false;
 
-            watch = Stopwatch.StartNew();
+            Stopwatch watch = Stopwatch.StartNew();
             stepScope.Clear();
             foreach (var var in staticVars.Values)
             {
@@ -89,30 +85,30 @@ namespace DomofonExcelToDbf.Sources
 
                     foreach (TCondition cond in conditions)
                     {
-                        if (cond.mustBe.Equals(tmp[i, cond.x]) || (cond.mustBe == "" && tmp[i, cond.x] == null))
+                        if (cond.mustBe.Equals(tmp[i, cond.x]) || cond.mustBe == "" && tmp[i, cond.x] == null)
                         {
                             foreach (TAction item in cond.onTrue)
                             {
-                                if (item is TInterrupt tinter)
+                                switch (item)
                                 {
-                                    if (tinter.action == TInterrupt.Action.SKIP_RECORD)
-                                    {
-                                        Console.WriteLine(String.Format("Пропуск записи по условию: значение в ячейке x={0} равно {1}", cond.x, cond.mustBe));
-                                        skipRecord = true;
-                                    }
-                                    if (tinter.action == TInterrupt.Action.STOP_LOOP)
-                                    {
-                                        Console.WriteLine(String.Format("Выход из цикла по условию: значение в ячейке x={0} равно {1}", cond.x, cond.mustBe));
-                                        stopLoop = true;
-                                    }
-                                    continue;
-                                }
-                                if (item is TVariable var)
-                                {
-                                    exception_var = var;
-                                    var.Set(tmp[i, var.x]);
-                                    stepScope[var.name] = var;
-                                    continue;
+                                    case TInterrupt tinter:
+                                        switch (tinter.action)
+                                        {
+                                            case TInterrupt.Action.SKIP_RECORD:
+                                                Logger.instance.log($"Пропуск записи по условию: значение в ячейке x={cond.x} равно {cond.mustBe}");
+                                                skipRecord = true;
+                                                break;
+                                            case TInterrupt.Action.STOP_LOOP:
+                                                Logger.instance.log($"Выход из цикла по условию: значение в ячейке x={cond.x} равно {cond.mustBe}");
+                                                stopLoop = true;
+                                                break;
+                                        }
+                                        continue;
+                                    case TVariable var:
+                                        exception_var = var;
+                                        var.Set(tmp[i, var.x]);
+                                        stepScope[var.name] = var;
+                                        break;
                                 }
                             }
                         }
@@ -120,26 +116,26 @@ namespace DomofonExcelToDbf.Sources
                         {
                             foreach (TAction item in cond.onFalse)
                             {
-                                if (item is TInterrupt tinter)
+                                switch (item)
                                 {
-                                    if (tinter.action == TInterrupt.Action.SKIP_RECORD)
-                                    {
-                                        Console.WriteLine(String.Format("Пропуск записи по условию: значение в ячейке x={0} равно {1}", cond.x, cond.mustBe));
-                                        skipRecord = true;
-                                    }
-                                    if (tinter.action == TInterrupt.Action.STOP_LOOP)
-                                    {
-                                        Console.WriteLine(String.Format("Выход из цикла по условию: значение в ячейке x={0} равно {1}", cond.x, cond.mustBe));
-                                        stopLoop = true;
-                                    }
-                                    continue;
-                                }
-                                if (item is TVariable var)
-                                {
-                                    exception_var = var;
-                                    var.Set(tmp[i, var.x]);
-                                    stepScope[var.name] = var;
-                                    continue;
+                                    case TInterrupt tinter:
+                                        switch (tinter.action)
+                                        {
+                                            case TInterrupt.Action.SKIP_RECORD:
+                                                Logger.instance.log($"Пропуск записи по условию: значение в ячейке x={cond.x} равно {cond.mustBe}");
+                                                skipRecord = true;
+                                                break;
+                                            case TInterrupt.Action.STOP_LOOP:
+                                                Logger.instance.log($"Выход из цикла по условию: значение в ячейке x={cond.x} равно {cond.mustBe}");
+                                                stopLoop = true;
+                                                break;
+                                        }
+                                        continue;
+                                    case TVariable var:
+                                        exception_var = var;
+                                        var.Set(tmp[i, var.x]);
+                                        stepScope[var.name] = var;
+                                        break;
                                 }
                             }
                         }
@@ -174,7 +170,7 @@ namespace DomofonExcelToDbf.Sources
                     guiCallback?.Invoke(total);
                 }
                 watch.Stop();
-                Logger.instance.log(String.Format("Сегмент в {0} элементов (с {1} по {2}) обработан за {3} мс", buffer, begin, end, watch.ElapsedMilliseconds));
+                Logger.instance.log($"Сегмент в {buffer} элементов (с {begin} по {end}) обработан за {watch.ElapsedMilliseconds} мс");
 
                 begin += buffer;
                 end += buffer;
@@ -198,12 +194,12 @@ namespace DomofonExcelToDbf.Sources
                 string value1 = var1?.value?.ToString() ?? "[неизвестно]";
                 string value2 = var2?.value?.ToString() ?? "[неизвестно]";
 
-                var elemMsg = validate.Message;
-                string message = "";
+                string elemMsg = validate.Message;
+                string message;
 
                 if (elemMsg == null)
                 {
-                    message = string.Format("Финальная проверка №{0} провалена!", num);
+                    message = $"Финальная проверка №{num} провалена!";
                 }
                 else
                 {
@@ -213,17 +209,15 @@ namespace DomofonExcelToDbf.Sources
 
                 if (var1 == null || var2 == null || var1.value == null || var2.value == null) throw new Exception(message);
 
-                Logger.instance.log(string.Format(
-                    "Проверка номер {0} : {1}({2}) сравнивается с {3}({4})",
-                    num, var1 != null ? var1.name : "null", value1, var2 != null ? var2.name : "null", value2));
+                Logger.instance.log($"Проверка номер {num} : {var1.name}({value1}) сравнивается с {var2.name}({value2})");
 
-                bool isEqual = false;
+                bool isEqual;
                 if (validate.Math != null)
                 {
                     int count = validate.Math.count;
                     float prec = Single.Parse(validate.Math.precision);
 
-                    float allowed_precision = (prec / count) * total;
+                    float allowed_precision = prec / count * total;
                     float var1fl = Convert.ToSingle(var1.value);
                     float var2fl = Convert.ToSingle(var2.value);
 
@@ -272,42 +266,59 @@ namespace DomofonExcelToDbf.Sources
 
         protected TCondition ScanCondition(XElement xml)
         {
-            if (xml.Attribute("X") == null) throw new NullReferenceException("Attribute \"X\" can't be null!");
-            if (xml.Attribute("VALUE") == null) throw new NullReferenceException("Attribute \"VALUE\" can't be null!");
-            if (xml.Element("THEN") == null) throw new NullReferenceException("Element <THEN> can't be null!");
+            string x = xml.Attribute("X")?.Value ??
+                       throw new NullReferenceException("Attribute \"X\" can't be null!");
+            string value = xml.Attribute("VALUE")?.Value ??
+                           throw new NullReferenceException("Attribute \"VALUE\" can't be null!");
+            var xthen = xml.Element("THEN") ??
+                        throw new NullReferenceException("Element <THEN> can't be null!");
+            var xelse = xml.Element("ELSE");
 
             TCondition condition = new TCondition
             {
-                x = Int32.Parse(xml.Attribute("X").Value),
-                mustBe = xml.Attribute("VALUE").Value
+                x = int.Parse(x),
+                mustBe = value
             };
 
-            foreach (XElement elem in xml.Element("THEN").Elements())
+            foreach (XElement elem in xthen.Elements())
             {
                 TAction action = null;
-                if (elem.Name == "SKIP_RECORD")
-                    action = new TInterrupt(TInterrupt.Action.SKIP_RECORD);
-                if (elem.Name == "STOP_LOOP")
-                    action = new TInterrupt(TInterrupt.Action.STOP_LOOP);
-                if (elem.Name == "Dynamic")
-                    action = getVar(elem, true);
+                switch (elem.Name.ToString())
+                {
+                    case "SKIP_RECORD":
+                        action = new TInterrupt(TInterrupt.Action.SKIP_RECORD);
+                        break;
+                    case "STOP_LOOP":
+                        action = new TInterrupt(TInterrupt.Action.STOP_LOOP);
+                        break;
+                    case "Dynamic":
+                        action = getVar(elem, true);
+                        break;
+                }
                 if (action != null) condition.onTrue.Add(action);
             }
 
-            if (xml.Element("ELSE") != null)
+            if (xelse != null)
             {
-                foreach (XElement elem in xml.Element("ELSE").Elements())
+                foreach (XElement elem in xelse.Elements())
                 {
                     TAction action = null;
-                    if (elem.Name == "SKIP_RECORD")
-                        action = new TInterrupt(TInterrupt.Action.SKIP_RECORD);
-                    if (elem.Name == "STOP_LOOP")
-                        action = new TInterrupt(TInterrupt.Action.STOP_LOOP);
-                    if (elem.Name == "Dynamic")
-                        action = getVar(elem, true);
+                    switch (elem.Name.ToString())
+                    {
+                        case "SKIP_RECORD":
+                            action = new TInterrupt(TInterrupt.Action.SKIP_RECORD);
+                            break;
+                        case "STOP_LOOP":
+                            action = new TInterrupt(TInterrupt.Action.STOP_LOOP);
+                            break;
+                        case "Dynamic":
+                            action = getVar(elem, true);
+                            break;
+                    }
                     if (action != null) condition.onFalse.Add(action);
                 }
             }
+
             return condition;
         }
 
@@ -318,7 +329,7 @@ namespace DomofonExcelToDbf.Sources
 
         protected TVariable getVar(XElement xml, bool dynamic)
         {
-            var name = xml.Attribute("name").Value;
+            var name = xml.Attribute("name")?.Value ?? throw new NullReferenceException("Variable attribute 'name' can't be null!");
             var ctype = xml.Attribute("type")?.Value ?? "string";
 
             TVariable.Type type = TVariable.getByString(ctype);
@@ -336,25 +347,31 @@ namespace DomofonExcelToDbf.Sources
                     break;
             }
 
-            variable.x = Int32.Parse(xml.Attribute("X").Value);
-            if (!dynamic) variable.y = Int32.Parse(xml.Attribute("Y").Value);
+            variable.x = Int32.Parse(xml.Attribute("X")?.Value ?? throw new NullReferenceException("Variable attribute 'X' can't be null!"));
+            if (!dynamic) variable.y = Int32.Parse(xml.Attribute("Y")?.Value ?? throw new NullReferenceException("Variable attribute 'Y' can't be null!"));
             variable.dynamic = dynamic;
             variable.type = type;
 
             if (variable is TNumeric tnumeric)
             {
-                if (xml.Attribute("function") != null)
-                    tnumeric.function = TNumeric.getFuncByString(xml.Attribute("function").Value);
+                var function = xml.Attribute("function");
+
+                if (function != null)
+                    tnumeric.function = TNumeric.getFuncByString(function.Value);
             }
 
             if (variable is TDate tdate)
             {
-                if (xml.Attribute("lastday") != null)
-                    tdate.lastday = Boolean.Parse(xml.Attribute("lastday").Value);
-                if (xml.Attribute("language") != null)
-                    tdate.language = xml.Attribute("language").Value;
-                if (xml.Attribute("format") != null)
-                    tdate.format = xml.Attribute("format").Value;
+                var lastday = xml.Attribute("lastday");
+                var language = xml.Attribute("language");
+                var format = xml.Attribute("format");
+
+                if (lastday != null)
+                    tdate.lastday = Boolean.Parse(lastday.Value);
+                if (language != null)
+                    tdate.language = language.Value;
+                if (format != null)
+                    tdate.format = format.Value;
             }
 
             var regex_pattern = xml.Attribute("regex_pattern");
@@ -362,7 +379,9 @@ namespace DomofonExcelToDbf.Sources
             {
                 variable.use_regex = true;
                 variable.regex_pattern = new Regex(regex_pattern.Value, RegexOptions.Compiled);
-                variable.regex_group = xml.Attribute("regex_group") != null ? Int32.Parse(xml.Attribute("regex_group").Value) : 1;
+
+                var regex_group = xml.Attribute("regex_group");
+                variable.regex_group = int.Parse(regex_group?.Value ?? "1");
             }
             return variable;
         }

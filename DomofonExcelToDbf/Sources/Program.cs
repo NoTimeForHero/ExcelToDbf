@@ -21,6 +21,11 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using DomofonExcelToDbf.Properties;
+using DomofonExcelToDbf.Sources.Core;
+using DomofonExcelToDbf.Sources.View;
+using Application = System.Windows.Forms.Application;
+using Point = System.Drawing.Point;
 
 namespace DomofonExcelToDbf
 {
@@ -32,7 +37,7 @@ namespace DomofonExcelToDbf
         {
 
 
-            var exists = System.Diagnostics.Process.GetProcessesByName(System.IO.Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetEntryAssembly().Location)).Count() > 1;
+            var exists = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location)).Count() > 1;
             if (exists)
             {
                 MessageBox.Show("Программа уже запущена!", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -40,15 +45,15 @@ namespace DomofonExcelToDbf
             }
 
             // Распаковка DLL, которая не находится при упаковке через LibZ 
-            File.WriteAllBytes("Microsoft.WindowsAPICodePack.dll", DomofonExcelToDbf.Properties.Resources.Microsoft_WindowsAPICodePack);
+            File.WriteAllBytes("Microsoft.WindowsAPICodePack.dll", Resources.Microsoft_WindowsAPICodePack);
 
-            System.Windows.Forms.Application.EnableVisualStyles();
-            System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
 
             Program program = new Program();
             MainWindow window = new MainWindow(program);
             window.FormClosing += new FormClosingEventHandler(program.onFormMainClosing);
-            System.Windows.Forms.Application.Run(window);
+            Application.Run(window);
         }
 
         string confName;
@@ -71,7 +76,7 @@ namespace DomofonExcelToDbf
             {
                 Console.WriteLine(@"Не найден конфигурационный файл!");
                 Console.WriteLine(@"Распаковываем его из внутренних ресурсов...");
-                Tools.WriteResourceToFile("xConfig", confName);
+                WriteResourceToFile("xConfig", confName);
             }
 
             config = Xml_Config.Load(confName);
@@ -82,7 +87,7 @@ namespace DomofonExcelToDbf
 
             updateDirectory();
 
-            Logger.instance.log("Версия программы: " + Properties.Resources.version);
+            Logger.instance.log("Версия программы: " + Resources.version);
         }
 
         public void updateDirectory()
@@ -158,7 +163,7 @@ namespace DomofonExcelToDbf
                     MessageBox.Show(wmain, "Документы не были обработаны: процесс был прерван пользователем!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             });
-            wstatus.Location = new System.Drawing.Point(
+            wstatus.Location = new Point(
                 wmain.Location.X + ((wmain.Width - wstatus.Width) / 2),
                 wmain.Location.Y + ((wmain.Height - wstatus.Height) / 2)
             );
@@ -190,7 +195,7 @@ namespace DomofonExcelToDbf
             Excel excel = new Excel(config.save_memory);
             DBF dbf = null;
 
-            var totalwatch = new System.Diagnostics.Stopwatch();
+            var totalwatch = new Stopwatch();
             totalwatch.Start();
             foreach (string fname in files)
             {
@@ -236,12 +241,12 @@ namespace DomofonExcelToDbf
                     dbf = new DBF(pathTemp,form.DBF);
                     dbf.writeHeader();
 
-                    var stopwatch = new System.Diagnostics.Stopwatch();
+                    var stopwatch = new Stopwatch();
 
                     RegExCache cache = new RegExCache();
 
-                    stopwatch.Start();                    
-                    Work work = new Work(xdoc,form, config.buffer_size);
+                    stopwatch.Start();
+                    Work work = new Work(form, config.buffer_size);
                     work.IterateRecords(excel.worksheet, dbf.appendRecord, 
                         (int id) => window.updateState(false, $"Обработано записей: {id}/{total}", id)
                     );
@@ -261,7 +266,7 @@ namespace DomofonExcelToDbf
                     File.Move(pathTemp, pathOutput);
                     Logger.instance.log($"Перемещение файла с {pathTemp} в {pathOutput}");
 
-                    Logger.instance.log(string.Format("=============== Документ {0} успешно обработан! ===============", Path.GetFileName(finput)));
+                    Logger.instance.log(String.Format("=============== Документ {0} успешно обработан! ===============", Path.GetFileName(finput)));
                 }               
                 /*
                 catch (Exception ex)
@@ -431,7 +436,36 @@ namespace DomofonExcelToDbf
             return null;
         }
 
+        // <summary>
+        // Метод считывает внутренний ресурс и записывает его в файл, возвращая статус существования ресурса
+        // </summary>
+        // <param name="resourceName">Имя внутренного ресурса</param>
+        // <param name="fileName">Имя внутренного ресурса</param>
+        // <returns>false если внутренний ресурс не был найден</returns>
+        public static bool WriteResourceToFile(string resourceName, string fileName)
+        {
+            using (var resource = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
+            {
+                if (resource == null) return false;
+                using (var file = new FileStream(fileName, FileMode.Create, FileAccess.Write))
+                {
+                    resource.CopyTo(file);
+                }
+            }
+            return true;
+        }
+    }
 
-    }   
+    public class MyException : Exception
+    {
+        private readonly string myStackTrace;
+
+        public MyException(string message, Exception exp) : base(message)
+        {
+            myStackTrace = exp.StackTrace;
+        }
+
+        public override string StackTrace => base.StackTrace + "\n" + myStackTrace;
+    }
 
 }

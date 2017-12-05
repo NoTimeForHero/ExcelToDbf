@@ -1,9 +1,6 @@
 ﻿using NickBuhro.Translit;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace DomofonExcelToDbf.Sources
@@ -45,7 +42,7 @@ namespace DomofonExcelToDbf.Sources
             engine.SetValue("error", new Action<string>(FuncThrowException));
             engine.SetValue("log", log);
             engine.SetValue("xls", readExcel);
-            engine.SetValue("dir", new System.Action(() => FuncThrowException("Ошибка 1754: Невозможно выполнить функцию dir(...), так как не установлена директория до конечного файла через JS->SetPath(...)!")));
+            engine.SetValue("dir", new Action(() => FuncThrowException("Ошибка 1754: Невозможно выполнить функцию dir(...), так как не установлена директория до конечного файла через JS->SetPath(...)!")));
         }
 
         public string Execute(string script)
@@ -55,7 +52,10 @@ namespace DomofonExcelToDbf.Sources
 
         public void SetPath(string fullPath)
         {
-            DirectoryInfo dir = new DirectoryInfo(Path.GetDirectoryName(fullPath));
+            string dirPath = Path.GetDirectoryName(fullPath);
+            if (dirPath == null) throw new InvalidOperationException($"Can't get directory name from: {fullPath}!");
+
+            DirectoryInfo dir = new DirectoryInfo(dirPath);
             // В этом методе возможно утечка памяти, только непонятно как её устранить без разбиения на класс
             PathHelper helper = new PathHelper(dir);
             engine.SetValue("dir", new Func<int, string>(helper.GetLevel));

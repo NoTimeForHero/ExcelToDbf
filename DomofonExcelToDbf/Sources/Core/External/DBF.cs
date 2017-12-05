@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using DomofonExcelToDbf.Sources.Core;
 using DomofonExcelToDbf.Sources.Xml;
 
 namespace DomofonExcelToDbf.Sources

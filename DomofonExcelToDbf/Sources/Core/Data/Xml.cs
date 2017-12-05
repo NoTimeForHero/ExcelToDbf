@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -164,10 +162,9 @@ namespace DomofonExcelToDbf.Sources.Xml
             get
             {
                 if (!__int_regex_group.HasValue) __int_regex_group =
-                        (__string_regex_group != null) ? Int32.Parse(__string_regex_group) : 1;
+                        (__string_regex_group != null) ? int.Parse(__string_regex_group) : 1;
                 return __int_regex_group.Value;
             }
-            private set { }
         }
     }
 

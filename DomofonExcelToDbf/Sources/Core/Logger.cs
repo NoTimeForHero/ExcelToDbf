@@ -1,21 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
-namespace DomofonExcelToDbf.Sources
+namespace DomofonExcelToDbf.Sources.Core
 {
     public class Logger
     {
-        bool console = false;
-        StreamWriter writer;
+        readonly bool console;
+        readonly StreamWriter writer;
 
         public static Logger instance;
 
         public Logger(string file = null)
         {
-            this.console = (file == null);
+            console = (file == null);
             if (file != null)
             {
                 writer = new StreamWriter(file, false);
