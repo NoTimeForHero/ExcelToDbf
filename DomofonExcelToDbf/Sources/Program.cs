@@ -45,11 +45,11 @@ namespace DomofonExcelToDbf.Sources
             Application.Run(window);
         }
 
-        string confName;
+        readonly string confName;
         public XDocument xdoc;
         public Xml_Config config;
         public bool showStacktrace = false;
-        Thread process;
+        private Thread process;
 
         public Dictionary<string, string> formToFile = new Dictionary<string, string>();
         public List<string> outlog = new List<string>();
@@ -57,7 +57,7 @@ namespace DomofonExcelToDbf.Sources
         public HashSet<string> filesExcel = new HashSet<string>();
         public HashSet<string> filesDBF = new HashSet<string>();
 
-        public void init()
+        public Program()
         {
             confName = Path.ChangeExtension(AppDomain.CurrentDomain.FriendlyName, ".xml");
 
@@ -82,6 +82,9 @@ namespace DomofonExcelToDbf.Sources
             Logger.info("Уровень логирования: " + Logger.Level);
         }
 
+        /// <summary>
+        /// Обновляет список файлов для установленных в конфиге директорий
+        /// </summary>
         public void updateDirectory()
         {
             Logger.debug("Директория чтения: " + config.inputDirectory);
@@ -134,6 +137,12 @@ namespace DomofonExcelToDbf.Sources
             process.Abort();
         }
 
+        /// <summary>
+        /// Запускает процесс конвертирования файлов в отдельном потоке
+        /// Вызывается по кнопке "Конвертировать" на форме
+        /// </summary>
+        /// <param name="wmain">Окно, которое вызывает процесс конвертации</param>
+        /// <param name="files">Список файлов для конвертирования (с учётом выбора пользователя)</param>
         public void action(MainWindow wmain, HashSet<string> files)
         {
             if (process != null && process.IsAlive)
@@ -151,7 +160,7 @@ namespace DomofonExcelToDbf.Sources
                 if (!e.Cancel)
                 {
                     process.Abort();
-                    wstatus.Hide();
+                    wstatus.Close();
                     MessageBox.Show(wmain, "Документы не были обработаны: процесс был прерван пользователем!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             };
@@ -174,6 +183,10 @@ namespace DomofonExcelToDbf.Sources
             process.Start(data);
         }
 
+        /// <summary>
+        /// Основной поток обработки
+        /// </summary>
+        /// <param name="obj">Форма процесса обработки, главная форма, список файлов для обработки</param>
         protected void delegate_action(object obj)
         {
             object [] data = (object[])obj;
@@ -245,11 +258,11 @@ namespace DomofonExcelToDbf.Sources
                     dbf.close();
 
                     Logger.info("Времени потрачено на обработку данных: " + stopwatch.Elapsed);
-                    Logger.info("Обработано записей: " + dbf.records);
-                    outlog.Add($"{Path.GetFileName(finput)} в {dbf.records} строк за {stopwatch.Elapsed:hh\\:mm\\:ss\\.ff}");
+                    Logger.info("Обработано записей: " + dbf.Writed);
+                    outlog.Add($"{Path.GetFileName(finput)} в {dbf.Writed} строк за {stopwatch.Elapsed:hh\\:mm\\:ss\\.ff}");
 
                     int startY = form.Fields.StartY;
-                    Logger.debug($"Начиная с {startY} по {startY + dbf.records}");
+                    Logger.debug($"Начиная с {startY} по {startY + dbf.Writed}");
 
                     // Перемещение файла
                     if (File.Exists(pathOutput)) File.Delete(pathOutput);
@@ -333,6 +346,14 @@ namespace DomofonExcelToDbf.Sources
             MessageBox.Show(crules, "Отчёт о времени обработки", MessageBoxButtons.OK, icon);
         }
 
+        /// <summary>
+        /// Метод, получающий имя выходного файла на основании JS скрипта из XML конфига
+        /// </summary>
+        /// <param name="worksheet">Excel документ для чтения ячеек в JS скрипте</param>
+        /// <param name="inputFile">Полный путь к исходному Exel файлу</param>
+        /// <param name="simple">Необходимо ли вообще использовать JS</param>
+        /// <param name="script">Содержимое JS скрипта в виде текста</param>
+        /// <returns></returns>
         public string getOutputFilename(Worksheet worksheet, String inputFile, bool simple, string script = null)
         {
             if (simple) return Path.GetFileName(Path.ChangeExtension(inputFile, ".dbf"));

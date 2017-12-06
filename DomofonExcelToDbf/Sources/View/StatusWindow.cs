@@ -13,7 +13,7 @@ namespace DomofonExcelToDbf.Sources.View
     public partial class StatusWindow : Form
     {
 
-        public bool codeClose = false;
+        public bool codeClose;
 
         public StatusWindow()
         {
@@ -26,7 +26,7 @@ namespace DomofonExcelToDbf.Sources.View
 
         public void setState(bool global, String data, int min=0, int max=100, int value=0)
         {
-            this.BeginInvoke((MethodInvoker)delegate {
+            BeginInvoke((MethodInvoker)delegate {
                 Label label = (global) ? label1 : label2;
                 ProgressBar progress = (global) ? progressBar1 : progressBar2;
 
@@ -40,12 +40,12 @@ namespace DomofonExcelToDbf.Sources.View
         public void mayClose()
         {
             codeClose = true;
-            this.BeginInvoke((MethodInvoker)this.Close);
+            BeginInvoke((MethodInvoker)Close);
         }
 
         public void updateState(bool global, String data, int progress_value)
         {
-            this.BeginInvoke((MethodInvoker)delegate {
+            BeginInvoke((MethodInvoker)delegate {
                 Label label = (global) ? label1 : label2;
                 ProgressBar progress = (global) ? progressBar1 : progressBar2;
 

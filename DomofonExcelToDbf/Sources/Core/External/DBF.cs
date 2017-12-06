@@ -12,12 +12,14 @@ namespace DomofonExcelToDbf.Sources
 {
     public class DBF
     {
-        public DbfFile odbf;
-        public List<Xml_DbfField> dbfFields;
-        public int records;
+        protected string path;
+        protected DbfFile odbf;
+        protected List<Xml_DbfField> dbfFields;
+        protected int records;
         protected bool closed;
         protected bool headersWrited;
-        protected string path;
+
+        public int Writed => records;
 
         public DBF(String path, List<Xml_DbfField> dbfFields, Encoding encoding = null)
         {

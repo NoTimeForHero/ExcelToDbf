@@ -7,10 +7,17 @@ namespace DomofonExcelToDbf.Sources
 {
     public class JS
     {
-        public Jint.Engine engine;
+        protected Jint.Engine engine;
         protected Regex regExS = new Regex(@"\s+", RegexOptions.Compiled);
 
+        /// <summary>
+        /// Функция чтения указанной ячейки Excel
+        /// </summary>
         public delegate string DelegateReadExcel(int x, int y);
+
+        /// <summary>
+        /// Функция, логирующие данные из JS скрипта в основную программу
+        /// </summary>
         public delegate void DelegateLog(object obj);
 
         /// <summary>
@@ -45,11 +52,18 @@ namespace DomofonExcelToDbf.Sources
             engine.SetValue("dir", new Action(() => FuncThrowException("Ошибка 1754: Невозможно выполнить функцию dir(...), так как не установлена директория до конечного файла через JS->SetPath(...)!")));
         }
 
+        /// <summary>
+        /// Выполняет указанный скрипт и возвращает конечное имя файла
+        /// </summary>
         public string Execute(string script)
         {
             return engine.Execute(script).GetCompletionValue().ToObject().ToString();
         }
 
+        /// <summary>
+        /// Задаёт JS движку функции и переменные, необходимые для работы с путём к файлу
+        /// </summary>
+        /// <param name="fullPath">Полный путь до файла, включая его имя</param>
         public void SetPath(string fullPath)
         {
             string dirPath = Path.GetDirectoryName(fullPath);
@@ -66,11 +80,17 @@ namespace DomofonExcelToDbf.Sources
             // Func<int,string> funcDir = new Func<int,string>(helper.GetLevel);
         }
 
+        /// <summary>
+        /// Переводит строку в транслит
+        /// </summary>
         protected string FuncTranslit(string input)
         {
             return SafeString(Transliteration.CyrillicToLatin(input, Language.Russian));
         }
 
+        /// <summary>
+        /// Удаляет из строки все недопустимые для файловой системы символы
+        /// </summary>
         protected string SafeString(string result)
         {
             Array.ForEach(Path.GetInvalidFileNameChars(),
@@ -78,11 +98,18 @@ namespace DomofonExcelToDbf.Sources
             return result;
         }
 
+        /// <summary>
+        /// Заменяет все пробельные символы в строке на указанную строку
+        /// </summary>
         protected string FuncReplaceSpace(string input, string replace)
         {
             return regExS.Replace(input, replace ?? "");
         }
 
+        /// <summary>
+        /// Разбивает подстроку input по регулярному выражению  info и возвращает nid группу
+        /// Например: для построки abc с регуляркой one(two)(three)(four) и nid=2 вернёт "three"
+        /// </summary>
         protected string FuncAfterRegEx(String input, Regex info, object nid)
         {
             int id = nid != null ? Convert.ToInt32(nid) : 1; // 1 == default
@@ -91,6 +118,9 @@ namespace DomofonExcelToDbf.Sources
             return groups[id];
         }
 
+        /// <summary>
+        /// Бросает исключение с заданным сообщением
+        /// </summary>
         protected void FuncThrowException(String text)
         {
             throw new Jint.Runtime.JavaScriptException("Исключение вызванное из JavaScript:\n" + text);

@@ -22,6 +22,7 @@ namespace DomofonExcelToDbf.Sources
 
         // Переменные для нахождения номера строки и переменной исключения
         protected int total;
+
         protected TVariable exception_var;
 
         public Dictionary<string, TVariable> stepScope = new Dictionary<string, TVariable>();
@@ -63,11 +64,7 @@ namespace DomofonExcelToDbf.Sources
             Stopwatch watch = Stopwatch.StartNew();
             stepScope.Clear();
             foreach (var var in staticVars.Values)
-            {
-                exception_var = var;
-                var.Set(worksheet.Cells[var.y, var.x].Value);
-                stepScope.Add(var.name, var);
-            }
+                SetVar(var, worksheet.Cells[var.y, var.x].Value);
             watch.Stop();
             Logger.debug("Заполнение массива локальных переменных: " + watch.ElapsedMilliseconds);
 
@@ -107,9 +104,7 @@ namespace DomofonExcelToDbf.Sources
                                         }
                                         continue;
                                     case TVariable var:
-                                        exception_var = var;
-                                        var.Set(tmp[i, var.x]);
-                                        stepScope[var.name] = var;
+                                        SetVar(var, tmp[i, var.x]);
                                         break;
                                 }
                             }
@@ -134,9 +129,7 @@ namespace DomofonExcelToDbf.Sources
                                         }
                                         continue;
                                     case TVariable var:
-                                        exception_var = var;
-                                        var.Set(tmp[i, var.x]);
-                                        stepScope[var.name] = var;
+                                        SetVar(var, tmp[i, var.x]);
                                         break;
                                 }
                             }
@@ -162,11 +155,7 @@ namespace DomofonExcelToDbf.Sources
                     if (skipRecord) continue;
 
                     foreach (var var in dynamicVars.Values)
-                    {
-                        exception_var = var;
-                        var.Set(tmp[i, var.x]);
-                        stepScope[var.name] = var;
-                    }
+                        SetVar(var, tmp[i, var.x]);
 
                     callback(stepScope);
                     guiCallback?.Invoke(total);
@@ -182,6 +171,13 @@ namespace DomofonExcelToDbf.Sources
             Logger.debug("Строк обработано: " + total);
             Logger.debug("Размер буффера:" + buffer);
         }
+
+        protected void SetVar(TVariable var, object value)
+        {
+            exception_var = var;
+            var.Set(value);
+            stepScope[var.name] = var;
+        } 
 
         protected void FinalChecks()
         {
@@ -232,7 +228,7 @@ namespace DomofonExcelToDbf.Sources
                         float diff = Math.Abs(Math.Abs(var1fl) - Math.Abs(var2fl));
                         isEqual = diff < allowed_precision;
 
-                        string message_diff = string.Format(validate.Math.message, allowed_precision, diff).Replace("\\n","\n");
+                        string message_diff = string.Format(validate.Math.message, allowed_precision, diff).Replace("\\n", "\n");
                         message += "\n" + message_diff;
                         Logger.info(message_diff);
                     }
@@ -282,7 +278,16 @@ namespace DomofonExcelToDbf.Sources
                 mustBe = value
             };
 
-            foreach (XElement elem in xthen.Elements())
+            AddTActionsToList(condition.onTrue, xthen);
+            AddTActionsToList(condition.onFalse, xelse);
+
+            return condition;
+        }
+
+        protected void AddTActionsToList(IList<TAction> list, XElement target)
+        {
+            if (target == null) return;
+            foreach (XElement elem in target.Elements())
             {
                 TAction action = null;
                 switch (elem.Name.ToString())
@@ -297,31 +302,8 @@ namespace DomofonExcelToDbf.Sources
                         action = getVar(elem, true);
                         break;
                 }
-                if (action != null) condition.onTrue.Add(action);
+                if (action != null) list.Add(action);
             }
-
-            if (xelse != null)
-            {
-                foreach (XElement elem in xelse.Elements())
-                {
-                    TAction action = null;
-                    switch (elem.Name.ToString())
-                    {
-                        case "SKIP_RECORD":
-                            action = new TInterrupt(TInterrupt.Action.SKIP_RECORD);
-                            break;
-                        case "STOP_LOOP":
-                            action = new TInterrupt(TInterrupt.Action.STOP_LOOP);
-                            break;
-                        case "Dynamic":
-                            action = getVar(elem, true);
-                            break;
-                    }
-                    if (action != null) condition.onFalse.Add(action);
-                }
-            }
-
-            return condition;
         }
 
         protected void AddVar(IDictionary<string, TVariable> dictionary, TVariable variable)

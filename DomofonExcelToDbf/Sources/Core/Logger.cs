@@ -6,13 +6,16 @@ namespace DomofonExcelToDbf.Sources.Core
 
     public class Logger
     {
-        readonly bool console;
-        readonly StreamWriter writer;
+        #region Variables
+        protected readonly bool console;
+        protected readonly StreamWriter writer;
         protected LogLevel level;
 
         public static Logger instance;
-
         public static LogLevel Level => instance.level;
+        #endregion
+
+        #region Constructor                
 
         public Logger(string file = null, LogLevel level = LogLevel.INFO)
         {
@@ -25,19 +28,9 @@ namespace DomofonExcelToDbf.Sources.Core
             }
         }
 
-        protected void _log(object data, LogLevel curLevel)
-        {
-            if (curLevel > level) return;
+        #endregion
 
-            string msg = $"[{curLevel}][{DateTime.Now:HH:mm:ss}] {data}";
-
-            Console.WriteLine(msg);
-            if (!console)
-            {
-                writer.WriteLine(msg);
-                writer.Flush();
-            }
-        }
+        #region LogLevel       
 
         public enum LogLevel : byte
         {
@@ -65,6 +58,10 @@ namespace DomofonExcelToDbf.Sources.Core
                 instance.level = onErrorSet;
             }
         }
+
+        #endregion
+
+        #region Logging Methods
 
         public static void tracer(object data)
         {
@@ -95,6 +92,22 @@ namespace DomofonExcelToDbf.Sources.Core
         {
             instance._log(data,level);
         }
+
+        protected void _log(object data, LogLevel curLevel)
+        {
+            if (curLevel > level) return;
+
+            string msg = $"[{curLevel}][{DateTime.Now:HH:mm:ss}] {data}";
+
+            Console.WriteLine(msg);
+            if (!console)
+            {
+                writer.WriteLine(msg);
+                writer.Flush();
+            }
+        }
+
+        #endregion
     }
 
 }

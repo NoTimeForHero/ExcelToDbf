@@ -131,16 +131,6 @@ namespace DomofonExcelToDbf.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Moscow {
-            get {
-                object obj = ResourceManager.GetObject("Moscow", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap oDBF2 {
             get {
                 object obj = ResourceManager.GetObject("oDBF2", resourceCulture);

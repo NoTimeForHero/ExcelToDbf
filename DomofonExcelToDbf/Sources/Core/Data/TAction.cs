@@ -38,13 +38,6 @@ namespace DomofonExcelToDbf.Sources
 
     public class TVariable : TAction
     {
-        public enum Type : byte
-        {
-            EUnknown,
-            EString,
-            ENumeric,
-            EDate
-        }
 
         public readonly string name;
         public Type type;
@@ -68,7 +61,7 @@ namespace DomofonExcelToDbf.Sources
         {
             string str = val?.ToString() ?? "";
             if (use_regex)
-                str = RegExCache.MatchGroup(str, regex_pattern, regex_group);
+                str = MatchGroup(str, regex_pattern, regex_group);
 
             switch (this)
             {
@@ -82,6 +75,24 @@ namespace DomofonExcelToDbf.Sources
                     value = str;
                     break;
             }
+        }
+
+        protected static String MatchGroup(String input, Regex regex, int group = 1)
+        {
+            Match match = regex.Match(input);
+            if (!match.Success) return "";
+            if (match.Groups.Count - 1 < group) return "";
+            return match.Groups[group].Value;
+        }
+
+        #region Class Enum
+
+        public enum Type : byte
+        {
+            EUnknown,
+            EString,
+            ENumeric,
+            EDate
         }
 
         public static Type getByString(string str)
@@ -99,6 +110,10 @@ namespace DomofonExcelToDbf.Sources
             }
         }
 
+        #endregion
+
+        #region Override Object Method's
+
         public override bool Equals(object obj)
         {
             if (!(obj is TVariable item)) return false;
@@ -109,24 +124,12 @@ namespace DomofonExcelToDbf.Sources
         {
             return name.GetHashCode();
         }
+
+        #endregion
     }
 
     public class TNumeric : TVariable
     {
-        public Func function = Func.NONE;
-
-        public enum Func : byte
-        {
-            NONE,
-            SUM
-        }
-
-        public static Func getFuncByString(string str)
-        {
-            if (str == "SUM") return Func.SUM;
-            return Func.NONE;
-        }
-
         public TNumeric(string name) : base(name) { }
 
         public new void Set(object obj)
@@ -143,6 +146,25 @@ namespace DomofonExcelToDbf.Sources
                     break;
             }
         }
+
+        #region Class Enum
+
+        public Func function = Func.NONE;
+
+        public enum Func : byte
+        {
+            NONE,
+            SUM
+        }
+
+        public static Func getFuncByString(string str)
+        {
+            if (str == "SUM") return Func.SUM;
+            return Func.NONE;
+        }
+
+        #endregion
+
     }
 
     public class TDate : TVariable

@@ -74,14 +74,6 @@ namespace DomofonExcelToDbf.Sources
             return match.Groups[group].Value;
         }
 
-        public static String MatchGroup(String input, Regex regex, int group = 1)
-        {
-            Match match = regex.Match(input);
-            if (!match.Success) return "";
-            if (match.Groups.Count - 1 < group) return "";
-            return match.Groups[group].Value;
-        }
-
     }
 
 }
