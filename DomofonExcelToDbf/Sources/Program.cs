@@ -1,5 +1,4 @@
-﻿using DomofonExcelToDbf.Sources.Xml;
-using Microsoft.Office.Interop.Excel;
+﻿using Microsoft.Office.Interop.Excel;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,6 +12,8 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using DomofonExcelToDbf.Properties;
 using DomofonExcelToDbf.Sources.Core;
+using DomofonExcelToDbf.Sources.Core.Data;
+using DomofonExcelToDbf.Sources.Core.External;
 using DomofonExcelToDbf.Sources.View;
 using Application = System.Windows.Forms.Application;
 using Point = System.Drawing.Point;

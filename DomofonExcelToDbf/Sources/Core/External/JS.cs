@@ -1,9 +1,10 @@
-﻿using NickBuhro.Translit;
-using System;
+﻿using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using Microsoft.CSharp.RuntimeBinder;
+using NickBuhro.Translit;
 
-namespace DomofonExcelToDbf.Sources
+namespace DomofonExcelToDbf.Sources.Core.External
 {
     public class JS
     {
@@ -64,10 +65,10 @@ namespace DomofonExcelToDbf.Sources
         /// Задаёт JS движку функции и переменные, необходимые для работы с путём к файлу
         /// </summary>
         /// <param name="fullPath">Полный путь до файла, включая его имя</param>
-        public void SetPath(string fullPath)
+        public JS SetPath(string fullPath)
         {
             string dirPath = Path.GetDirectoryName(fullPath);
-            if (dirPath == null) throw new InvalidOperationException($"Can't get directory name from: {fullPath}!");
+            if (string.IsNullOrEmpty(dirPath)) throw new ArgumentException($"Can't get directory name from: {fullPath}!");
 
             DirectoryInfo dir = new DirectoryInfo(dirPath);
             // В этом методе возможно утечка памяти, только непонятно как её устранить без разбиения на класс
@@ -78,6 +79,7 @@ namespace DomofonExcelToDbf.Sources
             // Старые способы задания
             // Func<int, string> funcDir = (int level) => helper.GetLevel(level);
             // Func<int,string> funcDir = new Func<int,string>(helper.GetLevel);
+            return this;
         }
 
         /// <summary>
@@ -123,7 +125,12 @@ namespace DomofonExcelToDbf.Sources
         /// </summary>
         protected void FuncThrowException(String text)
         {
-            throw new Jint.Runtime.JavaScriptException("Исключение вызванное из JavaScript:\n" + text);
+            throw new JSException("Исключение вызванное из JavaScript:\n" + text);
+        }
+
+        public class JSException : Exception
+        {
+            public JSException(string message) : base(message) { }
         }
     }
 }

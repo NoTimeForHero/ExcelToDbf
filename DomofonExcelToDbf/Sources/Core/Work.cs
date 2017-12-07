@@ -1,13 +1,12 @@
-﻿using Microsoft.Office.Interop.Excel;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using DomofonExcelToDbf.Sources.Core;
-using DomofonExcelToDbf.Sources.Xml;
+using DomofonExcelToDbf.Sources.Core.Data;
+using Microsoft.Office.Interop.Excel;
 
-namespace DomofonExcelToDbf.Sources
+namespace DomofonExcelToDbf.Sources.Core
 {
     public class Work
     {

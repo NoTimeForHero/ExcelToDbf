@@ -4,7 +4,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace DomofonExcelToDbf.Sources.Xml
+namespace DomofonExcelToDbf.Sources.Core.Data
 {
 
     [XmlRoot("config", IsNullable = false)]

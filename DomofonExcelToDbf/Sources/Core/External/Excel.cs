@@ -1,8 +1,7 @@
-﻿using Microsoft.Office.Interop.Excel;
-using System;
-using DomofonExcelToDbf.Sources.Core;
+﻿using System;
+using Microsoft.Office.Interop.Excel;
 
-namespace DomofonExcelToDbf.Sources
+namespace DomofonExcelToDbf.Sources.Core.External
 {
     public class Excel
     {

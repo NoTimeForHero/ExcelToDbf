@@ -1,52 +1,17 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using DomofonExcelToDbf.Sources;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using DomofonExcelToDbf.Sources.Core;
+using DomofonExcelToDbf.Sources.Core.Data;
+using DomofonExcelToDbf.Sources.Core.External;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SocialExplorer.IO.FastDBF;
-using DomofonExcelToDbf.Sources.Xml;
 
-namespace DomofonExcelToDbf.Sources.Tests
+namespace DomofonExcelToDbfTests.Tests.DBFClass
 {
-    public class TestRepository
-    {
-
-        public static List<Xml_DbfField> getFields()
-        {
-            List<Xml_DbfField> data = new List<Xml_DbfField>
-            {
-                new Xml_DbfField { name = "fio",   type = "string",  length = "40", text = "$FIO"},
-                new Xml_DbfField { name = "summa", type = "numeric", length = "10,4", text = "$SUMMA"},
-                new Xml_DbfField { name = "data",  type = "date", length = "8", text = "$DATE"}
-            };
-            return data;
-        }
-
-        public static Dictionary<string, TVariable> getVariables()
-        {
-            Dictionary<string, TVariable> data = new Dictionary<string, TVariable>();
-
-            var tvariable = new TVariable("FIO");
-            tvariable.Set("Ivanov Ivan Ivanovich");
-            data.Add(tvariable.name, tvariable);
-
-            var tnumeric = new TNumeric("SUMMA");
-            tnumeric.Set(12.3456f);
-            data.Add(tnumeric.name, tnumeric);
-
-            var tdate = new TDate("DATE");
-            tdate.Set("22.11.2001");
-            data.Add(tdate.name, tdate);
-
-            return data;
-        }
-    }
-
     [TestClass]
-    public class DBFWritingTests
+    public class FileTests
     {
         private string dbfFileName;
         private DBF dbf;
@@ -66,6 +31,7 @@ namespace DomofonExcelToDbf.Sources.Tests
 
             dbf = new DBF(dbfFileName, fields, encoding);
             dbf.appendRecord(variables);
+            Assert.AreEqual(dbf.Writed, 1);
             dbf.close();
         }
 
@@ -77,9 +43,8 @@ namespace DomofonExcelToDbf.Sources.Tests
 
             Assert.AreEqual(fields.Count, dbfFile.Header.ColumnCount);
 
-            Assert.AreEqual(dbfFile.Header[0].Name, fields[0].name);
-            Assert.AreEqual(dbfFile.Header[1].Name, fields[1].name);
-            Assert.AreEqual(dbfFile.Header[2].Name, fields[2].name);
+            for (int i=0;i<fields.Count;i++)
+                Assert.AreEqual(dbfFile.Header[i].Name, fields[i].name);
         }
 
         [TestMethod]
@@ -129,4 +94,39 @@ namespace DomofonExcelToDbf.Sources.Tests
             Assert.IsFalse(exists);
         }
     }
+
+    public class TestRepository
+    {
+        public static List<Xml_DbfField> getFields()
+        {
+            List<Xml_DbfField> data = new List<Xml_DbfField>
+            {
+                new Xml_DbfField { name = "fio",   type = "string",  length = "40", text = "$FIO"},
+                new Xml_DbfField { name = "summa", type = "numeric", length = "10,4", text = "$SUMMA"},
+                new Xml_DbfField { name = "data",  type = "date", length = "8", text = "$DATE"},
+                new Xml_DbfField { name = "test",  type = "string", length = "8", text = "$TEST"},
+            };
+            return data;
+        }
+
+        public static Dictionary<string, TVariable> getVariables()
+        {
+            Dictionary<string, TVariable> data = new Dictionary<string, TVariable>();
+
+            var tvariable = new TVariable("FIO");
+            tvariable.Set("Ivanov Ivan Ivanovich");
+            data.Add(tvariable.name, tvariable);
+
+            var tnumeric = new TNumeric("SUMMA");
+            tnumeric.Set(12.3456f);
+            data.Add(tnumeric.name, tnumeric);
+
+            var tdate = new TDate("DATE");
+            tdate.Set("22.11.2001");
+            data.Add(tdate.name, tdate);
+
+            return data;
+        }
+    }
+
 }
