@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace DomofonExcelToDbf.Sources.Core
+namespace ExcelToDbf.Sources.Core
 {
 
     public class Logger

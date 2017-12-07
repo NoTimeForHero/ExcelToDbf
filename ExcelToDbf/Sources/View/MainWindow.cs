@@ -9,7 +9,7 @@ using System.Text;
 using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
-namespace DomofonExcelToDbf.Sources.View
+namespace ExcelToDbf.Sources.View
 {
     public partial class MainWindow : Form
     {

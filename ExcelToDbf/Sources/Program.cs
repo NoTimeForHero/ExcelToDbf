@@ -10,15 +10,15 @@ using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Linq;
-using DomofonExcelToDbf.Properties;
-using DomofonExcelToDbf.Sources.Core;
-using DomofonExcelToDbf.Sources.Core.Data;
-using DomofonExcelToDbf.Sources.Core.External;
-using DomofonExcelToDbf.Sources.View;
+using ExcelToDbf.Properties;
+using ExcelToDbf.Sources.Core;
+using ExcelToDbf.Sources.Core.Data;
+using ExcelToDbf.Sources.Core.External;
+using ExcelToDbf.Sources.View;
 using Application = System.Windows.Forms.Application;
 using Point = System.Drawing.Point;
 
-namespace DomofonExcelToDbf.Sources
+namespace ExcelToDbf.Sources
 {
     [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
     public class Program

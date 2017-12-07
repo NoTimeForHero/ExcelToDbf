@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using DomofonExcelToDbf.Sources.Core;
-using DomofonExcelToDbf.Sources.Core.Data;
-using DomofonExcelToDbf.Sources.Core.External;
+using ExcelToDbf.Sources.Core;
+using ExcelToDbf.Sources.Core.Data;
+using ExcelToDbf.Sources.Core.External;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SocialExplorer.IO.FastDBF;
 

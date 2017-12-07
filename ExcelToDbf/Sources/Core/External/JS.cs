@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using Microsoft.CSharp.RuntimeBinder;
 using NickBuhro.Translit;
 
-namespace DomofonExcelToDbf.Sources.Core.External
+namespace ExcelToDbf.Sources.Core.External
 {
     public class JS
     {

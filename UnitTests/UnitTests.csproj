@@ -7,8 +7,8 @@
     <ProjectGuid>{1EF6B5C1-63F7-4A63-8A81-7F23D0EAA8DE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DomofonExcelToDbfTests</RootNamespace>
-    <AssemblyName>DomofonExcelToDbfTests</AssemblyName>
+    <RootNamespace>UnitTests</RootNamespace>
+    <AssemblyName>UnitTests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -71,9 +71,9 @@
     <Compile Include="Tests\JSTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DomofonExcelToDbf\DomofonExcelToDbf.csproj">
+    <ProjectReference Include="..\ExcelToDbf\ExcelToDbf.csproj">
       <Project>{F664DF91-786D-421E-8A7E-882BCD455A4D}</Project>
-      <Name>DomofonExcelToDbf</Name>
+      <Name>ExcelToDbf</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

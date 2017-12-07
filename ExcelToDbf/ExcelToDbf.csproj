@@ -7,8 +7,8 @@
     <ProjectGuid>{F664DF91-786D-421E-8A7E-882BCD455A4D}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DomofonExcelToDbf</RootNamespace>
-    <AssemblyName>DomofonExcelToDbf</AssemblyName>
+    <RootNamespace>ExcelToDbf</RootNamespace>
+    <AssemblyName>ExcelToDbf</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

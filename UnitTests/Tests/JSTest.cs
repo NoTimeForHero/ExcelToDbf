@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using DomofonExcelToDbf.Sources.Core.External;
+using ExcelToDbf.Sources.Core.External;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DomofonExcelToDbfTests.Tests

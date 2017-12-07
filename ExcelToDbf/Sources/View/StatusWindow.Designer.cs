@@ -1,4 +1,4 @@
-﻿namespace DomofonExcelToDbf.Sources.View
+﻿namespace ExcelToDbf.Sources.View
 {
     partial class StatusWindow
     {
@@ -72,7 +72,7 @@
             // 
             // pictureBox3
             // 
-            this.pictureBox3.Image = global::DomofonExcelToDbf.Properties.Resources.oDBF2;
+            this.pictureBox3.Image = global::ExcelToDbf.Properties.Resources.oDBF2;
             this.pictureBox3.Location = new System.Drawing.Point(379, 9);
             this.pictureBox3.Name = "pictureBox3";
             this.pictureBox3.Size = new System.Drawing.Size(53, 50);
@@ -82,7 +82,7 @@
             // 
             // pictureBox2
             // 
-            this.pictureBox2.Image = global::DomofonExcelToDbf.Properties.Resources.zXls;
+            this.pictureBox2.Image = global::ExcelToDbf.Properties.Resources.zXls;
             this.pictureBox2.Location = new System.Drawing.Point(12, 9);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(53, 50);

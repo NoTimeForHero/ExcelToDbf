@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace DomofonExcelToDbf.Sources.Core
+namespace ExcelToDbf.Sources.Core
 {
     /// <summary>
     /// Класс для удобного разбития пути на сегменты

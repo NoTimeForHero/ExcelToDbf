@@ -1,4 +1,4 @@
-﻿namespace DomofonExcelToDbf.Sources.View
+﻿namespace ExcelToDbf.Sources.View
 {
     partial class MainWindow
     {
@@ -66,7 +66,7 @@
             // 
             // buttonDirectory
             // 
-            this.buttonDirectory.Image = global::DomofonExcelToDbf.Properties.Resources.iPapkaLupa32;
+            this.buttonDirectory.Image = global::ExcelToDbf.Properties.Resources.iPapkaLupa32;
             this.buttonDirectory.Location = new System.Drawing.Point(12, 12);
             this.buttonDirectory.Name = "buttonDirectory";
             this.buttonDirectory.Size = new System.Drawing.Size(47, 47);
@@ -93,7 +93,7 @@
             this.buttonExit.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.buttonExit.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.buttonExit.ForeColor = System.Drawing.Color.White;
-            this.buttonExit.Image = global::DomofonExcelToDbf.Properties.Resources.iExit64;
+            this.buttonExit.Image = global::ExcelToDbf.Properties.Resources.iExit64;
             this.buttonExit.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.buttonExit.Location = new System.Drawing.Point(361, 65);
             this.buttonExit.Name = "buttonExit";
@@ -111,7 +111,7 @@
             this.buttonConvert.Cursor = System.Windows.Forms.Cursors.Default;
             this.buttonConvert.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.buttonConvert.ForeColor = System.Drawing.Color.White;
-            this.buttonConvert.Image = global::DomofonExcelToDbf.Properties.Resources.iConv;
+            this.buttonConvert.Image = global::ExcelToDbf.Properties.Resources.iConv;
             this.buttonConvert.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.buttonConvert.Location = new System.Drawing.Point(12, 65);
             this.buttonConvert.Name = "buttonConvert";
@@ -212,7 +212,7 @@
             // 
             // pictureBox3
             // 
-            this.pictureBox3.Image = global::DomofonExcelToDbf.Properties.Resources.oDBF2;
+            this.pictureBox3.Image = global::ExcelToDbf.Properties.Resources.oDBF2;
             this.pictureBox3.Location = new System.Drawing.Point(624, 12);
             this.pictureBox3.Name = "pictureBox3";
             this.pictureBox3.Size = new System.Drawing.Size(53, 50);
@@ -222,7 +222,7 @@
             // 
             // pictureBox2
             // 
-            this.pictureBox2.Image = global::DomofonExcelToDbf.Properties.Resources.zXls;
+            this.pictureBox2.Image = global::ExcelToDbf.Properties.Resources.zXls;
             this.pictureBox2.Location = new System.Drawing.Point(12, 12);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(53, 50);

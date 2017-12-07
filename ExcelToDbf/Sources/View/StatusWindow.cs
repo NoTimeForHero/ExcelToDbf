@@ -1,4 +1,4 @@
-﻿using DomofonExcelToDbf.Properties;
+﻿using ExcelToDbf.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace DomofonExcelToDbf.Sources.View
+namespace ExcelToDbf.Sources.View
 {
     public partial class StatusWindow : Form
     {

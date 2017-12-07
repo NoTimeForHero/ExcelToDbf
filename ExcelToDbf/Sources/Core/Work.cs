@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using DomofonExcelToDbf.Sources.Core.Data;
+using ExcelToDbf.Sources.Core.Data;
 using Microsoft.Office.Interop.Excel;
 
-namespace DomofonExcelToDbf.Sources.Core
+namespace ExcelToDbf.Sources.Core
 {
     public class Work
     {

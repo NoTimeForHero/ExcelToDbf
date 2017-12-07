@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using DomofonExcelToDbf.Sources.Core.Data;
+using ExcelToDbf.Sources.Core.Data;
 using SocialExplorer.IO.FastDBF;
 
-namespace DomofonExcelToDbf.Sources.Core.External
+namespace ExcelToDbf.Sources.Core.External
 {
     public class DBF
     {
