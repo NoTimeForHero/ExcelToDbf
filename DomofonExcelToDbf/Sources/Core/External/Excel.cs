@@ -4,7 +4,7 @@ using DomofonExcelToDbf.Sources.Core;
 
 namespace DomofonExcelToDbf.Sources
 {
-    class Excel
+    public class Excel
     {
         Application app;
         Workbook wb;

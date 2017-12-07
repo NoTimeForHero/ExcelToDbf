@@ -36,20 +36,24 @@ namespace DomofonExcelToDbf.Sources
             this.buffer = buffer;
         }
 
-        public void IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
+        public TimeSpan IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
         {
             if (buffer <= 0) throw new ArgumentException("Буфер обработки должен быть больше ноля!");
             total = 0;
+            Stopwatch watch = Stopwatch.StartNew();
             try
             {
                 __IterateRecords(worksheet, callback, guiCallback);
             }
-            catch (Exception ex) when (!Debugger.IsAttached)
+            catch (Exception ex) when (!Program.DEBUG)
             {
                 string message = $"Ошибка на строке {startY + total}, ячейке {exception_var.x} в переменной {exception_var.name}:\n{ex.Message}";
                 throw new MyException(message, ex);
             }
+            watch.Stop();
             FinalChecks();
+
+            return watch.Elapsed;
         }
 
         protected void __IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
@@ -373,7 +377,7 @@ namespace DomofonExcelToDbf.Sources
 
     public class MyException : Exception
     {
-        public MyException(string message, Exception exp) : base(message)
+        public MyException(string message, Exception exp) : base(message, exp)
         {
             StackTrace = exp.StackTrace;
         }

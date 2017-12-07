@@ -43,11 +43,10 @@ namespace DomofonExcelToDbf.Sources.Tests
 
             return data;
         }
-        
     }
 
     [TestClass]
-    public class DBFTests
+    public class DBFWritingTests
     {
         private string dbfFileName;
         private DBF dbf;
@@ -58,15 +57,14 @@ namespace DomofonExcelToDbf.Sources.Tests
         [TestInitialize()]
         public void Startup()
         {
-            Logger.instance = new Logger();
+            Logger.instance = new Logger(level: Logger.LogLevel.DEBUG);
 
-            encoding = Encoding.UTF8;            
+            encoding = Encoding.UTF8;
             fields = TestRepository.getFields();
             variables = TestRepository.getVariables();
             dbfFileName = Path.GetTempFileName();
 
             dbf = new DBF(dbfFileName, fields, encoding);
-            dbf.writeHeader();
             dbf.appendRecord(variables);
             dbf.close();
         }
@@ -106,6 +104,13 @@ namespace DomofonExcelToDbf.Sources.Tests
             Assert.AreEqual(new String(' ',10 - num.Length) + num, orec[1]);
 
             Assert.AreEqual("20011122", orec[2]);
+        }
+
+        [TestMethod]
+        public void RepeatClose()
+        {
+            dbf.close();
+            dbf.close();
         }
 
         [TestMethod]

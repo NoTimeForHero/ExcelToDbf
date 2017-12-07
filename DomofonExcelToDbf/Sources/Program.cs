@@ -22,6 +22,7 @@ namespace DomofonExcelToDbf.Sources
     [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
     public class Program
     {
+        public static readonly bool DEBUG = Debugger.IsAttached && false;
 
         [STAThread]
         private static void Main()
@@ -173,7 +174,7 @@ namespace DomofonExcelToDbf.Sources
             //wstatus.StartPosition = FormStartPosition.CenterParent;
             //wstatus.ShowDialog(wmain);
 
-            object data = new object[] { wstatus, wmain, files };
+            object data = new object[] { wstatus, wmain, files.ToList() };
 
             outlog.Clear();
             errlog.Clear();
@@ -193,102 +194,89 @@ namespace DomofonExcelToDbf.Sources
 
             StatusWindow window = (StatusWindow)data[0];
             MainWindow wmain = (MainWindow)data[1];
-            HashSet<string> files = (HashSet<string>)data[2];
+            List<string> files = (List<string>)data[2];
             window.setState(true, "Подготовка файлов", 0, files.Count);
-            int idoc = 1;
+
+            if (config.only_rules)
+            {
+                CheckRules(files, window);
+                return;
+            }
 
             Excel excel = new Excel(config.save_memory);
             DBF dbf = null;
 
-            var totalwatch = new Stopwatch();
-            totalwatch.Start();
-            foreach (string fname in files)
+            Stopwatch totalwatch = Stopwatch.StartNew();
+            for (int idoc=0;idoc<files.Count;idoc++)
             {
-
-                // COM Excel требуется полный путь до файла
-                string finput = Path.GetFullPath(fname);
+                string pathFull = files[idoc];
+                string filename = Path.GetFileName(pathFull);
+                string pathTemp = Path.GetTempFileName();
 
                 bool deleteDbf = false;
 
                 try
                 {
-                    Logger.debug("");
-                    Logger.info("");
-                    Logger.debug("==============================================================");
-                    Logger.info($"======= Загружаем Excel документ: {Path.GetFileName(finput)} ======");
-                    Logger.debug("==============================================================");
-                    window.updateState(true, $"Документ: {Path.GetFileName(finput)}", idoc);
-                    idoc++;
 
-                    excel.OpenWorksheet(finput);
+                    Logger.info("");
+                    Logger.debug("");
+                    Logger.debug("==============================================================");
+                    Logger.info($"======= Загружаем Excel документ: {filename} ======");
+                    Logger.debug("==============================================================");
+                    window.updateState(true, $"Документ: {filename}", idoc);
+
+                    excel.OpenWorksheet(pathFull);
 
                     var form = findCorrectForm(excel.worksheet, config);
-
-                    if (config.only_rules)
-                    {
-                        var formname = (form != null) ? form.Name : "null";
-                        formToFile.Add(Path.GetFileName(finput), formname);
-                        continue;
-                    }
-
                     if (form == null)
                     {
-                        Logger.warn("Не найдено подходящих форм для обработки документа work.xml!");
-                        throw new NoNullAllowedException("Не найдено подходящих форм для обработки документа work.xml!");
+                        Logger.warn("Не найдено подходящих форм для обработки документа: " + filename);
+                        throw new NoNullAllowedException($"Не найдено подходящих форм для обработки документа '{filename}'!");
                     }
 
-                    string fileName = getOutputFilename(excel.worksheet, finput, config.outfile.simple, config.outfile.script);
-                    string pathTemp = Path.GetTempFileName();
+                    string fileName = getOutputFilename(excel.worksheet, pathFull, config.outfile.simple, config.outfile.script);
                     string pathOutput = Path.Combine(config.outputDirectory, fileName);
+
+                    dbf = new DBF(pathTemp,form.DBF);
 
                     var total = excel.worksheet.UsedRange.Rows.Count - form.Fields.StartY;
                     window.setState(false, $"Обработано записей: {0}/{total}", 0, total);
 
-                    dbf = new DBF(pathTemp,form.DBF);
-                    dbf.writeHeader();
-
-                    var stopwatch = new Stopwatch();
-                    stopwatch.Start();
                     Work work = new Work(form, config.buffer_size);
-                    work.IterateRecords(excel.worksheet, dbf.appendRecord,
+                    TimeSpan elapsed = work.IterateRecords(excel.worksheet, dbf.appendRecord,
                         id => window.updateState(false, $"Обработано записей: {id}/{total}", id)
                     );
-                    stopwatch.Stop();
 
                     dbf.close();
-
-                    Logger.info("Времени потрачено на обработку данных: " + stopwatch.Elapsed);
-                    Logger.info("Обработано записей: " + dbf.Writed);
-                    outlog.Add($"{Path.GetFileName(finput)} в {dbf.Writed} строк за {stopwatch.Elapsed:hh\\:mm\\:ss\\.ff}");
-
-                    int startY = form.Fields.StartY;
-                    Logger.debug($"Начиная с {startY} по {startY + dbf.Writed}");
 
                     // Перемещение файла
                     if (File.Exists(pathOutput)) File.Delete(pathOutput);
                     File.Move(pathTemp, pathOutput);
                     Logger.debug($"Перемещение файла с {pathTemp} в {pathOutput}");
 
-                    Logger.info($"=============== Документ {Path.GetFileName(finput)} успешно обработан! ===============");
+                    outlog.Add($"{filename} в {dbf.Writed} строк за {elapsed:hh\\:mm\\:ss\\.ff}");
+
+                    Logger.info("Времени потрачено на обработку данных: " + elapsed);
+                    Logger.info("Обработано записей: " + dbf.Writed);
+                    Logger.debug($"Начиная с {form.Fields.StartY} по {form.Fields.StartY + dbf.Writed}");
+                    Logger.info($"=============== Документ {Path.GetFileName(pathFull)} успешно обработан! ===============");
                 }
-                catch (Exception ex) when (!Debugger.IsAttached)
+                catch (Exception ex) when (!DEBUG)
                 {
-                    if (ex is ThreadAbortException)
+                    if (ex is ThreadAbortException || ex.InnerException is ThreadAbortException)
                     {
-                        excel.close();
+                        Logger.warn($"Пользователь вышел во время процесса конвертации документа '{filename}'!");
                         goto skip_error_msgbox;
                     }
 
-                    errlog.Add($"Документ \"{Path.GetFileName(finput)}\" был пропущен!");
+                    string stacktrace = (showStacktrace) ? $"\n\n{ex.StackTrace}" : "";
+                    string message = $"Ошибка! Документ \"{filename}\" будет пропущен!\n\n{ex.Message}{stacktrace}";
+                    errlog.Add($"Документ \"{filename}\" был пропущен!");
 
-                    string stacktrace = (showStacktrace) ? ex.StackTrace : "";
-
-                    var message = $"Ошибка! Документ \"{Path.GetFileName(finput)}\" будет пропущен!\n\n{ex.Message}\n\n{stacktrace}";
-                    Logger.error(message + "\n" + ex.StackTrace);
+                    Logger.error($"Документ {filename} был пропущен из-за ошибки:\n{ex.Message}\n\n{ex.StackTrace}");
                     MessageBox.Show(message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                    skip_error_msgbox:
-                    Console.Error.WriteLine(ex);
+                    skip_error_msgbox:;
                     deleteDbf = true;
                 }
                 finally
@@ -304,46 +292,50 @@ namespace DomofonExcelToDbf.Sources
             // Не забываем завершить Excel
             excel.close();
 
-            string crules = "";
-
-            if (config.only_rules)
-            {
-                for (int i = 0; i < 3; i++) Logger.debug("");
-                foreach (var tup in formToFile)
-                {
-                    string line = $"Для \"{tup.Key}\" выбрана форма \"{tup.Value}\"";
-                    Logger.info(line);
-                    crules += line + "\n";
-                }
-                MessageBox.Show(crules, "Отчёт о формах", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-
-            crules = "Время обработки документов:\n";
-
-            var coutlog = String.Join("\n", outlog) + "\n";
-            crules += coutlog;
-            Logger.info(coutlog);
-
-            Logger.info("Времени затрачено суммарно: " + totalwatch.Elapsed);
+            string crules = "Время обработки документов:\n";
+            crules += String.Join("\n", outlog) + "\n";
             crules += String.Format("\nВремени затрачено суммарно: " + totalwatch.Elapsed.ToString("hh\\:mm\\:ss\\.ff"));
+            Logger.info(crules);
 
-            var icon = MessageBoxIcon.Information;
-
+            var icon = errlog.Count == 0 ? MessageBoxIcon.Information : MessageBoxIcon.Warning;
             if (errlog.Count > 0) {
-                icon = MessageBoxIcon.Warning;
-                crules += "\n\n";
-
-                var xmlWarning = xdoc.Root.Element("warning");
-                string warnFormat = xmlWarning?.Value ?? "{0}";
+                string warnFormat = config.warning ?? "{0}";
                 warnFormat = warnFormat.Replace("\\n", "\n");
-                crules += String.Format(warnFormat,string.Join("\n", errlog));
+                crules += "\n\n" + String.Format(warnFormat,string.Join("\n", errlog));
             }
 
             updateDirectory();
             wmain.BeginInvoke((MethodInvoker)wmain.fillElementsData);
-
             window.mayClose();
             MessageBox.Show(crules, "Отчёт о времени обработки", MessageBoxButtons.OK, icon);
+        }
+
+        protected void CheckRules(IList<string> files, StatusWindow window)
+        {
+            if (!config.only_rules) return;
+            string message = "";
+            Excel excel = new Excel(config.save_memory);
+
+            window.setState(true, "", 0, files.Count);
+
+            for (int id=0;id<files.Count;id++)
+            {
+                string fname = files[id];
+                string docname = Path.GetFileName(fname) ?? fname;
+
+                window.updateState(true, "Читаем документ " + docname, id+1);
+                excel.OpenWorksheet(fname);
+
+                var form = findCorrectForm(excel.worksheet, config);
+                var formname = form?.Name ?? "[NULL]";
+                string line = $"Для документа '{docname}' выбрана форма '{formname}'!";
+                message += "\n" + line;
+                Logger.info(line);
+            }
+
+            excel.close();
+            window.mayClose();
+            MessageBox.Show(message, "Отчёт о формах", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /// <summary>
@@ -382,6 +374,7 @@ namespace DomofonExcelToDbf.Sources
         // <summary>
         // Ищет подходящую XML форму для документа или null если ни одна не подходит
         // </summary>
+        [SuppressMessage("ReSharper", "ReplaceWithSingleAssignment.False")]
         public Xml_Form findCorrectForm(Worksheet worksheet, Xml_Config pConfig)
         {
             RegExCache regExCache = new RegExCache();

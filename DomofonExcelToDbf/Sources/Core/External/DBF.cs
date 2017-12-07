@@ -16,8 +16,6 @@ namespace DomofonExcelToDbf.Sources
         protected DbfFile odbf;
         protected List<Xml_DbfField> dbfFields;
         protected int records;
-        protected bool closed;
-        protected bool headersWrited;
 
         public int Writed => records;
 
@@ -32,9 +30,11 @@ namespace DomofonExcelToDbf.Sources
             odbf.Open(path, FileMode.Create); // FileMode.Create = файл будет перезаписан если уже существует
             Logger.info($"Создаём DBF по пути: {path}");
             Logger.debug("и кодировкой: {encoding}");
+
+            writeHeader();
         }
 
-        public void writeHeader()
+        protected void writeHeader()
         {
             Logger.info($"Записываем в DBF {dbfFields.Count} полей:");
             Logger.info(string.Join(", ", dbfFields.Select(x => x.name).ToArray()));
@@ -65,13 +65,10 @@ namespace DomofonExcelToDbf.Sources
                 }
             }
             odbf.WriteHeader();
-            headersWrited = true;
         }
 
         public void appendRecord(Dictionary<string, TVariable> variables)
         {
-            if (!headersWrited) throw new Exception("Невозможно вставить запись в DBF раньше записи заголовков!");
-
             var orec = new DbfRecord(odbf.Header);
             //orec.AllowIntegerTruncate = true;
             orec.AllowStringTurncate = true;
@@ -126,8 +123,6 @@ namespace DomofonExcelToDbf.Sources
 
         public void close()
         {
-            if (closed) return;
-            closed = false;
             odbf.Close();
         }
 
