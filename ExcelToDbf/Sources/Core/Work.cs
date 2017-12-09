@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using ExcelToDbf.Sources.Core.Data;
+using ExcelToDbf.Sources.Core.Data.TData;
+using ExcelToDbf.Sources.Core.Data.Xml;
 using Microsoft.Office.Interop.Excel;
 
 namespace ExcelToDbf.Sources.Core

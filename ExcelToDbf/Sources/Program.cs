@@ -12,7 +12,7 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using ExcelToDbf.Properties;
 using ExcelToDbf.Sources.Core;
-using ExcelToDbf.Sources.Core.Data;
+using ExcelToDbf.Sources.Core.Data.Xml;
 using ExcelToDbf.Sources.Core.External;
 using ExcelToDbf.Sources.View;
 using Application = System.Windows.Forms.Application;

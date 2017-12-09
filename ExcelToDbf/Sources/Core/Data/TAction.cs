@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace ExcelToDbf.Sources.Core.Data
+namespace ExcelToDbf.Sources.Core.Data.TData
 {
     /// <summary>
     /// Универсальный класс, от которого наследуются всё возможные операции

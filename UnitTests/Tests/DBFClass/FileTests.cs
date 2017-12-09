@@ -4,6 +4,8 @@ using System.IO;
 using System.Text;
 using ExcelToDbf.Sources.Core;
 using ExcelToDbf.Sources.Core.Data;
+using ExcelToDbf.Sources.Core.Data.TData;
+using ExcelToDbf.Sources.Core.Data.Xml;
 using ExcelToDbf.Sources.Core.External;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SocialExplorer.IO.FastDBF;

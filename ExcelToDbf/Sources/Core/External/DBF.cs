@@ -4,7 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using ExcelToDbf.Sources.Core.Data;
+using ExcelToDbf.Sources.Core.Data.TData;
+using ExcelToDbf.Sources.Core.Data.Xml;
 using SocialExplorer.IO.FastDBF;
 
 namespace ExcelToDbf.Sources.Core.External

@@ -4,7 +4,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace ExcelToDbf.Sources.Core.Data
+namespace ExcelToDbf.Sources.Core.Data.Xml
 {
 
     [XmlRoot("config", IsNullable = false)]
