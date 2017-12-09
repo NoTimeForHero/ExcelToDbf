@@ -320,14 +320,13 @@ namespace ExcelToDbf.Sources.Core
             var name = xml.Attribute("name")?.Value ?? throw new NullReferenceException("Variable attribute 'name' can't be null!");
             var ctype = xml.Attribute("type")?.Value ?? "string";
 
-            TVariable.Type type = TVariable.getByString(ctype);
             TVariable variable;
-            switch (type)
+            switch (ctype)
             {
-                case TVariable.Type.ENumeric:
+                case "numeric":
                     variable = new TNumeric(name);
                     break;
-                case TVariable.Type.EDate:
+                case "date":
                     variable = new TDate(name);
                     break;
                 default:
@@ -338,7 +337,6 @@ namespace ExcelToDbf.Sources.Core
             variable.x = Int32.Parse(xml.Attribute("X")?.Value ?? throw new NullReferenceException("Variable attribute 'X' can't be null!"));
             if (!dynamic) variable.y = Int32.Parse(xml.Attribute("Y")?.Value ?? throw new NullReferenceException("Variable attribute 'Y' can't be null!"));
             variable.dynamic = dynamic;
-            variable.type = type;
 
             if (variable is TNumeric tnumeric)
             {
@@ -365,7 +363,6 @@ namespace ExcelToDbf.Sources.Core
             var regex_pattern = xml.Attribute("regex_pattern");
             if (regex_pattern != null)
             {
-                variable.use_regex = true;
                 variable.regex_pattern = new Regex(regex_pattern.Value, RegexOptions.Compiled);
 
                 var regex_group = xml.Attribute("regex_group");

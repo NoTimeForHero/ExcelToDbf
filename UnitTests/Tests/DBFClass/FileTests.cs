@@ -24,7 +24,7 @@ namespace DomofonExcelToDbfTests.Tests.DBFClass
         [TestInitialize()]
         public void Startup()
         {
-            Logger.instance = new Logger(level: Logger.LogLevel.DEBUG);
+            Logger.SetLevel(Logger.LogLevel.DEBUG);
 
             encoding = Encoding.UTF8;
             fields = TestRepository.getFields();

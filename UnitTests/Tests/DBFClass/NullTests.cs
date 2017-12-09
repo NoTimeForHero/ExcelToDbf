@@ -19,7 +19,7 @@ namespace DomofonExcelToDbfTests.Tests.DBFClass
         [TestInitialize]
         public void Startup()
         {
-            Logger.instance = new Logger(level: Logger.LogLevel.DEBUG);
+            Logger.SetLevel(Logger.LogLevel.DEBUG);
             dbfFileName = Path.GetTempFileName();
         }
 

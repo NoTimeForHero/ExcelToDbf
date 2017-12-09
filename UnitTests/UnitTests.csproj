@@ -72,6 +72,7 @@
     <Compile Include="Tests\DBFClass\FileTests.cs" />
     <Compile Include="Tests\DBFClass\NullTests.cs" />
     <Compile Include="Tests\JSTest.cs" />
+    <Compile Include="Tests\TData.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ExcelToDbf\ExcelToDbf.csproj">

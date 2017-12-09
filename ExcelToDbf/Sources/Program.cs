@@ -75,7 +75,7 @@ namespace ExcelToDbf.Sources
 
             if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
 
-            Logger.instance = new Logger(config.log ? "logs\\" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log" : null);
+            if (config.log) Logger.SetFile("logs\\" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log");
             Logger.ParseLevel(config.LogLevel);
 
             updateDirectory();

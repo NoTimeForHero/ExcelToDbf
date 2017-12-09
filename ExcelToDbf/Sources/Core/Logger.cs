@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 
 namespace ExcelToDbf.Sources.Core
 {
@@ -7,11 +8,11 @@ namespace ExcelToDbf.Sources.Core
     public class Logger
     {
         #region Variables
-        protected readonly bool console;
-        protected readonly StreamWriter writer;
+        protected StreamWriter writer;
         protected LogLevel level;
 
-        public static Logger instance;
+        private static readonly Lazy<Logger> lazy = new Lazy<Logger>(() => new Logger());
+        public static Logger instance => lazy.Value;
         public static LogLevel Level => instance.level;
         #endregion
 
@@ -20,14 +21,16 @@ namespace ExcelToDbf.Sources.Core
         public Logger(string file = null, LogLevel level = LogLevel.INFO)
         {
             this.level = level;
-
-            console = (file == null);
-            if (file != null)
-            {
-                writer = new StreamWriter(file, false) {AutoFlush = true};
-            }
+            if (file != null) SetFile(file);
         }
+        #endregion
 
+        #region File
+        public static void SetFile(string file)
+        {
+            instance.writer?.Close();
+            instance.writer = new StreamWriter(file, false) { AutoFlush = true };
+        }
         #endregion
 
         #region LogLevel       
@@ -97,13 +100,14 @@ namespace ExcelToDbf.Sources.Core
         {
             if (curLevel > level) return;
 
-            string msg = $"[{curLevel}][{DateTime.Now:HH:mm:ss}] {data}";
+            string prefix = $"[{curLevel}][{DateTime.Now:HH:mm:ss}] ";
+            var msg = prefix + data;
 
             Console.WriteLine(msg);
-            if (!console)
+            if (writer != null)
             {
+                msg = msg.Replace("\n", Environment.NewLine + prefix);
                 writer.WriteLine(msg);
-                writer.Flush();
             }
         }
 

@@ -38,9 +38,7 @@ namespace ExcelToDbf.Sources.Core.Data.TData
 
     public class TVariable : TAction
     {
-
         public readonly string name;
-        public Type type;
 
         public bool dynamic;
         public int x;
@@ -48,9 +46,9 @@ namespace ExcelToDbf.Sources.Core.Data.TData
 
         public object value;
 
-        public bool use_regex = false;
+        public bool use_regex => regex_pattern != null;
         public Regex regex_pattern;
-        public int regex_group;
+        public int regex_group = 1;
 
         public TVariable(string name)
         {
@@ -59,22 +57,26 @@ namespace ExcelToDbf.Sources.Core.Data.TData
 
         public void Set(object val)
         {
-            string str = val?.ToString() ?? "";
-            if (use_regex)
-                str = MatchGroup(str, regex_pattern, regex_group);
-
             switch (this)
             {
                 case TDate tdate:
-                    tdate.Set(str);
+                    tdate.Set(val);
                     break;
                 case TNumeric tnum:
-                    tnum.Set(str);
+                    tnum.Set(val);
                     break;
                 default:
+                    string str = ToStr(val);
+                    if (use_regex)
+                        str = MatchGroup(str, regex_pattern, regex_group);
                     value = str;
                     break;
             }
+        }
+
+        protected string ToStr(object val)
+        {
+            return val?.ToString() ?? "";
         }
 
         protected static String MatchGroup(String input, Regex regex, int group = 1)
@@ -93,21 +95,6 @@ namespace ExcelToDbf.Sources.Core.Data.TData
             EString,
             ENumeric,
             EDate
-        }
-
-        public static Type getByString(string str)
-        {
-            switch (str)
-            {
-                case "string":
-                    return Type.EString;
-                case "date":
-                    return Type.EDate;
-                case "numeric":
-                    return Type.ENumeric;
-                default:
-                    return Type.EUnknown;
-            }
         }
 
         #endregion
@@ -134,8 +121,12 @@ namespace ExcelToDbf.Sources.Core.Data.TData
 
         public new void Set(object obj)
         {
-            if ("".Equals(obj)) obj = "0"; // Иначе Convert.ToSingle упадёт с ошибкой
-            float flValue = Convert.ToSingle(obj);
+            string str = ToStr(obj);
+
+            if (use_regex) str = MatchGroup(str, regex_pattern, regex_group);
+
+            if (str == "") str = "0"; // Иначе Convert.ToSingle упадёт с ошибкой
+            float flValue = Convert.ToSingle(str);
             switch (function)
             {
                 case Func.SUM:
@@ -177,7 +168,12 @@ namespace ExcelToDbf.Sources.Core.Data.TData
 
         public new void Set(object val)
         {
-            DateTime date = DateTime.ParseExact(val.ToString(), format, CultureInfo.GetCultureInfo(language));
+            string str = ToStr(val);
+
+            if (use_regex)
+                str = MatchGroup(str, regex_pattern, regex_group);
+
+            DateTime date = DateTime.ParseExact(str, format, CultureInfo.GetCultureInfo(language));
             if (lastday) date = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
             value = date;
         }
