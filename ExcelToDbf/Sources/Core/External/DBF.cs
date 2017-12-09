@@ -79,7 +79,7 @@ namespace ExcelToDbf.Sources.Core.External
             int fid = 0;
             foreach (var field in dbfFields)
             {
-                string input = field.text;
+                string input = field.text ?? "";
                 string type = field.type ?? "string";
 
                 var matches = Regex.Matches(input, "\\$([0-9a-zA-Z]+)", RegexOptions.Compiled);

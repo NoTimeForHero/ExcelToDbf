@@ -47,6 +47,7 @@ namespace ExcelToDbf.Sources.Core
             }
             catch (Exception ex) when (!Program.DEBUG)
             {
+                if (exception_var == null) throw;
                 string message = $"Ошибка на строке {startY + total}, ячейке {exception_var.x} в переменной {exception_var.name}:\n{ex.Message}";
                 throw new MyException(message, ex);
             }
@@ -142,7 +143,7 @@ namespace ExcelToDbf.Sources.Core
 
                     total++;
 
-                    if (total > maxY - startY)
+                    if (total > maxY - startY + 1)
                     {
                         Logger.warn("Попытка выйти за пределы документа, выход из цикла");
                         EOF = true;
@@ -155,6 +156,7 @@ namespace ExcelToDbf.Sources.Core
                         EOF = true;
                         break;
                     }
+
 
                     if (skipRecord) continue;
 

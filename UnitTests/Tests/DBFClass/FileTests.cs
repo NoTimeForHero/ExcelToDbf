@@ -9,6 +9,7 @@ using ExcelToDbf.Sources.Core.Data.Xml;
 using ExcelToDbf.Sources.Core.External;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SocialExplorer.IO.FastDBF;
+using UnitTests;
 
 namespace DomofonExcelToDbfTests.Tests.DBFClass
 {
@@ -21,7 +22,7 @@ namespace DomofonExcelToDbfTests.Tests.DBFClass
         private List<Xml_DbfField> fields;
         private Dictionary<string, TVariable> variables;
 
-        [TestInitialize()]
+        [TestInitialize]
         public void Startup()
         {
             Logger.SetLevel(Logger.LogLevel.DEBUG);
@@ -35,6 +36,12 @@ namespace DomofonExcelToDbfTests.Tests.DBFClass
             dbf.appendRecord(variables);
             Assert.AreEqual(dbf.Writed, 1);
             dbf.close();
+        }
+
+        [TestCleanup]
+        public void Cleanup()
+        {
+            TestLibrary.safeDelete(dbfFileName);
         }
 
         [TestMethod]

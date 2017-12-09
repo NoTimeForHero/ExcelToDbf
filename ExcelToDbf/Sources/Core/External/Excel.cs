@@ -34,11 +34,6 @@ namespace ExcelToDbf.Sources.Core.External
                 Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                 Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                 Type.Missing, Type.Missing);
-            if (wb.Worksheets.Count < 1)
-            {
-                Logger.warn("Выбранный Excel не содержит ни одного листа!");
-                return false;
-            }
 
             worksheet = wb.Worksheets[1];
             return true;

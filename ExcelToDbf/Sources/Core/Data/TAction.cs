@@ -168,6 +168,14 @@ namespace ExcelToDbf.Sources.Core.Data.TData
 
         public new void Set(object val)
         {
+            // Регулярные выражения игнорируются, если в ячейке уже дата
+            if (val is DateTime xdate)
+            {
+                if (lastday) xdate = new DateTime(xdate.Year, xdate.Month, DateTime.DaysInMonth(xdate.Year, xdate.Month));
+                value = xdate;
+                return;
+            }
+
             string str = ToStr(val);
 
             if (use_regex)

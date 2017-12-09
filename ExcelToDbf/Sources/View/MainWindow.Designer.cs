@@ -84,8 +84,7 @@
             this.textBoxPath.ReadOnly = true;
             this.textBoxPath.Size = new System.Drawing.Size(612, 24);
             this.textBoxPath.TabIndex = 4;
-            this.textBoxPath.Text = "C:\\Users\\user\\Documents\\Visual Studio 2015\\Projects\\DomofonExcelToDbf\\DomofonExce" +
-    "lToDbf\\bin\\Debug";
+            this.textBoxPath.Text = "C:\\";
             // 
             // buttonExit
             // 
@@ -196,6 +195,7 @@
             this.listBoxExcel.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
             this.listBoxExcel.Size = new System.Drawing.Size(307, 304);
             this.listBoxExcel.TabIndex = 3;
+            this.listBoxExcel.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listBoxFiles_MouseDoubleClick);
             // 
             // listBoxDBF
             // 
@@ -208,7 +208,7 @@
             this.listBoxDBF.ScrollAlwaysVisible = true;
             this.listBoxDBF.Size = new System.Drawing.Size(317, 304);
             this.listBoxDBF.TabIndex = 4;
-            this.listBoxDBF.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listBoxDBF_MouseDoubleClick);
+            this.listBoxDBF.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listBoxFiles_MouseDoubleClick);
             // 
             // pictureBox3
             // 

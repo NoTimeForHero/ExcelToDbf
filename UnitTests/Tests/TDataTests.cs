@@ -8,7 +8,7 @@ namespace UnitTests.Tests
 {
 
     [TestClass]
-    public class TData
+    public class TDataTests
     {
 
         [TestMethod]

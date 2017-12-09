@@ -23,7 +23,7 @@ namespace ExcelToDbf.Sources
     [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
     public class Program
     {
-        public static readonly bool DEBUG = Debugger.IsAttached && false;
+        public static readonly bool DEBUG = Debugger.IsAttached;
 
         [STAThread]
         private static void Main()
@@ -144,9 +144,26 @@ namespace ExcelToDbf.Sources
         /// Вызывается по кнопке "Конвертировать" на форме
         /// </summary>
         /// <param name="wmain">Окно, которое вызывает процесс конвертации</param>
-        /// <param name="files">Список файлов для конвертирования (с учётом выбора пользователя)</param>
-        public void action(MainWindow wmain, HashSet<string> files)
+        /// <param name="selectedfiles">Список файлов для конвертирования (с учётом выбора пользователя)</param>
+        public void action(MainWindow wmain, HashSet<string> selectedfiles)
         {
+            if (selectedfiles.Count > 0)
+            {
+                DialogResult ask = MessageBox.Show("Вы действительно хотите конвертировать только выбранные файлы?", "Вопрос",
+                    MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+
+                if (ask == DialogResult.No) selectedfiles = filesExcel;
+                if (ask == DialogResult.Cancel) return;
+            }
+            else selectedfiles = filesExcel;
+
+            if (selectedfiles.Count == 0 && filesExcel.Count == 0)
+            {
+                MessageBox.Show($"В директории нет Excel файлов для обработки!\nВыберите другую директорию!\n\n{config.inputDirectory}",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             if (process != null && process.IsAlive)
             {
                 MessageBox.Show("Процесс конвертирования уже запущен!\nДождись его завершения, если вы хотите начать новый.", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -162,7 +179,7 @@ namespace ExcelToDbf.Sources
                 if (!e.Cancel)
                 {
                     process.Abort();
-                    wstatus.Close();
+                    wstatus.mayClose();
                     MessageBox.Show(wmain, "Документы не были обработаны: процесс был прерван пользователем!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             };
@@ -175,7 +192,7 @@ namespace ExcelToDbf.Sources
             //wstatus.StartPosition = FormStartPosition.CenterParent;
             //wstatus.ShowDialog(wmain);
 
-            object data = new object[] { wstatus, wmain, files.ToList() };
+            object data = new object[] { wstatus, wmain, selectedfiles.ToList() };
 
             outlog.Clear();
             errlog.Clear();

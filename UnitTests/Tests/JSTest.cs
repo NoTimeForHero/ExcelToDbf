@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using ExcelToDbf.Sources.Core;
 using ExcelToDbf.Sources.Core.External;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -14,6 +15,7 @@ namespace DomofonExcelToDbfTests.Tests
         [DataRow("afterRegEx(file,/\\s/,2)", "Мир")]
         [DataRow("afterRegEx(file,/\\s/,8)+''", "null")]
         [DataRow("dir(0)", "Книги")]
+        [DataRow("dir(5)+''", "null")]
         public void FileFunction(string script, string mustbe)
         {
             JS engine = new JS(null);
@@ -39,6 +41,8 @@ namespace DomofonExcelToDbfTests.Tests
             ExceptionAssert.Throws<JS.JSException>(() => engine.Execute("dir(0)"));
             ExceptionAssert.Throws<ArgumentException>(() => engine.SetPath(null).Execute("dir(0)"));
             ExceptionAssert.Throws<ArgumentException>(() => engine.SetPath("Invalid Path?").Execute("dir(0)"));
+            // ReSharper disable once ObjectCreationAsStatement
+            ExceptionAssert.Throws<ArgumentNullException>(() => new PathHelper(null));
         }
 
         protected string ReadCell(int x, int y)

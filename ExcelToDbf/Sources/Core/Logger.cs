@@ -17,11 +17,9 @@ namespace ExcelToDbf.Sources.Core
         #endregion
 
         #region Constructor                
-
-        public Logger(string file = null, LogLevel level = LogLevel.INFO)
+        public Logger(LogLevel level = LogLevel.INFO)
         {
             this.level = level;
-            if (file != null) SetFile(file);
         }
         #endregion
 
@@ -29,7 +27,7 @@ namespace ExcelToDbf.Sources.Core
         public static void SetFile(string file)
         {
             instance.writer?.Close();
-            instance.writer = new StreamWriter(file, false) { AutoFlush = true };
+            instance.writer = file == null ? null : new StreamWriter(file, false) { AutoFlush = true };
         }
         #endregion
 
@@ -96,7 +94,7 @@ namespace ExcelToDbf.Sources.Core
             instance._log(data,level);
         }
 
-        protected void _log(object data, LogLevel curLevel)
+        protected void _log(object data, LogLevel curLevel, bool noFlush = false)
         {
             if (curLevel > level) return;
 
@@ -104,10 +102,17 @@ namespace ExcelToDbf.Sources.Core
             var msg = prefix + data;
 
             Console.WriteLine(msg);
-            if (writer != null)
+            if (writer != null && !noFlush)
             {
-                msg = msg.Replace("\n", Environment.NewLine + prefix);
-                writer.WriteLine(msg);
+                try
+                {
+                    msg = msg.Replace("\n", Environment.NewLine + prefix);
+                    writer.WriteLine(msg);
+                }
+                catch (Exception ex)
+                {
+                    _log(ex, LogLevel.CRITICAL, true);
+                }
             }
         }
 

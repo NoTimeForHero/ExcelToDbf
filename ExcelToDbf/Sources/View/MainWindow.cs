@@ -28,29 +28,12 @@ namespace ExcelToDbf.Sources.View
 
         private void buttonConvert_Click(object sender, EventArgs e)
         {
-            HashSet<string> files = program.filesExcel;
             HashSet<string> selectedfiles = new HashSet<string>();
 
             foreach (string filename in listBoxExcel.SelectedItems)
                 selectedfiles.Add(Path.Combine(program.config.inputDirectory, filename));
 
-            if (selectedfiles.Count > 0)
-            {
-                DialogResult ask = MessageBox.Show("Вы действительно хотите конвертировать только выбранные файлы?","Вопрос",
-                    MessageBoxButtons.YesNoCancel,MessageBoxIcon.Question);
-
-                if (ask == DialogResult.Yes) files = selectedfiles;
-                if (ask == DialogResult.Cancel) return;
-            }
-
-            if (selectedfiles.Count == 0 && files.Count == 0)
-            {
-                MessageBox.Show($"В директории нет Excel файлов для обработки!\nВыберите другую директорию!\n\n{program.config.inputDirectory}",
-                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            program.action(this,files);
+            program.action(this, selectedfiles);
         }
 
         private void MainWindow_Load(object sender, EventArgs e)
@@ -90,6 +73,7 @@ namespace ExcelToDbf.Sources.View
 
             if (result == CommonFileDialogResult.Ok)
             {
+                textBoxPath.Text = dialog.FileName;
                 program.config.inputDirectory = dialog.FileName;
                 program.config.outputDirectory = dialog.FileName;
                 program.updateDirectory();
@@ -120,13 +104,18 @@ namespace ExcelToDbf.Sources.View
             program.showStacktrace = settings_stack_trace.Checked;
         }
 
-        private void listBoxDBF_MouseDoubleClick(object sender, MouseEventArgs e)
+        private void listBoxFiles_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            int index = this.listBoxDBF.IndexFromPoint(e.Location);
-            if (index == System.Windows.Forms.ListBox.NoMatches) return;
+            if (!(sender is ListBox source)) return;
+            string initPath = sender.Equals(listBoxExcel) ? program.config.inputDirectory : program.config.outputDirectory;
 
-            var item = listBoxDBF.Items[index];
-            string path = Path.Combine(program.config.inputDirectory, item.ToString());
+            int index = source.IndexFromPoint(e.Location);
+            if (index == ListBox.NoMatches) return;
+
+            var item = source.Items[index];
+            string path = Path.Combine(initPath, item.ToString());
+
+            source.SelectedItems.Remove(item);
 
             var psi = new System.Diagnostics.ProcessStartInfo(path);
             psi.UseShellExecute = true;
