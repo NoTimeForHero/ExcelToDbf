@@ -29,7 +29,6 @@ namespace UnitTests.Tests
         }
 
         [TestMethod]
-        //[MethodImpl(MethodImplOptions.Synchronized)]
         public void TestFile()
         {
             String path = Path.GetTempFileName();

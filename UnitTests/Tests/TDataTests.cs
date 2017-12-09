@@ -111,5 +111,17 @@ namespace UnitTests.Tests
             tdate.Set("2005.15.05");
             Assert.AreEqual(new DateTime(2005, 5, 15), tdate.value);
         }
+
+        [TestMethod]
+        public void TestTDateWithDateValue()
+        {
+            var tdate = new TDate("DATE");
+            tdate.Set(new DateTime(2001, 11, 22));
+            Assert.AreEqual(new DateTime(2001, 11, 22), tdate.value);
+
+            tdate = new TDate("DATE") { lastday = true};
+            tdate.Set(new DateTime(2001, 11, 22));
+            Assert.AreEqual(new DateTime(2001, 11, DateTime.DaysInMonth(2001, 11)), tdate.value);
+        }
     }
 }

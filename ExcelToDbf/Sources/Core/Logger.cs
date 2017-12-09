@@ -104,15 +104,8 @@ namespace ExcelToDbf.Sources.Core
             Console.WriteLine(msg);
             if (writer != null && !noFlush)
             {
-                try
-                {
-                    msg = msg.Replace("\n", Environment.NewLine + prefix);
-                    writer.WriteLine(msg);
-                }
-                catch (Exception ex)
-                {
-                    _log(ex, LogLevel.CRITICAL, true);
-                }
+                msg = msg.Replace("\n", Environment.NewLine + prefix);
+                writer.WriteLine(msg);
             }
         }
 

@@ -17,6 +17,7 @@ using ExcelToDbf.Sources.Core.External;
 using ExcelToDbf.Sources.View;
 using Application = System.Windows.Forms.Application;
 using Point = System.Drawing.Point;
+using System.Runtime.InteropServices;
 
 namespace ExcelToDbf.Sources
 {
@@ -221,7 +222,8 @@ namespace ExcelToDbf.Sources
                 return;
             }
 
-            Excel excel = new Excel(config.save_memory);
+            bool reopenExcel = true;
+            Excel excel = null;
             DBF dbf = null;
 
             Stopwatch totalwatch = Stopwatch.StartNew();
@@ -232,6 +234,12 @@ namespace ExcelToDbf.Sources
                 string pathTemp = Path.GetTempFileName();
 
                 bool deleteDbf = false;
+
+                if (reopenExcel)
+                {
+                    excel = new Excel();
+                    reopenExcel = false;
+                }
 
                 try
                 {
@@ -281,6 +289,12 @@ namespace ExcelToDbf.Sources
                 }
                 catch (Exception ex) when (!DEBUG)
                 {
+                    if (ex is COMException)
+                    {
+                        Logger.error("Excel вероятнее всего крашанулся, он будет перезапущен для следующего документа в очереди!");
+                        reopenExcel = true;
+                    }
+
                     if (ex is ThreadAbortException || ex.InnerException is ThreadAbortException)
                     {
                         Logger.warn($"Пользователь вышел во время процесса конвертации документа '{filename}'!");
@@ -332,7 +346,7 @@ namespace ExcelToDbf.Sources
         {
             if (!config.only_rules) return;
             string message = "";
-            Excel excel = new Excel(config.save_memory);
+            Excel excel = new Excel();
 
             window.setState(true, "", 0, files.Count);
 

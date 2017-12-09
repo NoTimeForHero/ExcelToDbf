@@ -164,10 +164,10 @@ namespace ExcelToDbf.Sources.Core
                         SetVar(var, tmp[i, var.x]);
 
                     callback(stepScope);
-                    guiCallback?.Invoke(total);
                 }
                 watch.Stop();
                 Logger.debug($"Сегмент в {buffer} элементов (с {begin} по {end}) обработан за {watch.ElapsedMilliseconds} мс");
+                guiCallback?.Invoke(total);
 
                 begin += buffer;
                 end += buffer;

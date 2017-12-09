@@ -6,29 +6,19 @@ namespace ExcelToDbf.Sources.Core.External
     public class Excel
     {
         Application app;
-        Workbook wb;
+        public Workbook wb;
         public Worksheet worksheet;
-        protected bool saveMemory;
 
-        public Excel(bool saveMemory)
+        public Excel()
         {
-            if (saveMemory) app = new Application();
-            this.saveMemory = saveMemory;
+            app = new Application();
 
         }
 
         public bool OpenWorksheet(String path)
         {
             // Если не экономим память, то создаём новый экземпляр COM OLE
-            if (saveMemory)
-            {
-                wb?.Close(0);
-            }
-            else
-            {
-                app?.Quit();
-                app = new Application();
-            }
+            wb?.Close(0);
 
             wb = app.Workbooks.Open(path, Type.Missing, Type.Missing, Type.Missing, Type.Missing,
                 Type.Missing, Type.Missing, Type.Missing, Type.Missing,

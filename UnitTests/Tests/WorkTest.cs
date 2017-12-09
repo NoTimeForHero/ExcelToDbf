@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Xml;
 using ExcelToDbf.Sources.Core;
 using ExcelToDbf.Sources.Core.Data.Xml;
 using ExcelToDbf.Sources.Core.External;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Diagnostics;
 
 namespace UnitTests.Tests
 {
     [TestClass]
-    public class UnitTest1
+    public class WorkTest
     {
         protected Xml_Form generateForm()
         {
@@ -108,16 +111,14 @@ namespace UnitTests.Tests
             return doc.DocumentElement;
         }
 
-
         [TestMethod]
-        public void TestMethod1()
+        public void TestExcelExample1()
         {
-            //Logger.SetFile(null);
             string pathExcel = Path.Combine(Environment.CurrentDirectory, "Data\\Example1.xlsx");
             string pathTemp = TestLibrary.getTempFilename(".dbf");
 
             Xml_Form form = generateForm();
-            Excel excel = new Excel(true);
+            Excel excel = new Excel();
             DBF dbf = new DBF(pathTemp, form.DBF);
             try
             {
