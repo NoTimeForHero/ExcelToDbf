@@ -33,23 +33,23 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.buttonDirectory = new System.Windows.Forms.Button();
             this.textBoxPath = new System.Windows.Forms.TextBox();
-            this.button1 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
+            this.buttonSelectAll = new System.Windows.Forms.Button();
+            this.buttonUnSelectAll = new System.Windows.Forms.Button();
             this.labelSelectionCount = new System.Windows.Forms.Label();
-            this.dataGridViewExcel = new System.Windows.Forms.DataGridView();
             this.buttonConvert = new System.Windows.Forms.Button();
             this.buttonAbout = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
             this.labelDelimiter = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.labelTitle = new System.Windows.Forms.Label();
             this.labelStatus = new System.Windows.Forms.Label();
+            this.labelTitle = new System.Windows.Forms.Label();
+            this.dataGridViewExcel = new System.Windows.Forms.DataGridView();
             this.ColumnConvert = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.ColumnFilename = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnSize = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewExcel)).BeginInit();
             this.panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewExcel)).BeginInit();
             this.SuspendLayout();
             // 
             // buttonDirectory
@@ -72,34 +72,36 @@
             this.textBoxPath.TabIndex = 4;
             this.textBoxPath.Text = "C:\\";
             // 
-            // button1
+            // buttonSelectAll
             // 
-            this.button1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(4)))), ((int)(((byte)(232)))), ((int)(((byte)(2)))));
-            this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.button1.Image = global::ExcelToDbf.Properties.Resources.if_checkbox_checked_83249;
-            this.button1.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.button1.Location = new System.Drawing.Point(607, 556);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(127, 28);
-            this.button1.TabIndex = 8;
-            this.button1.Text = "Выделить все";
-            this.button1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.button1.UseVisualStyleBackColor = false;
+            this.buttonSelectAll.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(4)))), ((int)(((byte)(232)))), ((int)(((byte)(2)))));
+            this.buttonSelectAll.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.buttonSelectAll.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.buttonSelectAll.Image = global::ExcelToDbf.Properties.Resources.if_checkbox_checked_83249;
+            this.buttonSelectAll.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.buttonSelectAll.Location = new System.Drawing.Point(607, 556);
+            this.buttonSelectAll.Name = "buttonSelectAll";
+            this.buttonSelectAll.Size = new System.Drawing.Size(127, 28);
+            this.buttonSelectAll.TabIndex = 8;
+            this.buttonSelectAll.Text = "Выделить все";
+            this.buttonSelectAll.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.buttonSelectAll.UseVisualStyleBackColor = false;
+            this.buttonSelectAll.Click += new System.EventHandler(this.buttonSelectAll_Click);
             // 
-            // button2
+            // buttonUnSelectAll
             // 
-            this.button2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(4)))), ((int)(((byte)(232)))), ((int)(((byte)(2)))));
-            this.button2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.button2.Image = global::ExcelToDbf.Properties.Resources.if_checkbox_unchecked_83251;
-            this.button2.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.button2.Location = new System.Drawing.Point(740, 556);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(127, 28);
-            this.button2.TabIndex = 9;
-            this.button2.Text = "Снять все";
-            this.button2.UseVisualStyleBackColor = false;
+            this.buttonUnSelectAll.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(4)))), ((int)(((byte)(232)))), ((int)(((byte)(2)))));
+            this.buttonUnSelectAll.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.buttonUnSelectAll.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.buttonUnSelectAll.Image = global::ExcelToDbf.Properties.Resources.if_checkbox_unchecked_83251;
+            this.buttonUnSelectAll.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.buttonUnSelectAll.Location = new System.Drawing.Point(740, 556);
+            this.buttonUnSelectAll.Name = "buttonUnSelectAll";
+            this.buttonUnSelectAll.Size = new System.Drawing.Size(127, 28);
+            this.buttonUnSelectAll.TabIndex = 9;
+            this.buttonUnSelectAll.Text = "Снять все";
+            this.buttonUnSelectAll.UseVisualStyleBackColor = false;
+            this.buttonUnSelectAll.Click += new System.EventHandler(this.buttonSelectAll_Click);
             // 
             // labelSelectionCount
             // 
@@ -111,42 +113,6 @@
             this.labelSelectionCount.TabIndex = 10;
             this.labelSelectionCount.Text = "Файлов выбрано: 25";
             this.labelSelectionCount.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // dataGridViewExcel
-            // 
-            this.dataGridViewExcel.AllowUserToAddRows = false;
-            this.dataGridViewExcel.AllowUserToDeleteRows = false;
-            this.dataGridViewExcel.AllowUserToResizeRows = false;
-            this.dataGridViewExcel.BackgroundColor = System.Drawing.SystemColors.Control;
-            this.dataGridViewExcel.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(69)))), ((int)(((byte)(21)))));
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.Yellow;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewExcel.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
-            this.dataGridViewExcel.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewExcel.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.ColumnConvert,
-            this.ColumnFilename,
-            this.ColumnSize,
-            this.ColumnDate});
-            this.dataGridViewExcel.EnableHeadersVisualStyles = false;
-            this.dataGridViewExcel.Location = new System.Drawing.Point(19, 138);
-            this.dataGridViewExcel.Margin = new System.Windows.Forms.Padding(0);
-            this.dataGridViewExcel.Name = "dataGridViewExcel";
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewExcel.RowHeadersDefaultCellStyle = dataGridViewCellStyle2;
-            this.dataGridViewExcel.RowHeadersVisible = false;
-            this.dataGridViewExcel.Size = new System.Drawing.Size(848, 407);
-            this.dataGridViewExcel.TabIndex = 12;
             // 
             // buttonConvert
             // 
@@ -173,7 +139,7 @@
             this.buttonAbout.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.buttonAbout.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.buttonAbout.ForeColor = System.Drawing.Color.Yellow;
-            this.buttonAbout.Image = global::ExcelToDbf.Properties.Resources.if_run_3251;
+            this.buttonAbout.Image = global::ExcelToDbf.Properties.Resources.if_userconfig_7388;
             this.buttonAbout.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.buttonAbout.Location = new System.Drawing.Point(523, 601);
             this.buttonAbout.Name = "buttonAbout";
@@ -221,18 +187,6 @@
             this.panel1.Size = new System.Drawing.Size(884, 81);
             this.panel1.TabIndex = 18;
             // 
-            // labelTitle
-            // 
-            this.labelTitle.BackColor = System.Drawing.Color.Transparent;
-            this.labelTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.labelTitle.ForeColor = System.Drawing.Color.Yellow;
-            this.labelTitle.Location = new System.Drawing.Point(15, 9);
-            this.labelTitle.Name = "labelTitle";
-            this.labelTitle.Size = new System.Drawing.Size(855, 38);
-            this.labelTitle.TabIndex = 8;
-            this.labelTitle.Text = "Example";
-            this.labelTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // labelStatus
             // 
             this.labelStatus.BackColor = System.Drawing.Color.Transparent;
@@ -245,23 +199,81 @@
             this.labelStatus.Text = "Status";
             this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // labelTitle
+            // 
+            this.labelTitle.BackColor = System.Drawing.Color.Transparent;
+            this.labelTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.labelTitle.ForeColor = System.Drawing.Color.Yellow;
+            this.labelTitle.Location = new System.Drawing.Point(15, 9);
+            this.labelTitle.Name = "labelTitle";
+            this.labelTitle.Size = new System.Drawing.Size(855, 38);
+            this.labelTitle.TabIndex = 8;
+            this.labelTitle.Text = "Example";
+            this.labelTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // dataGridViewExcel
+            // 
+            this.dataGridViewExcel.AllowUserToAddRows = false;
+            this.dataGridViewExcel.AllowUserToDeleteRows = false;
+            this.dataGridViewExcel.AllowUserToResizeRows = false;
+            this.dataGridViewExcel.BackgroundColor = System.Drawing.SystemColors.Control;
+            this.dataGridViewExcel.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(69)))), ((int)(((byte)(21)))));
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.Yellow;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewExcel.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            this.dataGridViewExcel.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewExcel.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.ColumnConvert,
+            this.ColumnFilename,
+            this.ColumnSize,
+            this.ColumnDate});
+            this.dataGridViewExcel.EnableHeadersVisualStyles = false;
+            this.dataGridViewExcel.Location = new System.Drawing.Point(19, 138);
+            this.dataGridViewExcel.Margin = new System.Windows.Forms.Padding(0);
+            this.dataGridViewExcel.Name = "dataGridViewExcel";
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.Color.Khaki;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewExcel.RowHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            this.dataGridViewExcel.RowHeadersVisible = false;
+            this.dataGridViewExcel.RowTemplate.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.Khaki;
+            this.dataGridViewExcel.RowTemplate.DefaultCellStyle.SelectionForeColor = System.Drawing.SystemColors.WindowText;
+            this.dataGridViewExcel.Size = new System.Drawing.Size(848, 407);
+            this.dataGridViewExcel.TabIndex = 12;
+            this.dataGridViewExcel.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewExcel_CellClick);
+            this.dataGridViewExcel.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewExcel_CellDoubleClick);
+            // 
             // ColumnConvert
             // 
+            this.ColumnConvert.DataPropertyName = "Checked";
             this.ColumnConvert.HeaderText = "#";
             this.ColumnConvert.Name = "ColumnConvert";
             this.ColumnConvert.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.ColumnConvert.ToolTipText = "Конвертировать этот файл?";
             this.ColumnConvert.Width = 30;
             // 
             // ColumnFilename
             // 
+            this.ColumnFilename.DataPropertyName = "Filename";
             this.ColumnFilename.HeaderText = "Имя файла";
             this.ColumnFilename.MinimumWidth = 150;
             this.ColumnFilename.Name = "ColumnFilename";
             this.ColumnFilename.ReadOnly = true;
+            this.ColumnFilename.ToolTipText = "Нажмите дважды, чтобы открыть этот файл в Excel";
             this.ColumnFilename.Width = 500;
             // 
             // ColumnSize
             // 
+            this.ColumnSize.DataPropertyName = "Size";
             this.ColumnSize.HeaderText = "Размер";
             this.ColumnSize.MinimumWidth = 40;
             this.ColumnSize.Name = "ColumnSize";
@@ -270,6 +282,7 @@
             // 
             // ColumnDate
             // 
+            this.ColumnDate.DataPropertyName = "Date";
             this.ColumnDate.HeaderText = "Дата создания";
             this.ColumnDate.MinimumWidth = 40;
             this.ColumnDate.Name = "ColumnDate";
@@ -289,8 +302,8 @@
             this.Controls.Add(this.buttonDirectory);
             this.Controls.Add(this.textBoxPath);
             this.Controls.Add(this.labelSelectionCount);
-            this.Controls.Add(this.button2);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.buttonUnSelectAll);
+            this.Controls.Add(this.buttonSelectAll);
             this.Controls.Add(this.dataGridViewExcel);
             this.Controls.Add(this.panel1);
             this.DoubleBuffered = true;
@@ -301,8 +314,8 @@
             this.Name = "MainWindow";
             this.Text = "Конвертирование XLS файлов в DBF";
             this.Load += new System.EventHandler(this.MainWindow_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewExcel)).EndInit();
             this.panel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewExcel)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -311,10 +324,9 @@
         #endregion
         private System.Windows.Forms.Button buttonDirectory;
         private System.Windows.Forms.TextBox textBoxPath;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button buttonSelectAll;
+        private System.Windows.Forms.Button buttonUnSelectAll;
         private System.Windows.Forms.Label labelSelectionCount;
-        private System.Windows.Forms.DataGridView dataGridViewExcel;
         private System.Windows.Forms.Button buttonConvert;
         private System.Windows.Forms.Button buttonAbout;
         private System.Windows.Forms.Button button3;
@@ -322,6 +334,7 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label labelTitle;
         private System.Windows.Forms.Label labelStatus;
+        private System.Windows.Forms.DataGridView dataGridViewExcel;
         private System.Windows.Forms.DataGridViewCheckBoxColumn ColumnConvert;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnFilename;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnSize;

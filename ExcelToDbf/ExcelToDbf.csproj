@@ -228,13 +228,7 @@
     <Folder Include="bin\Debug\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\if_kde-folder-saved-search_25195.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\if_Folder_27849.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\if_document-open_79401.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\if_run_3251.png" />
@@ -247,6 +241,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\if_checkbox-checked_83249.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\if_userconfig_7388.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\xl.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\folder.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

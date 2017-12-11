@@ -79,6 +79,24 @@ namespace ExcelToDbf.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Sking;http://skingcito.deviantart.com/.
+        /// </summary>
+        internal static string convert_excel {
+            get {
+                return ResourceManager.GetString("convert_excel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на JOMMANS;http://jommans.deviantart.com/.
+        /// </summary>
+        internal static string convert_folder {
+            get {
+                return ResourceManager.GetString("convert_folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на FatCow Web Hosting;http://www.fatcow.com/.
         /// </summary>
         internal static string excel_export_xlsx {
@@ -102,6 +120,15 @@ namespace ExcelToDbf.Properties {
         internal static string run {
             get {
                 return ResourceManager.GetString("run", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Sergio Sánchez López;http://www.kde-look.org/usermanager/search.php?username=Sephiroth6779.
+        /// </summary>
+        internal static string users {
+            get {
+                return ResourceManager.GetString("users", resourceCulture);
             }
         }
     }

@@ -148,15 +148,12 @@ namespace ExcelToDbf.Sources
         /// <param name="selectedfiles">Список файлов для конвертирования (с учётом выбора пользователя)</param>
         public void action(MainWindow wmain, HashSet<string> selectedfiles)
         {
-            if (selectedfiles.Count > 0)
+            if (selectedfiles.Count == 0)
             {
-                DialogResult ask = MessageBox.Show("Вы действительно хотите конвертировать только выбранные файлы?", "Вопрос",
-                    MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-
-                if (ask == DialogResult.No) selectedfiles = filesExcel;
-                if (ask == DialogResult.Cancel) return;
+                MessageBox.Show($"Вы выбрали 0 файлов!\nДля продолжения выберите хотя бы один файл!",
+                    "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
-            else selectedfiles = filesExcel;
 
             if (selectedfiles.Count == 0 && filesExcel.Count == 0)
             {

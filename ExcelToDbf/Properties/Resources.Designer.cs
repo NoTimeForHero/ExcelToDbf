@@ -73,6 +73,16 @@ namespace ExcelToDbf.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap folder {
+            get {
+                object obj = ResourceManager.GetObject("folder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap if_checkbox_checked_83249 {
             get {
                 object obj = ResourceManager.GetObject("if_checkbox_checked_83249", resourceCulture);
@@ -121,12 +131,32 @@ namespace ExcelToDbf.Properties {
         }
         
         /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap if_userconfig_7388 {
+            get {
+                object obj = ResourceManager.GetObject("if_userconfig_7388", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Поиск локализованного ресурса типа System.Byte[].
         /// </summary>
         internal static byte[] Microsoft_WindowsAPICodePack {
             get {
                 object obj = ResourceManager.GetObject("Microsoft_WindowsAPICodePack", resourceCulture);
                 return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap xl {
+            get {
+                object obj = ResourceManager.GetObject("xl", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }

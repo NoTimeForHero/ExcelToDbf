@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
@@ -14,6 +11,15 @@ namespace ExcelToDbf.Sources.View
     public partial class MainWindow : Form
     {
         protected readonly Program program;
+        protected BindingSource BSFileInfo = new BindingSource();
+
+        protected enum GridIndexes : byte
+        {
+            CHECKED = 0,
+            FNAME = 1,
+            FSIZE = 2,
+            FDATE = 3
+        }
 
         public MainWindow(Program program)
         {
@@ -29,11 +35,9 @@ namespace ExcelToDbf.Sources.View
         private void buttonConvert_Click(object sender, EventArgs e)
         {
             HashSet<string> selectedfiles = new HashSet<string>();
-
-            /*
-            foreach (string filename in listBoxExcel.SelectedItems)
-                selectedfiles.Add(Path.Combine(program.config.inputDirectory, filename));
-                */
+            foreach (DataFileInfo info in BSFileInfo)
+                if (info.Checked)
+                    selectedfiles.Add(info.fullPath);
             program.action(this, selectedfiles);
         }
 
@@ -49,33 +53,19 @@ namespace ExcelToDbf.Sources.View
             textBoxPath.Text = Path.GetFullPath(program.config.inputDirectory);
             labelTitle.Text = program.config.title;
 
-            dataGridViewExcel.Rows.Clear();
+            BSFileInfo.Clear();
+            foreach (string fpath in program.filesExcel)
+                BSFileInfo.Add(new DataFileInfo(fpath, Update_LabelSelectionCount));
 
-            foreach (string fpath in program.filesExcel) {
-                FileInfo info = new FileInfo(fpath);
-                string filename = Path.GetFileName(fpath);
-                string size = BytesToString(info.Length);
-                string date = info.LastWriteTime.ToString("HH:mm - dd/MM/yyyy");
-
-                dataGridViewExcel.Rows.Add(true, filename, size, date);
-            }
-            Update_LabelSelectionCount(program.filesExcel.Count);
+            dataGridViewExcel.DataSource = BSFileInfo;
+            dataGridViewExcel.Refresh();
+            Update_LabelSelectionCount();
         }
 
-        protected void Update_LabelSelectionCount(int count)
+        protected void Update_LabelSelectionCount(bool value=false)
         {
-            labelSelectionCount.Text = "Файлов выбрано: " + count;
-        }
-
-        protected static String BytesToString(long byteCount)
-        {
-            string[] suf = { "Б", "Кб", "Мб", "Гб", "Тб" }; //Longs run out around EB
-            if (byteCount == 0)
-                return "0" + suf[0];
-            long bytes = Math.Abs(byteCount);
-            int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
-            double num = Math.Round(bytes / Math.Pow(1024, place), 1);
-            return Math.Sign(byteCount) * num + " " + suf[place];
+            IList<DataFileInfo> files = BSFileInfo.List as IList<DataFileInfo>;
+            labelSelectionCount.Text = "Файлов выбрано: " + files?.Count(f => f.Checked);
         }
 
         private void buttonDirectory_Click(object sender, EventArgs e)
@@ -103,35 +93,86 @@ namespace ExcelToDbf.Sources.View
             }
         }
 
-        /*
-        private void listBoxFiles_MouseDoubleClick(object sender, MouseEventArgs e)
+        // Запускаем Excel через Shell Execute при двойном клике на имени файла
+        private void dataGridViewExcel_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (!(sender is ListBox source)) return;
-            string initPath = sender.Equals(listBoxExcel) ? program.config.inputDirectory : program.config.outputDirectory;
+            if (e.ColumnIndex != (int) GridIndexes.FNAME || e.RowIndex == -1) return;
 
-            int index = source.IndexFromPoint(e.Location);
-            if (index == ListBox.NoMatches) return;
-
-            var item = source.Items[index];
-            string path = Path.Combine(initPath, item.ToString());
-
-            source.SelectedItems.Remove(item);
-
-            var psi = new System.Diagnostics.ProcessStartInfo(path);
-            psi.UseShellExecute = true;
+            if (!(BSFileInfo[e.RowIndex] is DataFileInfo info)) return;
+            var psi = new System.Diagnostics.ProcessStartInfo(info.fullPath) {UseShellExecute = true};
             System.Diagnostics.Process.Start(psi);
         }
 
-        private void listBoxExcel_MouseClick(object sender, MouseEventArgs e)
+        // Клик учитывается, даже если пользователь не попал по чекбоксу
+        private void dataGridViewExcel_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (!(sender is CheckedListBox source)) return;
-
-            int index = source.IndexFromPoint(e.Location);
-            if (index == ListBox.NoMatches) return;
-
-            bool state = source.GetItemChecked(index);
-            source.SetItemChecked(index, !state);
+            Console.WriteLine("Clicked!");
+            if (e.ColumnIndex != (int)GridIndexes.CHECKED || e.RowIndex == -1) return;
+            if (!(BSFileInfo[e.RowIndex] is DataFileInfo info)) return;
+            Console.WriteLine("Changed!");
+            info.Checked = !info.Checked;
+            BSFileInfo.ResetBindings(true);
         }
-        */
+
+        [SuppressMessage("ReSharper", "UnusedMember.Local")]
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
+        [SuppressMessage("ReSharper", "FieldCanBeMadeReadOnly.Local")]
+        [SuppressMessage("ReSharper", "NotAccessedField.Local")]
+        private class DataFileInfo
+        {
+            protected bool isChecked;
+            protected readonly string name;
+            protected readonly string size;
+            protected readonly string date;
+            public readonly string fullPath;
+
+            public delegate void DelegateCheckedChange(bool newState);
+            public DelegateCheckedChange CheckedChange;
+
+            public bool Checked
+            {
+                get => isChecked;
+                set
+                {
+                    isChecked = value;
+                    CheckedChange?.Invoke(value);
+                }
+            }
+
+            public string Filename => name;
+            public string Size => size;
+            public string Date => date;
+
+            public DataFileInfo(string fullPath, DelegateCheckedChange CheckedChange = null, string dateFormat ="HH:mm - dd/MM/yyyy")
+            {
+                this.CheckedChange = CheckedChange;
+                this.fullPath = fullPath;
+
+                FileInfo info = new FileInfo(fullPath);
+                name = Path.GetFileName(fullPath);
+                size = BytesToString(info.Length);
+                date = info.LastWriteTime.ToString(dateFormat);
+                isChecked = true;
+            }
+
+            protected static String BytesToString(long byteCount)
+            {
+                string[] suf = { "Б", "Кб", "Мб", "Гб", "Тб" }; //Longs run out around EB
+                if (byteCount == 0)
+                    return "0" + suf[0];
+                long bytes = Math.Abs(byteCount);
+                int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
+                double num = Math.Round(bytes / Math.Pow(1024, place), 1);
+                return Math.Sign(byteCount) * num + " " + suf[place];
+            }
+        }
+
+        private void buttonSelectAll_Click(object sender, EventArgs e)
+        {
+            bool Checked = sender == buttonSelectAll;
+            foreach (DataFileInfo info in BSFileInfo) info.Checked = Checked;
+            BSFileInfo.ResetBindings(true);
+            dataGridViewExcel.Refresh();
+        }
     }
 }
