@@ -81,7 +81,7 @@ namespace ExcelToDbf.Sources
 
             updateDirectory();
 
-            Logger.info("Версия программы: " + Resources.version);
+            Logger.info("Версия программы: " + Application.ProductVersion);
             Logger.info("Уровень логирования: " + Logger.Level);
         }
 

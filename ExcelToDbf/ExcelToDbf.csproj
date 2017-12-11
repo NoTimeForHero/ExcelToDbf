@@ -102,10 +102,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Properties\IconCredits.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IconCredits.resx</DependentUpon>
+    </Compile>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\LastLaunch.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>LastLaunch.settings</DependentUpon>
     </Compile>
     <Compile Include="Sources\View\MainWindow.cs">
       <SubType>Form</SubType>
@@ -189,6 +199,10 @@
     <EmbeddedResource Include="config.xml">
       <LogicalName>xConfig</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Properties\IconCredits.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>IconCredits.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Sources\View\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
@@ -202,31 +216,37 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\iConv.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\iExit64.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\zXls.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\oDBF2.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\zStrelka1.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\iPapkaLupa32.ico" />
+    <None Include="Properties\LastLaunch.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>LastLaunch.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\1488562050_export_excel.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\smallcheck.png" />
+    <Folder Include="bin\Debug\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="bin\Debug\" />
+    <None Include="Resources\if_kde-folder-saved-search_25195.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\if_Folder_27849.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\if_document-open_79401.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\if_run_3251.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\if_Gnome-Application-Exit-32_54914.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\if_checkbox-unchecked_83251.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\if_checkbox-checked_83249.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

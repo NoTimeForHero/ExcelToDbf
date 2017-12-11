@@ -22,14 +22,14 @@ namespace ExcelToDbf.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    internal class IconCredits {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Resources() {
+        internal IconCredits() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace ExcelToDbf.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ExcelToDbf.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ExcelToDbf.Properties.IconCredits", typeof(IconCredits).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,72 +61,47 @@ namespace ExcelToDbf.Properties {
         }
         
         /// <summary>
-        ///   Поиск локализованного ресурса типа System.Drawing.Icon, аналогичного (Значок).
+        ///   Ищет локализованную строку, похожую на Gnome Project;http://art.gnome.org/themes/icon.
         /// </summary>
-        internal static System.Drawing.Icon export_excel {
+        internal static string application_exit_gnome {
             get {
-                object obj = ResourceManager.GetObject("export_excel", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
+                return ResourceManager.GetString("application_exit_gnome", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        ///   Ищет локализованную строку, похожую на Keyamoon;http://keyamoon.com/.
         /// </summary>
-        internal static System.Drawing.Bitmap if_checkbox_checked_83249 {
+        internal static string checked_unchecked {
             get {
-                object obj = ResourceManager.GetObject("if_checkbox_checked_83249", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
+                return ResourceManager.GetString("checked_unchecked", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        ///   Ищет локализованную строку, похожую на FatCow Web Hosting;http://www.fatcow.com/.
         /// </summary>
-        internal static System.Drawing.Bitmap if_checkbox_unchecked_83251 {
+        internal static string excel_export_xlsx {
             get {
-                object obj = ResourceManager.GetObject("if_checkbox_unchecked_83251", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
+                return ResourceManager.GetString("excel_export_xlsx", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        ///   Ищет локализованную строку, похожую на Visual Pharm;http://icons8.com/.
         /// </summary>
-        internal static System.Drawing.Bitmap if_Folder_27849 {
+        internal static string folder {
             get {
-                object obj = ResourceManager.GetObject("if_Folder_27849", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
+                return ResourceManager.GetString("folder", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        ///   Ищет локализованную строку, похожую на Everaldo Coelho;http://www.everaldo.com/.
         /// </summary>
-        internal static System.Drawing.Bitmap if_Gnome_Application_Exit_32_54914 {
+        internal static string run {
             get {
-                object obj = ResourceManager.GetObject("if_Gnome_Application_Exit_32_54914", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap if_run_3251 {
-            get {
-                object obj = ResourceManager.GetObject("if_run_3251", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Поиск локализованного ресурса типа System.Byte[].
-        /// </summary>
-        internal static byte[] Microsoft_WindowsAPICodePack {
-            get {
-                object obj = ResourceManager.GetObject("Microsoft_WindowsAPICodePack", resourceCulture);
-                return ((byte[])(obj));
+                return ResourceManager.GetString("run", resourceCulture);
             }
         }
     }

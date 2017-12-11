@@ -13,7 +13,7 @@ namespace ExcelToDbf.Sources.View
 {
     public partial class MainWindow : Form
     {
-        Program program;
+        protected readonly Program program;
 
         public MainWindow(Program program)
         {
@@ -30,32 +30,52 @@ namespace ExcelToDbf.Sources.View
         {
             HashSet<string> selectedfiles = new HashSet<string>();
 
+            /*
             foreach (string filename in listBoxExcel.SelectedItems)
                 selectedfiles.Add(Path.Combine(program.config.inputDirectory, filename));
-
+                */
             program.action(this, selectedfiles);
         }
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
+            labelStatus.Text = program.config.status;
+            Text += $" ({Application.ProductVersion})";
             fillElementsData();
         }
 
         public void fillElementsData()
         {
             textBoxPath.Text = Path.GetFullPath(program.config.inputDirectory);
-            toolStripStatusLabel1.Text = program.config.status;
             labelTitle.Text = program.config.title;
 
-            listBoxExcel.Items.Clear();
-            foreach (string fpath in program.filesExcel)
-                listBoxExcel.Items.Add(Path.GetFileName(fpath));
-            listBoxExcel.Refresh();
+            dataGridViewExcel.Rows.Clear();
 
-            listBoxDBF.Items.Clear();
-            foreach (string fpath in program.filesDBF)
-                listBoxDBF.Items.Add(Path.GetFileName(fpath));
-            listBoxDBF.Refresh();
+            foreach (string fpath in program.filesExcel) {
+                FileInfo info = new FileInfo(fpath);
+                string filename = Path.GetFileName(fpath);
+                string size = BytesToString(info.Length);
+                string date = info.LastWriteTime.ToString("HH:mm - dd/MM/yyyy");
+
+                dataGridViewExcel.Rows.Add(true, filename, size, date);
+            }
+            Update_LabelSelectionCount(program.filesExcel.Count);
+        }
+
+        protected void Update_LabelSelectionCount(int count)
+        {
+            labelSelectionCount.Text = "Файлов выбрано: " + count;
+        }
+
+        protected static String BytesToString(long byteCount)
+        {
+            string[] suf = { "Б", "Кб", "Мб", "Гб", "Тб" }; //Longs run out around EB
+            if (byteCount == 0)
+                return "0" + suf[0];
+            long bytes = Math.Abs(byteCount);
+            int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
+            double num = Math.Round(bytes / Math.Pow(1024, place), 1);
+            return Math.Sign(byteCount) * num + " " + suf[place];
         }
 
         private void buttonDirectory_Click(object sender, EventArgs e)
@@ -66,9 +86,11 @@ namespace ExcelToDbf.Sources.View
                 return;
             }
 
-            var dialog = new CommonOpenFileDialog();
-            dialog.InitialDirectory = Path.GetFullPath(Path.GetDirectoryName(program.config.inputDirectory));
-            dialog.IsFolderPicker = true;
+            var dialog = new CommonOpenFileDialog
+            {
+                InitialDirectory = Path.GetFullPath(program.config.inputDirectory),
+                IsFolderPicker = true
+            };
             CommonFileDialogResult result = dialog.ShowDialog();
 
             if (result == CommonFileDialogResult.Ok)
@@ -81,29 +103,7 @@ namespace ExcelToDbf.Sources.View
             }
         }
 
-        private void menu_settings_DropDownOpening(object sender, EventArgs e)
-        {
-            settings_only_rules.Checked = program.config.only_rules;
-            settings_only_rules_CheckStateChanged(null, null);
-
-            settings_stack_trace.Checked = program.showStacktrace;
-            settings_stack_trace_CheckStateChanged(null, null);
-
-            settings_version.Text = "Версия: " + Properties.Resources.version;
-        }
-
-        private void settings_only_rules_CheckStateChanged(object sender, EventArgs e)
-        {
-            settings_only_rules.Image = (settings_only_rules.Checked) ? Properties.Resources.smallcheck : null;
-            program.config.only_rules = settings_only_rules.Checked;
-        }
-
-        private void settings_stack_trace_CheckStateChanged(object sender, EventArgs e)
-        {
-            settings_stack_trace.Image = (settings_stack_trace.Checked) ? Properties.Resources.smallcheck : null;
-            program.showStacktrace = settings_stack_trace.Checked;
-        }
-
+        /*
         private void listBoxFiles_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             if (!(sender is ListBox source)) return;
@@ -122,5 +122,16 @@ namespace ExcelToDbf.Sources.View
             System.Diagnostics.Process.Start(psi);
         }
 
+        private void listBoxExcel_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (!(sender is CheckedListBox source)) return;
+
+            int index = source.IndexFromPoint(e.Location);
+            if (index == ListBox.NoMatches) return;
+
+            bool state = source.GetItemChecked(index);
+            source.SetItemChecked(index, !state);
+        }
+        */
     }
 }
