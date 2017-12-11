@@ -103,6 +103,16 @@ namespace ExcelToDbf.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap if_eps_extension_file_name_13_1572493 {
+            get {
+                object obj = ResourceManager.GetObject("if_eps_extension_file_name-13_1572493", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap if_Folder_27849 {
             get {
                 object obj = ResourceManager.GetObject("if_Folder_27849", resourceCulture);

@@ -115,6 +115,15 @@ namespace ExcelToDbf.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Sergey Toropov;https://www.iconfinder.com/Sergt.
+        /// </summary>
+        internal static string main_excel {
+            get {
+                return ResourceManager.GetString("main_excel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Everaldo Coelho;http://www.everaldo.com/.
         /// </summary>
         internal static string run {

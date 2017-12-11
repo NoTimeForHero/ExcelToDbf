@@ -117,31 +117,4 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="application_exit_gnome" xml:space="preserve">
-    <value>Gnome Project;http://art.gnome.org/themes/icon</value>
-  </data>
-  <data name="checked_unchecked" xml:space="preserve">
-    <value>Keyamoon;http://keyamoon.com/</value>
-  </data>
-  <data name="convert_excel" xml:space="preserve">
-    <value>Sking;http://skingcito.deviantart.com/</value>
-  </data>
-  <data name="convert_folder" xml:space="preserve">
-    <value>JOMMANS;http://jommans.deviantart.com/</value>
-  </data>
-  <data name="excel_export_xlsx" xml:space="preserve">
-    <value>FatCow Web Hosting;http://www.fatcow.com/</value>
-  </data>
-  <data name="folder" xml:space="preserve">
-    <value>Visual Pharm;http://icons8.com/</value>
-  </data>
-  <data name="main_excel" xml:space="preserve">
-    <value>Sergey Toropov;https://www.iconfinder.com/Sergt</value>
-  </data>
-  <data name="run" xml:space="preserve">
-    <value>Everaldo Coelho;http://www.everaldo.com/</value>
-  </data>
-  <data name="users" xml:space="preserve">
-    <value>Sergio Sánchez López;http://www.kde-look.org/usermanager/search.php?username=Sephiroth6779</value>
-  </data>
 </root>

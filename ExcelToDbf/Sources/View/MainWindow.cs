@@ -174,5 +174,11 @@ namespace ExcelToDbf.Sources.View
             BSFileInfo.ResetBindings(true);
             dataGridViewExcel.Refresh();
         }
+
+        private void buttonAbout_Click(object sender, EventArgs e)
+        {
+            AboutBox about = new AboutBox();
+            about.Show(this);
+        }
     }
 }
