@@ -14,11 +14,10 @@ namespace ExcelToDbf.Sources.View
         public AboutBox()
         {
             InitializeComponent();
-            this.Text = $"О программе: {AssemblyTitle}";
-            this.labelProductName.Text += $": {AssemblyProduct}";
-            this.labelVersion.Text = $"Версия: {AssemblyVersion}";
-            this.labelCompanyName.Text += $": {AssemblyCompany}";
-            //this.textBoxDescription.Text += $": {AssemblyDescription}";
+            Text = $"О программе: {AssemblyTitle}";
+            labelProductName.Text += $": {AssemblyProduct}";
+            labelVersion.Text = $"Версия: {AssemblyVersion}";
+            labelCompanyName.Text += $": {AssemblyCompany}";
 
             string about = "Excel® является зарегистрированной торговой маркой Microsoft." + Environment.NewLine;
             about += $"Разработчик программы: <a href='http://github.com/{AssemblyCompany}'>{AssemblyCompany}</a> <br/>";
@@ -39,8 +38,13 @@ namespace ExcelToDbf.Sources.View
                 about += $"<a href='{parts[1]}'>{parts[0]}</a>, ";
                 count++;
             }
-            Console.WriteLine("Total: " + count);
             webBrowser1.DocumentText = about;
+        }
+
+        public sealed override string Text
+        {
+            get { return base.Text; }
+            set { base.Text = value; }
         }
 
         #region Методы доступа к атрибутам сборки

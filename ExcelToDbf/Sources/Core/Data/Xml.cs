@@ -17,7 +17,7 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
         public string LogLevel;
 
         public bool only_rules;
-        public bool save_memory;
+        public bool no_form_is_error;
 
         public int buffer_size;
 

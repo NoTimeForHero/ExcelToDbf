@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using ExcelToDbf.Properties;
+using ExcelToDbf.Sources.Core.Data;
+using ExcelToDbf.Sources.Core.Data.FormData;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace ExcelToDbf.Sources.View
@@ -12,6 +16,9 @@ namespace ExcelToDbf.Sources.View
     {
         protected readonly Program program;
         protected BindingSource BSFileInfo = new BindingSource();
+        protected BindingSource BSResults = new BindingSource();
+
+        protected EnumState state = EnumState.CHOOSE_FILES;
 
         protected enum GridIndexes : byte
         {
@@ -25,6 +32,40 @@ namespace ExcelToDbf.Sources.View
         {
             this.program = program;
             InitializeComponent();
+            dataGridViewResult.DataSource = BSResults;
+            changeState();
+        }
+
+        public void Log(DataLog.LogImage type, string message)
+        {
+            var groups = message.Split(new[] { "\n", "\\n" }, StringSplitOptions.None);
+            Invoke((MethodInvoker) delegate
+            {
+                foreach (var line in groups)
+                {
+                    if (line == "") continue;
+                    BSResults.Add(new DataLog(type, line));
+                }
+            });
+        }
+
+        protected void changeState()
+        {
+            state = state.Next();
+            if (state == EnumState.VIEW_LOG)
+            {
+                buttonConvert.Text = "Выбор файлов";
+                buttonConvert.Image = Resources.if_FolderOpened_Yellow_34223;
+                panelResult.Show();
+                panelConvert.Hide();
+            }
+            else
+            {
+                buttonConvert.Text = "Конвертировать";
+                buttonConvert.Image = Resources.if_run_3251;
+                panelResult.Hide();
+                panelConvert.Show();
+            }
         }
 
         private void buttonExit_Click(object sender, EventArgs e)
@@ -34,18 +75,34 @@ namespace ExcelToDbf.Sources.View
 
         private void buttonConvert_Click(object sender, EventArgs e)
         {
+            if (state == EnumState.VIEW_LOG)
+            {
+                changeState();
+                return;
+            }
+
+            BSResults.Clear();
+
             HashSet<string> selectedfiles = new HashSet<string>();
             foreach (DataFileInfo info in BSFileInfo)
                 if (info.Checked)
                     selectedfiles.Add(info.fullPath);
-            program.action(this, selectedfiles);
+            if (program.action(this, selectedfiles)) changeState();
         }
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
+            ToolTip tooltip = new ToolTip();
+            tooltip.SetToolTip(buttonDirectory, "Выбор директории входящих файлов");
+
             labelStatus.Text = program.config.status;
             Text += $" ({Application.ProductVersion})";
             fillElementsData();
+        }
+
+        public void toggleConvertButton(bool visible)
+        {
+            Invoke((MethodInvoker)delegate { buttonConvert.Visible = visible; });
         }
 
         public void fillElementsData()
@@ -103,68 +160,15 @@ namespace ExcelToDbf.Sources.View
             System.Diagnostics.Process.Start(psi);
         }
 
-        // Клик учитывается, даже если пользователь не попал по чекбоксу
+        // Клик учитывается, даже если пользователь не попал по чекбоксу      
+        // TODO: Пофиксить баг с обновлением - пока не переключишься на новую ячейку, не отрабатывает Callback на isChecked в DataFileInfo
         private void dataGridViewExcel_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            Console.WriteLine("Clicked!");
+            /*
             if (e.ColumnIndex != (int)GridIndexes.CHECKED || e.RowIndex == -1) return;
             if (!(BSFileInfo[e.RowIndex] is DataFileInfo info)) return;
-            Console.WriteLine("Changed!");
             info.Checked = !info.Checked;
-            BSFileInfo.ResetBindings(true);
-        }
-
-        [SuppressMessage("ReSharper", "UnusedMember.Local")]
-        [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
-        [SuppressMessage("ReSharper", "FieldCanBeMadeReadOnly.Local")]
-        [SuppressMessage("ReSharper", "NotAccessedField.Local")]
-        private class DataFileInfo
-        {
-            protected bool isChecked;
-            protected readonly string name;
-            protected readonly string size;
-            protected readonly string date;
-            public readonly string fullPath;
-
-            public delegate void DelegateCheckedChange(bool newState);
-            public DelegateCheckedChange CheckedChange;
-
-            public bool Checked
-            {
-                get => isChecked;
-                set
-                {
-                    isChecked = value;
-                    CheckedChange?.Invoke(value);
-                }
-            }
-
-            public string Filename => name;
-            public string Size => size;
-            public string Date => date;
-
-            public DataFileInfo(string fullPath, DelegateCheckedChange CheckedChange = null, string dateFormat ="HH:mm - dd/MM/yyyy")
-            {
-                this.CheckedChange = CheckedChange;
-                this.fullPath = fullPath;
-
-                FileInfo info = new FileInfo(fullPath);
-                name = Path.GetFileName(fullPath);
-                size = BytesToString(info.Length);
-                date = info.LastWriteTime.ToString(dateFormat);
-                isChecked = true;
-            }
-
-            protected static String BytesToString(long byteCount)
-            {
-                string[] suf = { "Б", "Кб", "Мб", "Гб", "Тб" }; //Longs run out around EB
-                if (byteCount == 0)
-                    return "0" + suf[0];
-                long bytes = Math.Abs(byteCount);
-                int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
-                double num = Math.Round(bytes / Math.Pow(1024, place), 1);
-                return Math.Sign(byteCount) * num + " " + suf[place];
-            }
+            */
         }
 
         private void buttonSelectAll_Click(object sender, EventArgs e)

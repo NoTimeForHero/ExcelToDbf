@@ -97,6 +97,15 @@ namespace ExcelToDbf.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Dat Nguyen;http://splashyfish.com/.
+        /// </summary>
+        internal static string error {
+            get {
+                return ResourceManager.GetString("error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на FatCow Web Hosting;http://www.fatcow.com/.
         /// </summary>
         internal static string excel_export_xlsx {
@@ -115,6 +124,15 @@ namespace ExcelToDbf.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Icons Land;http://www.icons-land.com/.
+        /// </summary>
+        internal static string folder_main {
+            get {
+                return ResourceManager.GetString("folder_main", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Sergey Toropov;https://www.iconfinder.com/Sergt.
         /// </summary>
         internal static string main_excel {
@@ -126,9 +144,9 @@ namespace ExcelToDbf.Properties {
         /// <summary>
         ///   Ищет локализованную строку, похожую на Everaldo Coelho;http://www.everaldo.com/.
         /// </summary>
-        internal static string run {
+        internal static string success_run {
             get {
-                return ResourceManager.GetString("run", resourceCulture);
+                return ResourceManager.GetString("success_run", resourceCulture);
             }
         }
         
@@ -138,6 +156,15 @@ namespace ExcelToDbf.Properties {
         internal static string users {
             get {
                 return ResourceManager.GetString("users", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Gasyoun;http://twitter.com/gasyoun.
+        /// </summary>
+        internal static string warning {
+            get {
+                return ResourceManager.GetString("warning", resourceCulture);
             }
         }
     }

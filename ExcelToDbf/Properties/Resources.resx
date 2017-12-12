@@ -148,7 +148,19 @@
   <data name="if_userconfig_7388" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\if_userconfig_7388.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="if_eps_extension_file_name-13_1572493" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="if_eps_extension_file_name" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\if_eps_extension_file_name-13_1572493.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="if_agt_action_success_3807" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\if_agt_action_success_3807.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="if_error_14415" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\if_error_14415.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="if_FolderOpened_Yellow_34223" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\if_FolderOpened_Yellow_34223.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="if_warning_16263" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\if_error_16263.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

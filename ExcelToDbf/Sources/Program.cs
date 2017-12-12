@@ -18,13 +18,15 @@ using ExcelToDbf.Sources.View;
 using Application = System.Windows.Forms.Application;
 using Point = System.Drawing.Point;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using ExcelToDbf.Sources.Core.Data.FormData;
 
 namespace ExcelToDbf.Sources
 {
     [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
     public class Program
     {
-        public static readonly bool DEBUG = Debugger.IsAttached;
+        public static readonly bool DEBUG = Debugger.IsAttached && false;
 
         [STAThread]
         private static void Main()
@@ -146,26 +148,26 @@ namespace ExcelToDbf.Sources
         /// </summary>
         /// <param name="wmain">Окно, которое вызывает процесс конвертации</param>
         /// <param name="selectedfiles">Список файлов для конвертирования (с учётом выбора пользователя)</param>
-        public void action(MainWindow wmain, HashSet<string> selectedfiles)
+        public bool action(MainWindow wmain, HashSet<string> selectedfiles)
         {
             if (selectedfiles.Count == 0)
             {
                 MessageBox.Show($"Вы выбрали 0 файлов!\nДля продолжения выберите хотя бы один файл!",
                     "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                return false;
             }
 
             if (selectedfiles.Count == 0 && filesExcel.Count == 0)
             {
                 MessageBox.Show($"В директории нет Excel файлов для обработки!\nВыберите другую директорию!\n\n{config.inputDirectory}",
                     "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                return false;
             }
 
             if (process != null && process.IsAlive)
             {
                 MessageBox.Show("Процесс конвертирования уже запущен!\nДождись его завершения, если вы хотите начать новый.", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                return false;
             }
 
             StatusWindow wstatus = new StatusWindow();
@@ -196,8 +198,10 @@ namespace ExcelToDbf.Sources
             errlog.Clear();
             formToFile.Clear();
 
+            wmain.toggleConvertButton(false);
             process = new Thread(delegate_action);
             process.Start(data);
+            return true;
         }
 
         /// <summary>
@@ -219,6 +223,11 @@ namespace ExcelToDbf.Sources
                 return;
             }
 
+            wmain.Log(DataLog.LogImage.NONE, DateTime.Now.ToString("Начало конвертации dd.MM.yyyy в HH:mm:ss"));
+            wmain.Log(DataLog.LogImage.NONE, "Директория: " + config.inputDirectory);
+            wmain.Log(DataLog.LogImage.NONE, "Задано файлов для обработки: " + files.Count);
+
+            int errcount = 0;
             bool reopenExcel = true;
             Excel excel = null;
             DBF dbf = null;
@@ -253,8 +262,10 @@ namespace ExcelToDbf.Sources
                     var form = findCorrectForm(excel.worksheet, config);
                     if (form == null)
                     {
-                        Logger.warn("Не найдено подходящих форм для обработки документа: " + filename);
-                        throw new NoNullAllowedException($"Не найдено подходящих форм для обработки документа '{filename}'!");
+                        string warning = $"Для документа '{filename}' не найдено подходящих форм обработки!";
+                        Logger.warn(warning);
+                        wmain.Log(DataLog.LogImage.WARNING, warning);
+                        throw new ArgumentNullException(warning);
                     }
 
                     string fileName = getOutputFilename(excel.worksheet, pathFull, config.outfile.simple, config.outfile.script);
@@ -277,6 +288,10 @@ namespace ExcelToDbf.Sources
                     File.Move(pathTemp, pathOutput);
                     Logger.debug($"Перемещение файла с {pathTemp} в {pathOutput}");
 
+                    wmain.Log(
+                        DataLog.LogImage.SUCCESS,
+                        $"Документ '{filename}' в {dbf.Writed} строк успешно обработан за {elapsed:hh\\:mm\\:ss\\.ff}."
+                        );
                     outlog.Add($"{filename} в {dbf.Writed} строк за {elapsed:hh\\:mm\\:ss\\.ff}");
 
                     Logger.info("Времени потрачено на обработку данных: " + elapsed);
@@ -286,6 +301,8 @@ namespace ExcelToDbf.Sources
                 }
                 catch (Exception ex) when (!DEBUG)
                 {
+                    bool addToFormLog = true;
+
                     if (ex is COMException)
                     {
                         Logger.error("Excel вероятнее всего крашанулся, он будет перезапущен для следующего документа в очереди!");
@@ -298,14 +315,18 @@ namespace ExcelToDbf.Sources
                         goto skip_error_msgbox;
                     }
 
-                    string stacktrace = (showStacktrace) ? $"\n\n{ex.StackTrace}" : "";
-                    string message = $"Ошибка! Документ \"{filename}\" будет пропущен!\n\n{ex.Message}{stacktrace}";
-                    errlog.Add($"Документ \"{filename}\" был пропущен!");
+                    if (ex is ArgumentNullException)
+                    {
+                        if (!config.no_form_is_error)
+                            continue;
+                        addToFormLog = false;
+                    }
 
+                    if (addToFormLog) wmain.Log(DataLog.LogImage.ERROR, $"Документ '{filename}' был пропущен из-за ошибки!\n{ex.Message}");
                     Logger.error($"Документ {filename} был пропущен из-за ошибки:\n{ex.Message}\n\n{ex.StackTrace}");
-                    MessageBox.Show(message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                    skip_error_msgbox:;
+                    skip_error_msgbox:
+                    errcount++;
                     deleteDbf = true;
                 }
                 finally
@@ -321,22 +342,16 @@ namespace ExcelToDbf.Sources
             // Не забываем завершить Excel
             excel.close();
 
-            string crules = "Время обработки документов:\n";
-            crules += String.Join("\n", outlog) + "\n";
-            crules += String.Format("\nВремени затрачено суммарно: " + totalwatch.Elapsed.ToString("hh\\:mm\\:ss\\.ff"));
-            Logger.info(crules);
+            string msgTotal = $"\nВремени затрачено суммарно: {totalwatch.Elapsed:hh\\:mm\\:ss\\.ff}";
+            wmain.Log(DataLog.LogImage.NONE, msgTotal);
+            Logger.info(msgTotal);
 
-            var icon = errlog.Count == 0 ? MessageBoxIcon.Information : MessageBoxIcon.Warning;
-            if (errlog.Count > 0) {
-                string warnFormat = config.warning ?? "{0}";
-                warnFormat = warnFormat.Replace("\\n", "\n");
-                crules += "\n\n" + String.Format(warnFormat,string.Join("\n", errlog));
-            }
+            if (errcount > 0) wmain.Log(DataLog.LogImage.ERROR, config.warning ?? "{0}");
 
+            wmain.toggleConvertButton(true);
             updateDirectory();
             wmain.BeginInvoke((MethodInvoker)wmain.fillElementsData);
             window.mayClose();
-            MessageBox.Show(crules, "Отчёт о времени обработки", MessageBoxButtons.OK, icon);
         }
 
         protected void CheckRules(IList<string> files, StatusWindow window)

@@ -129,19 +129,28 @@
   <data name="convert_folder" xml:space="preserve">
     <value>JOMMANS;http://jommans.deviantart.com/</value>
   </data>
+  <data name="error" xml:space="preserve">
+    <value>Dat Nguyen;http://splashyfish.com/</value>
+  </data>
   <data name="excel_export_xlsx" xml:space="preserve">
     <value>FatCow Web Hosting;http://www.fatcow.com/</value>
   </data>
   <data name="folder" xml:space="preserve">
     <value>Visual Pharm;http://icons8.com/</value>
   </data>
+  <data name="folder_main" xml:space="preserve">
+    <value>Icons Land;http://www.icons-land.com/</value>
+  </data>
   <data name="main_excel" xml:space="preserve">
     <value>Sergey Toropov;https://www.iconfinder.com/Sergt</value>
   </data>
-  <data name="run" xml:space="preserve">
+  <data name="success_run" xml:space="preserve">
     <value>Everaldo Coelho;http://www.everaldo.com/</value>
   </data>
   <data name="users" xml:space="preserve">
     <value>Sergio Sánchez López;http://www.kde-look.org/usermanager/search.php?username=Sephiroth6779</value>
+  </data>
+  <data name="warning" xml:space="preserve">
+    <value>Gasyoun;http://twitter.com/gasyoun</value>
   </data>
 </root>

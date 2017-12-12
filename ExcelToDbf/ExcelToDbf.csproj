@@ -117,6 +117,8 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>LastLaunch.settings</DependentUpon>
     </Compile>
+    <Compile Include="Sources\Core\Data\EnumState.cs" />
+    <Compile Include="Sources\Core\Data\FormData.cs" />
     <Compile Include="Sources\View\AboutBox.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -262,6 +264,18 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\if_eps_extension_file_name-13_1572493.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\if_agt_action_success_3807.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\if_error_14415.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\if_error_16263.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\if_FolderOpened_Yellow_34223.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
