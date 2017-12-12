@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using ExcelToDbf.Properties;
 
 namespace ExcelToDbf.Sources.Core.Data.FormData
@@ -44,6 +49,33 @@ namespace ExcelToDbf.Sources.Core.Data.FormData
             }
         }
 
+        public static List<DataLog> Load()
+        {
+            if (LastLaunch.Default.LastLog == null) return null;
+            byte[] data = Convert.FromBase64String(LastLaunch.Default.LastLog);
+            if (data.Length == 0) return null;
+            List<DataLog> list;
+            using (MemoryStream ms = new MemoryStream(data))
+            {
+                BinaryFormatter bf = new BinaryFormatter();
+                list = bf.Deserialize(ms) as List<DataLog>;
+            }
+            return list;
+        }
+
+        public static void Save(List<DataLog> list)
+        {
+            byte[] data;
+            using (MemoryStream ms = new MemoryStream())
+            {
+                BinaryFormatter bf = new BinaryFormatter();
+                bf.Serialize(ms, list);
+                data = ms.ToArray();
+            }
+            LastLaunch.Default.LastLog = Convert.ToBase64String(data);
+            LastLaunch.Default.Save();
+        }
+
         public DataLog(LogImage type, string message)
         {
             this.type = type;
@@ -77,6 +109,7 @@ namespace ExcelToDbf.Sources.Core.Data.FormData
             }
         }
 
+        public Bitmap CheckedImg => getImg(isChecked);
         public string Filename => name;
         public string Size => size;
         public string Date => date;
@@ -91,6 +124,11 @@ namespace ExcelToDbf.Sources.Core.Data.FormData
             size = BytesToString(info.Length);
             date = info.LastWriteTime.ToString(dateFormat);
             isChecked = true;
+        }
+
+        protected static Bitmap getImg(bool isChecked)
+        {
+            return isChecked ? Resources.if_checkbox_checked_83249 : Resources.if_checkbox_unchecked_83251;
         }
 
         protected static String BytesToString(long byteCount)

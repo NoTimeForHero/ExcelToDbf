@@ -51,7 +51,6 @@ namespace ExcelToDbf.Sources
         }
 
         readonly string confName;
-        public XDocument xdoc;
         public Xml_Config config;
         public bool showStacktrace = false;
         private Thread process;
@@ -74,7 +73,6 @@ namespace ExcelToDbf.Sources
             }
 
             config = Xml_Config.Load(confName);
-            xdoc = XDocument.Load(confName);
 
             if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
 
@@ -92,21 +90,21 @@ namespace ExcelToDbf.Sources
         /// </summary>
         public void updateDirectory()
         {
-            Logger.debug("Директория чтения: " + config.inputDirectory);
-            Logger.debug("Директория записи: " + config.outputDirectory);
+            Logger.debug("Директория чтения: " + LastLaunch.Default.inputDirectory);
+            Logger.debug("Директория записи: " + LastLaunch.Default.outputDirectory);
 
-            if (!Directory.Exists(config.inputDirectory)) config.inputDirectory = Directory.GetCurrentDirectory();
-            if (!Directory.Exists(config.outputDirectory)) config.outputDirectory = Directory.GetCurrentDirectory();
+            if (!Directory.Exists(LastLaunch.Default.inputDirectory)) LastLaunch.Default.inputDirectory = Directory.GetCurrentDirectory();
+            if (!Directory.Exists(LastLaunch.Default.outputDirectory)) LastLaunch.Default.outputDirectory = Directory.GetCurrentDirectory();
 
             filesDBF.Clear();
             filesExcel.Clear();
 
-            string[] fbyext = Directory.GetFiles(config.outputDirectory, "*.dbf", SearchOption.TopDirectoryOnly);
+            string[] fbyext = Directory.GetFiles(LastLaunch.Default.outputDirectory, "*.dbf", SearchOption.TopDirectoryOnly);
             filesDBF.UnionWith(fbyext);
 
             foreach (string extension in config.extensions)
             {
-                fbyext = Directory.GetFiles(config.inputDirectory, extension, SearchOption.TopDirectoryOnly);
+                fbyext = Directory.GetFiles(LastLaunch.Default.inputDirectory, extension, SearchOption.TopDirectoryOnly);
                 fbyext = fbyext.Where(path => path != null
                         && !Path.GetFileName(path).Equals(confName) // А также наш конфигурационный файл %EXE_NAME%.xml
                         && !Path.GetFileName(path).StartsWith("~$")).ToArray(); // Игнорируем временные файлы Excel вида ~$Document.xls[x]
@@ -117,10 +115,7 @@ namespace ExcelToDbf.Sources
         private void onFormMainClosing(object sender, FormClosingEventArgs e)
         {
             onCloseCheckProcess(e);
-
-            xdoc.Root.Element("inputDirectory").Value = config.inputDirectory;
-            xdoc.Root.Element("outputDirectory").Value = config.outputDirectory;
-            xdoc.Save(confName);
+            LastLaunch.Default.Save();
         }
 
         private void onCloseCheckProcess(FormClosingEventArgs e)
@@ -159,7 +154,7 @@ namespace ExcelToDbf.Sources
 
             if (selectedfiles.Count == 0 && filesExcel.Count == 0)
             {
-                MessageBox.Show($"В директории нет Excel файлов для обработки!\nВыберите другую директорию!\n\n{config.inputDirectory}",
+                MessageBox.Show($"В директории нет Excel файлов для обработки!\nВыберите другую директорию!\n\n{LastLaunch.Default.inputDirectory}",
                     "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
@@ -224,7 +219,7 @@ namespace ExcelToDbf.Sources
             }
 
             wmain.Log(DataLog.LogImage.NONE, DateTime.Now.ToString("Начало конвертации dd.MM.yyyy в HH:mm:ss"));
-            wmain.Log(DataLog.LogImage.NONE, "Директория: " + config.inputDirectory);
+            wmain.Log(DataLog.LogImage.NONE, "Директория: " + LastLaunch.Default.inputDirectory);
             wmain.Log(DataLog.LogImage.NONE, "Задано файлов для обработки: " + files.Count);
 
             int errcount = 0;
@@ -269,7 +264,7 @@ namespace ExcelToDbf.Sources
                     }
 
                     string fileName = getOutputFilename(excel.worksheet, pathFull, config.outfile.simple, config.outfile.script);
-                    string pathOutput = Path.Combine(config.outputDirectory, fileName);
+                    string pathOutput = Path.Combine(LastLaunch.Default.outputDirectory, fileName);
 
                     dbf = new DBF(pathTemp,form.DBF);
 

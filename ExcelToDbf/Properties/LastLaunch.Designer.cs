@@ -22,5 +22,41 @@ namespace ExcelToDbf.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string inputDirectory {
+            get {
+                return ((string)(this["inputDirectory"]));
+            }
+            set {
+                this["inputDirectory"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string outputDirectory {
+            get {
+                return ((string)(this["outputDirectory"]));
+            }
+            set {
+                this["outputDirectory"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastLog {
+            get {
+                return ((string)(this["LastLog"]));
+            }
+            set {
+                this["LastLog"] = value;
+            }
+        }
     }
 }

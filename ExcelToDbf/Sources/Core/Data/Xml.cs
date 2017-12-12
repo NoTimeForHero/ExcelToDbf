@@ -10,9 +10,6 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
     [XmlRoot("config", IsNullable = false)]
     public class Xml_Config
     {
-        public string inputDirectory;
-        public string outputDirectory;
-
         public bool log;
         public string LogLevel;
 

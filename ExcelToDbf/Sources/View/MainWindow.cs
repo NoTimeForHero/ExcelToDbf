@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 using System.Windows.Forms;
 using ExcelToDbf.Properties;
 using ExcelToDbf.Sources.Core.Data;
@@ -22,10 +24,10 @@ namespace ExcelToDbf.Sources.View
 
         protected enum GridIndexes : byte
         {
-            CHECKED = 0,
-            FNAME = 1,
-            FSIZE = 2,
-            FDATE = 3
+            CHECKED = 1,
+            FNAME = 2,
+            FSIZE = 3,
+            FDATE = 4
         }
 
         public MainWindow(Program program)
@@ -98,6 +100,8 @@ namespace ExcelToDbf.Sources.View
             labelStatus.Text = program.config.status;
             Text += $" ({Application.ProductVersion})";
             fillElementsData();
+
+            BSResults.DataSource = DataLog.Load();
         }
 
         public void toggleConvertButton(bool visible)
@@ -107,7 +111,7 @@ namespace ExcelToDbf.Sources.View
 
         public void fillElementsData()
         {
-            textBoxPath.Text = Path.GetFullPath(program.config.inputDirectory);
+            textBoxPath.Text = Path.GetFullPath(LastLaunch.Default.inputDirectory);
             labelTitle.Text = program.config.title;
 
             BSFileInfo.Clear();
@@ -135,7 +139,7 @@ namespace ExcelToDbf.Sources.View
 
             var dialog = new CommonOpenFileDialog
             {
-                InitialDirectory = Path.GetFullPath(program.config.inputDirectory),
+                InitialDirectory = Path.GetFullPath(LastLaunch.Default.inputDirectory),
                 IsFolderPicker = true
             };
             CommonFileDialogResult result = dialog.ShowDialog();
@@ -143,8 +147,8 @@ namespace ExcelToDbf.Sources.View
             if (result == CommonFileDialogResult.Ok)
             {
                 textBoxPath.Text = dialog.FileName;
-                program.config.inputDirectory = dialog.FileName;
-                program.config.outputDirectory = dialog.FileName;
+                LastLaunch.Default.inputDirectory = dialog.FileName;
+                LastLaunch.Default.outputDirectory = dialog.FileName;
                 program.updateDirectory();
                 fillElementsData();
             }
@@ -160,15 +164,13 @@ namespace ExcelToDbf.Sources.View
             System.Diagnostics.Process.Start(psi);
         }
 
-        // Клик учитывается, даже если пользователь не попал по чекбоксу      
-        // TODO: Пофиксить баг с обновлением - пока не переключишься на новую ячейку, не отрабатывает Callback на isChecked в DataFileInfo
+        // Вместо чекбокса выступает поле с картинкой чекбокса (которая не багует, в отличии от настоящих, WTF?)
         private void dataGridViewExcel_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            /*
             if (e.ColumnIndex != (int)GridIndexes.CHECKED || e.RowIndex == -1) return;
             if (!(BSFileInfo[e.RowIndex] is DataFileInfo info)) return;
             info.Checked = !info.Checked;
-            */
+            BSFileInfo.ResetBindings(true);
         }
 
         private void buttonSelectAll_Click(object sender, EventArgs e)
@@ -183,6 +185,11 @@ namespace ExcelToDbf.Sources.View
         {
             AboutBox about = new AboutBox();
             about.Show(this);
+        }
+
+        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            DataLog.Save(BSResults.List.Cast<DataLog>().ToList());
         }
     }
 }
