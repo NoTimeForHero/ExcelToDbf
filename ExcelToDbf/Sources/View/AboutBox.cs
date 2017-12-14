@@ -20,13 +20,12 @@ namespace ExcelToDbf.Sources.View
             labelCompanyName.Text += $": {AssemblyCompany}";
 
             string about = "Excel® является зарегистрированной торговой маркой Microsoft." + Environment.NewLine;
-            about += $"Разработчик программы: <a href='http://github.com/{AssemblyCompany}'>{AssemblyCompany}</a> <br/>";
+            about += $"<br/>Разработчик программы: <a href='http://github.com/{AssemblyCompany}'>{AssemblyCompany}</a> <br/><br/>";
             about += "Все права на иконки принадлежат их авторам: <br/>";
 
             Type resourceType = typeof(IconCredits);
             PropertyInfo[] resourceProps = resourceType.GetProperties( BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.GetProperty);
 
-            int count = 0;
             foreach (PropertyInfo info in resourceProps)
             {
                 if (info.PropertyType != typeof(string)) continue;
@@ -36,15 +35,14 @@ namespace ExcelToDbf.Sources.View
 
                 string[] parts = value.Split(new char[]{';'}, 2);
                 about += $"<a href='{parts[1]}'>{parts[0]}</a>, ";
-                count++;
             }
             webBrowser1.DocumentText = about;
         }
 
         public sealed override string Text
         {
-            get { return base.Text; }
-            set { base.Text = value; }
+            get => base.Text;
+            set => base.Text = value;
         }
 
         #region Методы доступа к атрибутам сборки
@@ -141,7 +139,7 @@ namespace ExcelToDbf.Sources.View
 
         private void AboutBox_Load(object sender, EventArgs e)
         {
-
+            // Nothing to do, just for fast skip to code
         }
     }
 }

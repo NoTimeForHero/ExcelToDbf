@@ -144,9 +144,9 @@ namespace ExcelToDbf.Properties {
         /// <summary>
         ///   Ищет локализованную строку, похожую на Everaldo Coelho;http://www.everaldo.com/.
         /// </summary>
-        internal static string success_run {
+        internal static string success_run_info {
             get {
-                return ResourceManager.GetString("success_run", resourceCulture);
+                return ResourceManager.GetString("success_run_info", resourceCulture);
             }
         }
         

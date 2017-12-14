@@ -212,15 +212,15 @@ namespace ExcelToDbf.Sources
             List<string> files = (List<string>)data[2];
             window.setState(true, "Подготовка файлов", 0, files.Count);
 
-            if (config.only_rules)
-            {
-                CheckRules(files, window);
-                return;
-            }
-
             wmain.Log(DataLog.LogImage.NONE, DateTime.Now.ToString("Начало конвертации dd.MM.yyyy в HH:mm:ss"));
             wmain.Log(DataLog.LogImage.NONE, "Директория: " + LastLaunch.Default.inputDirectory);
             wmain.Log(DataLog.LogImage.NONE, "Задано файлов для обработки: " + files.Count);
+
+            if (config.only_rules)
+            {
+                CheckRules(files, window, wmain);
+                return;
+            }
 
             int errcount = 0;
             bool reopenExcel = true;
@@ -338,7 +338,7 @@ namespace ExcelToDbf.Sources
             excel.close();
 
             string msgTotal = $"\nВремени затрачено суммарно: {totalwatch.Elapsed:hh\\:mm\\:ss\\.ff}";
-            wmain.Log(DataLog.LogImage.NONE, msgTotal);
+            wmain.Log(DataLog.LogImage.INFO, msgTotal);
             Logger.info(msgTotal);
 
             if (errcount > 0) wmain.Log(DataLog.LogImage.ERROR, config.warning ?? "{0}");
@@ -349,12 +349,13 @@ namespace ExcelToDbf.Sources
             window.mayClose();
         }
 
-        protected void CheckRules(IList<string> files, StatusWindow window)
+        protected void CheckRules(IList<string> files, StatusWindow window, MainWindow wmain)
         {
             if (!config.only_rules) return;
-            string message = "";
             Excel excel = new Excel();
 
+            int failed = 0;
+            wmain.Log(DataLog.LogImage.INFO, "Включен режим проверки форм без конвертирования!");
             window.setState(true, "", 0, files.Count);
 
             for (int id=0;id<files.Count;id++)
@@ -366,15 +367,21 @@ namespace ExcelToDbf.Sources
                 excel.OpenWorksheet(fname);
 
                 var form = findCorrectForm(excel.worksheet, config);
-                var formname = form?.Name ?? "[NULL]";
-                string line = $"Для документа '{docname}' выбрана форма '{formname}'!";
-                message += "\n" + line;
+                if (form == null) failed++;
+
+                var icon = form == null ? DataLog.LogImage.WARNING : DataLog.LogImage.SUCCESS;
+                var line = form == null ? $"Для документа '{docname}' не найдена форма!" : $"Для документа '{docname}' выбрана форма '{form.Name}'!";
+
+                wmain.Log(icon, line);
                 Logger.info(line);
             }
 
+            if (failed == 0) wmain.Log(DataLog.LogImage.SUCCESS, "Для всех документов были найдены формы!");
+            else wmain.Log(DataLog.LogImage.WARNING, $"Не удалось найти форму для {failed} документов!");
+
+            wmain.toggleConvertButton(true);
             excel.close();
             window.mayClose();
-            MessageBox.Show(message, "Отчёт о формах", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /// <summary>

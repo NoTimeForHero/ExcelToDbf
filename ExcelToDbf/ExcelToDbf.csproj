@@ -206,6 +206,7 @@
   <ItemGroup>
     <EmbeddedResource Include="config.xml">
       <LogicalName>xConfig</LogicalName>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\IconCredits.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -276,6 +277,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\if_FolderOpened_Yellow_34223.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\if_info_3238.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

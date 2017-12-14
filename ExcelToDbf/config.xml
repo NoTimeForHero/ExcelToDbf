@@ -1,23 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <config>
-  <inputDirectory regex="^([1-9]|1[0-2])$">DATA\2016\12</inputDirectory>
-  <outputDirectory>DATA\2016\12</outputDirectory>
+  <!-- записывать в LOG файл -->
   <log>true</log>
-  <show_stacktrace>false</show_stacktrace>
-  <only_rules>false</only_rules> <!-- не создавать DBF, только проверить заголовки -->
-  <save_memory>true</save_memory> <!-- использовать только один экземпляр COM Excel -->
-  <status>Тут будет какая-то информация</status>
+  <LogLevel>DEBUG</LogLevel>
+  <!-- не создавать DBF, только проверить заголовки -->
+  <only_rules>false</only_rules>
   <!-- Сколько записей будет обработано за один OLE запрос к Excel -->
   <buffer_size>2000</buffer_size>
-  <title>ООО "Рога и Копыта"</title>  
-  <warning>{0}</warning>
-  
+  <title>ООО "Рога и Копыта"</title>
+  <status>Тут будет важная информация?</status>
+  <warning>Строка, отображаемая если хоть в одном документе прошла ошибка.\nЛегко переносится на несколько строк.\nДля удобства.</warning>
+  <!-- Если true, значит при пропуске хоть одного документа из-за отсутствия форм будет показана ошибка из элемента выше -->
+  <no_form_is_error>false</no_form_is_error>
   <extensions>
     <ext>*.xls</ext>
     <ext>*.xlsx</ext>
     <ext>*.xml</ext>
   </extensions>
-
   <outfile>
     <simple>false</simple> <!-- если стоит true, то последующие инструкции будут проигнорированы, конвертируя по принципу "Some_document.xlsx" => "Some_document.dbf" -->
     <script>

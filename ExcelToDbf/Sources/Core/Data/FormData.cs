@@ -23,7 +23,8 @@ namespace ExcelToDbf.Sources.Core.Data.FormData
             NONE,
             WARNING,
             ERROR,
-            SUCCESS
+            SUCCESS,
+            INFO
         }
 
         protected readonly LogImage type;
@@ -44,6 +45,8 @@ namespace ExcelToDbf.Sources.Core.Data.FormData
                     return Resources.if_error_14415;
                 case LogImage.SUCCESS:
                     return Resources.if_agt_action_success_3807;
+                case LogImage.INFO:
+                    return Resources.if_info_3238;
                 default:
                     throw new ArgumentException("Unknown image for this LogImage enum: " + type);
             }

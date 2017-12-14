@@ -163,6 +163,16 @@ namespace ExcelToDbf.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap if_info_3238 {
+            get {
+                object obj = ResourceManager.GetObject("if_info_3238", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap if_run_3251 {
             get {
                 object obj = ResourceManager.GetObject("if_run_3251", resourceCulture);
