@@ -249,23 +249,26 @@ namespace ExcelToDbf.Sources.Core
 
         protected void InitVariables(Xml_Form lForm)
         {
-            foreach (var xmlelem in lForm.Fields.IF)
-            {
-                XElement xelem = XElement.Parse(xmlelem.OuterXml);
-                conditions.Add(ScanCondition(xelem));
-            }
+            if (lForm.Fields.Static != null)
+                foreach (var xmlelem in lForm.Fields.IF)
+                {
+                    XElement xelem = XElement.Parse(xmlelem.OuterXml);
+                    conditions.Add(ScanCondition(xelem));
+                }
 
-            foreach (var xmlelem in lForm.Fields.Static)
-            {
-                XElement xelem = XElement.Parse(xmlelem.OuterXml);
-                AddVar(staticVars, getVar(xelem, false));
-            }
+            if (lForm.Fields.Static != null)
+                foreach (var xmlelem in lForm.Fields.Static)
+                {
+                    XElement xelem = XElement.Parse(xmlelem.OuterXml);
+                    AddVar(staticVars, getVar(xelem, false));
+                }
 
-            foreach (var xmlelem in lForm.Fields.Dynamic)
-            {
-                XElement xelem = XElement.Parse(xmlelem.OuterXml);
-                AddVar(dynamicVars, getVar(xelem, true));
-            }
+            if (lForm.Fields.Dynamic != null)
+                foreach (var xmlelem in lForm.Fields.Dynamic)
+                {
+                    XElement xelem = XElement.Parse(xmlelem.OuterXml);
+                    AddVar(dynamicVars, getVar(xelem, true));
+                }
         }
 
         protected TCondition ScanCondition(XElement xml)
