@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // набора атрибутов. Измените значения этих атрибутов, чтобы изменить сведения,
 // связанные со сборкой.
 [assembly: AssemblyTitle("ExcelToDbf")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Конвертирование Excel файлов в DBF")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("NoTimeForHero")]
 [assembly: AssemblyProduct("ExcelToDbf")]
