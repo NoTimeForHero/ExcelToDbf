@@ -48,7 +48,7 @@ namespace ExcelToDbf.Sources.Core
             catch (Exception ex) when (!Program.DEBUG)
             {
                 if (exception_var == null) throw;
-                string message = $"Ошибка на строке {startY + total}, ячейке {exception_var.x} в переменной {exception_var.name}:\n{ex.Message}";
+                string message = $"Ошибка на строке {startY + total - 1}, ячейке {exception_var.x} в переменной {exception_var.name}:\n{ex.Message}";
                 throw new MyException(message, ex);
             }
             watch.Stop();
@@ -84,6 +84,7 @@ namespace ExcelToDbf.Sources.Core
                 watch = Stopwatch.StartNew();
                 for (int i = 1; i <= buffer; i++)
                 {
+                    total++;
                     bool skipRecord = false;
                     bool stopLoop = false;
 
@@ -140,8 +141,6 @@ namespace ExcelToDbf.Sources.Core
                             }
                         }
                     }
-
-                    total++;
 
                     if (total > maxY - startY + 1)
                     {
@@ -249,7 +248,7 @@ namespace ExcelToDbf.Sources.Core
 
         protected void InitVariables(Xml_Form lForm)
         {
-            if (lForm.Fields.Static != null)
+            if (lForm.Fields.IF != null)
                 foreach (var xmlelem in lForm.Fields.IF)
                 {
                     XElement xelem = XElement.Parse(xmlelem.OuterXml);

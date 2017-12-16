@@ -7,8 +7,8 @@
   <only_rules>false</only_rules>
   <!-- Сколько записей будет обработано за один OLE запрос к Excel -->
   <buffer_size>2000</buffer_size>
-  <title>ООО "Рога и Копыта"</title>
-  <status>Тут будет важная информация?</status>
+  <title>Название фирмы</title>
+  <status>Дополнительная информация</status>
   <warning>Строка, отображаемая если хоть в одном документе прошла ошибка.\nЛегко переносится на несколько строк.\nДля удобства.</warning>
   <!-- Если true, значит при пропуске хоть одного документа из-за отсутствия форм будет показана ошибка из элемента выше -->
   <no_form_is_error>false</no_form_is_error>
@@ -18,91 +18,148 @@
     <ext>*.xml</ext>
   </extensions>
   <outfile>
-    <simple>false</simple> <!-- если стоит true, то последующие инструкции будут проигнорированы, конвертируя по принципу "Some_document.xlsx" => "Some_document.dbf" -->
+    <simple>false</simple>
+    <!-- если стоит true, то последующие инструкции будут проигнорированы, конвертируя по принципу "Some_document.xlsx" => "Some_document.dbf" -->
     <script>
-        /// ---- Доступные функции: -----
-        /// string translit(string input) - возвращает строку input в транслите
-        /// string nospace(string input,string replaced) - заменяет в строке input все пробелы на replaced и возвращает строку
-        /// string|null xls(int x, int y) - читает значение из ячейки Excel, возвращает null если произошла ошибка
-        /// string|null afterRegEx(string input, Regex regex, int id=1) - разделяет строку input по регулярному выражению regex и возвращает id элемент полученного массива (1 если не указано) или null
-        /// string|null dir(int id) - возвращает сегмент пути по заданному пути
-        /// void log(string message) - вывести сообщение через Console.WriteLine (по умолчанию)
-        /// void  string message) - кидает исключение класса Jint.Runtime.JavaScriptException с сообщением message
-        /// 
-        /// ---- Доступные переменные: ----
-        /// string file - оригинальное имя Excel файла
-        /// string dirCount - количество сегментов в пути
-        /// 
-        /// На выход должна подаваться единственная строка с новым именем файла	
-		(function(){
-			file = nospace(file);
-			file = translit(file);
-			file = file + ".dbf";
-			return file;
-		})();
-	</script>
+      /// ---- Доступные функции: -----
+      /// string translit(string input) - возвращает строку input в транслите
+      /// string nospace(string input,string replaced) - заменяет в строке input все пробелы на replaced и возвращает строку
+      /// string|null xls(int x, int y) - читает значение из ячейки Excel, возвращает null если произошла ошибка
+      /// string|null afterRegEx(string input, Regex regex, int id=1) - разделяет строку input по регулярному выражению regex и возвращает id элемент полученного массива (1 если не указано) или null
+      /// string|null dir(int id) - возвращает сегмент пути по заданному пути
+      /// void log(string message) - вывести сообщение через Console.WriteLine (по умолчанию)
+      /// void  string message) - кидает исключение класса Jint.Runtime.JavaScriptException с сообщением message
+      ///
+      /// ---- Доступные переменные: ----
+      /// string file - оригинальное имя Excel файла
+      /// string dirCount - количество сегментов в пути
+      ///
+      /// На выход должна подаваться единственная строка с новым именем файла
+      (function(){
+      file = nospace(file);
+      file = translit(file);
+      file = file + ".dbf";
+      return file;
+      })();
+    </script>
   </outfile>
-  
+
   <Forms>
     <Form>
-      <Name>Форма 1-18 с ФИО</Name>
+      <Name>Форма 2.21А</Name>
       <Rules>
-        <Equal Y="1" X="10">Форма 1-18</Equal>
-        <Equal Y="11" X="1">№ кв.</Equal>
-        <Equal Y="11" X="2">ФИО</Equal>
-        <Equal Y="11" X="3">Код плательщика</Equal>
-        <Equal Y="11" X="10">Оплачено</Equal>
-        <!--<Equal Y="33" X="3">Несуществующее поле</Equal>-->
+        <Equal Y="2" X="2">Форма 2.21А</Equal>
+        <Equal Y="7" X="2">№</Equal>
+        <Equal Y="7" X="3">ФИО</Equal>
+        <Equal Y="7" X="4">Счёт</Equal>
+        <Equal Y="7" X="5">Сумма</Equal>
+        <Equal Y="7" X="6">Дата оплаты</Equal>
       </Rules>
       <Fields>
-        <StartY>13</StartY>
+        <StartY>8</StartY>
         <!-- Максимальное значение X, которое будет вытянуто в массив -->
-        <EndX>12</EndX>
-        <!-- language - необязательный тэг, по умолчанию будет задан ru-ru -->
-        <!-- форматы даты: https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx -->
-        <!-- ВНИМАНИЕ: Static внутри THEN/ELSE будет ПРОИГНОРИРОВАН! -->
-        <Static Y="3" X="3" name="DATEOPL" type="date" format="MMMM yyyy" lastday="true" language="ru-ru" />
-        <Static Y="1" X="10" name="FORM" />
-        <Dynamic X="12" name="RAND" />
+        <EndX>7</EndX>
         <!-- IF подобно Dynamic будет вызван для каждой записи -->
-        <IF X="1" VALUE="">
+        <IF X="2" VALUE="Пропуск">
           <THEN>
             <SKIP_RECORD />
           </THEN>
         </IF>
-        <IF X="1" VALUE="ИТОГО:">
+        <IF X="2" VALUE="Итого:">
           <THEN>
-            <SKIP_RECORD />
-          </THEN>
-        </IF>
-        <IF X="1" VALUE="ВСЕГО:">
-          <THEN>
-            <Dynamic X="10" name="XLS_SUMMA" type="numeric" />
+            <!-- Сумма из отчёта -->
+            <Dynamic X="5" name="XLS_SUMMA" type="numeric" />
             <STOP_LOOP />
           </THEN>
         </IF>
-        <IF X="3" VALUE="">
-          <THEN>
-            <Dynamic X="1" name="SMADR" />
-            <SKIP_RECORD />
-          </THEN>
-          <ELSE>
-            <Dynamic X="1" name="NUMKV" />
-            <Dynamic X="2" name="FIO" />
-            <Dynamic X="3" name="KP" />
-            <Dynamic X="10" name="SUMMA" type="numeric" />
-            <Dynamic X="10" name="TOTAL_SUMMA" type="numeric" function="SUM" />
-          </ELSE>
-        </IF>
+        <!-- Тип по умолчанию - string -->
+        <Dynamic X="2" name="ID" />
+        <Dynamic X="3" name="FIO" />
+        <Dynamic X="4" name="KP" />
+        <Dynamic X="5" name="SUMMA" type="numeric" />
+        <!-- Суммирование для каждой записи -->
+        <Dynamic X="5" name="TOTAL_SUMMA" type="numeric" function="SUM" />
+        <!-- language - необязательный тэг, по умолчанию будет задан ru-ru -->
+        <!-- форматы даты: https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx -->
+        <Dynamic X="6" name="DATEOPL" type="date" format="dd.MM.yyyy" language="ru-ru" lastday="false"/>
       </Fields>
       <DBF>
-        <field name="KP" type="string" length="14">$KP</field>
-        <field name="FIO" type="string" length="40">$FIO</field>
-        <field name="ADRES" type="string" length="40">$SMADR, кв.$NUMKV</field>
-        <field name="SUMMA" type="numeric" length="10,2">$SUMMA</field>
+        <field name="ID" type="string" length="8">$ID</field>
+        <field name="KP" type="string" length="8">$KP</field>
+        <field name="FIO" type="string" length="60">$FIO</field>
+        <field name="SUMMA" type="numeric" length="6,2">$SUMMA</field>
         <field name="DATAOPL" type="date" format="yyyy-MM-dd" length="8">$DATEOPL</field>
       </DBF>
       <Validate>
+        <!-- Сравнение суммы из отчёта и таблицы, помогает избежать расхождения при промежуточных полях -->
+        <Equal var1="TOTAL_SUMMA" var2="XLS_SUMMA">
+          <!-- На 10.000 записей допускается математическая погрешность в 0,5 -->
+          <Math type="numeric" count="10000" precision="0,5">Допустимая погрешность = {0}, значения отличаются на {1}</Math>
+          <Message>Итоговая сумма в DBF отличается от суммы в Excel!\nВ документе {0} ≠ {1} в экселе</Message>
+        </Equal>
+      </Validate>
+    </Form>
+    <Form>
+      <Name>Форма 2.21Б</Name>
+      <Rules>
+        <Equal Y="2" X="2">Форма 2.21Б</Equal>
+        <Equal Y="7" X="2">№</Equal>
+        <Equal Y="7" X="3">ФИО</Equal>
+        <Equal Y="7" X="4">Счёт</Equal>
+        <Equal Y="7" X="5">Сумма</Equal>
+        <Equal Y="7" X="6">Дата оплаты</Equal>
+      </Rules>
+      <Fields>
+        <StartY>8</StartY>
+        <EndX>7</EndX>
+        <!-- ВНИМАНИЕ: Static внутри THEN/ELSE будет ПРОИГНОРИРОВАН! -->
+        <Static X="2" Y="6" name="NACHDATE" type="date" format="dd.MM.yyyy" regex_pattern="по состоянию на (\d{2}\.\d{2}\.\d{4})" />
+        <IF X="2" VALUE="">
+          <THEN>
+            <SKIP_RECORD />
+          </THEN>
+        </IF>
+        <IF X="2" VALUE="###">
+          <THEN>
+            <Dynamic X="3" name="ADDRESS"/>
+            <SKIP_RECORD />
+          </THEN>
+        </IF>
+        <IF X="2" VALUE="Итого по дому:">
+          <THEN>
+            <!-- Сумма из отчёта -->
+            <Dynamic X="5" name="XLS_SUMMA" type="numeric" />
+            <SKIP_RECORD />
+          </THEN>
+        </IF>
+        <IF X="2" VALUE="Итого:">
+          <THEN>
+            <!-- Сумма из отчёта -->
+            <Dynamic X="5" name="XLS_SUMMA" type="numeric" />
+            <STOP_LOOP />
+          </THEN>
+        </IF>
+        <!-- Тип по умолчанию - string -->
+        <Dynamic X="2" name="ID" />
+        <Dynamic X="3" name="FIO" />
+        <Dynamic X="4" name="KP" />
+        <Dynamic X="5" name="SUMMA" type="numeric" />
+        <!-- Суммирование для каждой записи -->
+        <Dynamic X="5" name="TOTAL_SUMMA" type="numeric" function="SUM" />
+        <!-- language - необязательный тэг, по умолчанию будет задан ru-ru -->
+        <!-- форматы даты: https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx -->
+        <Dynamic X="6" name="DATEOPL" type="date" format="dd.MM.yyyy" language="ru-ru" lastday="false"/>
+      </Fields>
+      <DBF>
+        <field name="ID" type="string" length="8">$ID</field>
+        <field name="KP" type="string" length="8">$KP</field>
+        <field name="PERSON" type="string" length="140">$FIO, проживающий(ая) по адресу $ADDRESS</field>
+        <field name="SUMMA" type="numeric" length="6,2">$SUMMA</field>
+        <field name="DATAOPL" type="date" format="yyyy-MM-dd" length="8">$DATEOPL</field>
+        <field name="NACHDATE" type="date" format="yyyy-MM-dd" length="8">$NACHDATE</field>
+      </DBF>
+      <Validate>
+        <!-- Сравнение суммы из отчёта и таблицы, помогает избежать расхождения при промежуточных полях -->
         <Equal var1="TOTAL_SUMMA" var2="XLS_SUMMA">
           <!-- На 10.000 записей допускается математическая погрешность в 0,5 -->
           <Math type="numeric" count="10000" precision="0,5">Допустимая погрешность = {0}, значения отличаются на {1}</Math>
@@ -154,6 +211,6 @@
           <Message>Итоговая сумма в DBF отличается от суммы в Excel!\nВ документе {0} ≠ {1} в экселе</Message>
         </Equal>
       </Validate>
-    </Form>		
+    </Form>
   </Forms>
-</config>   
+</config>

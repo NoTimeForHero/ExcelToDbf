@@ -49,6 +49,8 @@ namespace ExcelToDbf.Sources.View
                 Label label = (global) ? label1 : label2;
                 ProgressBar progress = (global) ? progressBar1 : progressBar2;
 
+                if (progress_value > progress.Maximum) progress_value = progress.Maximum;
+
                 label.Text = data;
                 progress.Value = progress_value;
             });
