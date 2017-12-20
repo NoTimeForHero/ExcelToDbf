@@ -170,7 +170,6 @@
     <Form>
       <Name>Форма с регулярными выражениями</Name>
       <Rules>
-        <Equal Y="1" X="12">ООО "ЕРИЦ Владимирской области"</Equal>
         <Equal Y="6" X="2">№</Equal>
         <Equal Y="7" X="2">лицевого</Equal>
         <Equal Y="9" X="2">счета</Equal>
@@ -213,4 +212,4 @@
       </Validate>
     </Form>
   </Forms>
-</config>
+</config> 
