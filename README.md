@@ -17,11 +17,11 @@
 
 
 ## Используемые библиотеки
-
+* [SocialExplorer/FastDBF](https://github.com/SocialExplorer/FastDBF) - работа с DBF файлами
 * [Jint](https://github.com/sebastienros/jint) - JS интерпретатор для преобразования выходного имени DBF файла
 * [LibZ](https://github.com/MiloszKrajewski/LibZ) - альтернатива LibZ для объединения DLL в один EXE
-* [NickBuhro.Translit](https://github.com/nick-buhro/Translit) - библиотека для транслитерации согласно ГОСТу
-* [Windows API Code Pack](https://github.com/aybe/Windows-API-Code-Pack-1.1) - библиотека, для диалога выбора директории из нового Windows API
+* [NickBuhro.Translit](https://github.com/nick-buhro/Translit) - транслитерации согласно ГОСТу
+* [Windows API Code Pack](https://github.com/aybe/Windows-API-Code-Pack-1.1) - диалога выбора директории из нового Windows API
 * [Exception Assert](https://www.nuget.org/packages/ExceptionAssert/1.0.0) - библиотека, упрощающая юнит-тестирование
 
 

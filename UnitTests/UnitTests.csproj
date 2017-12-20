@@ -56,7 +56,7 @@
     </Reference>
     <Reference Include="SocialExplorer.FastDBF, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\SocialExplorer.FastDBF.dll</HintPath>
+      <HintPath>..\External\SocialExplorer.FastDBF.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
