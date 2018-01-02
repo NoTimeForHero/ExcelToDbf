@@ -55,23 +55,12 @@ namespace ExcelToDbf.Sources.Core.Data.TData
             this.name = name ?? throw new ArgumentNullException(nameof(name), @"Name can't be null!");
         }
 
-        public void Set(object val)
+        public virtual void Set(object val)
         {
-            switch (this)
-            {
-                case TDate tdate:
-                    tdate.Set(val);
-                    break;
-                case TNumeric tnum:
-                    tnum.Set(val);
-                    break;
-                default:
-                    string str = ToStr(val);
-                    if (use_regex)
-                        str = MatchGroup(str, regex_pattern, regex_group);
-                    value = str;
-                    break;
-            }
+            string str = ToStr(val);
+            if (use_regex)
+                str = MatchGroup(str, regex_pattern, regex_group);
+            value = str;
         }
 
         protected string ToStr(object val)
@@ -119,7 +108,7 @@ namespace ExcelToDbf.Sources.Core.Data.TData
     {
         public TNumeric(string name) : base(name) { }
 
-        public new void Set(object obj)
+        public override void Set(object obj)
         {
             string str = ToStr(obj);
 
@@ -166,7 +155,7 @@ namespace ExcelToDbf.Sources.Core.Data.TData
 
         public TDate(string name) : base(name) { }
 
-        public new void Set(object val)
+        public override void Set(object val)
         {
             // Регулярные выражения игнорируются, если в ячейке уже дата
             if (val is DateTime xdate)

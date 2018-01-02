@@ -131,24 +131,33 @@ namespace ExcelToDbf.Sources.View
 
         private void buttonDirectory_Click(object sender, EventArgs e)
         {
+            string filename;
+            bool selected;
+
             if (!CommonFileDialog.IsPlatformSupported)
             {
-                MessageBox.Show("Диалог выбора директории не поддерживается в вашей операционной системе!", "Критическая ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                var dialog = new FolderBrowserDialog {SelectedPath = LastLaunch.Default.inputDirectory};
+                DialogResult result = dialog.ShowDialog();
+                selected = result == DialogResult.OK;
+                filename = dialog.SelectedPath;
+            }
+            else
+            {
+                var dialog = new CommonOpenFileDialog
+                {
+                    InitialDirectory = Path.GetFullPath(LastLaunch.Default.inputDirectory),
+                    IsFolderPicker = true
+                };
+                CommonFileDialogResult result = dialog.ShowDialog();
+                selected = result == CommonFileDialogResult.Ok;
+                filename = dialog.FileName;
             }
 
-            var dialog = new CommonOpenFileDialog
+            if (selected)
             {
-                InitialDirectory = Path.GetFullPath(LastLaunch.Default.inputDirectory),
-                IsFolderPicker = true
-            };
-            CommonFileDialogResult result = dialog.ShowDialog();
-
-            if (result == CommonFileDialogResult.Ok)
-            {
-                textBoxPath.Text = dialog.FileName;
-                LastLaunch.Default.inputDirectory = dialog.FileName;
-                LastLaunch.Default.outputDirectory = dialog.FileName;
+                textBoxPath.Text = filename;
+                LastLaunch.Default.inputDirectory = filename;
+                LastLaunch.Default.outputDirectory = filename;
                 program.updateDirectory();
                 fillElementsData();
             }
