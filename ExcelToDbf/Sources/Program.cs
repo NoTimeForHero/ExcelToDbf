@@ -253,6 +253,20 @@ namespace ExcelToDbf.Sources
                     Logger.debug("==============================================================");
                     window.updateState(true, $"Документ: {filename}", idoc);
 
+                    string targetFileName = getOutputFilename(excel.worksheet, pathFull, config.outfile.simple, config.outfile.script);
+                    string pathOutput = Path.Combine(LastLaunch.Default.outputDirectory, targetFileName);
+
+                    if (File.Exists(pathOutput))
+                    {
+                        Logger.info($"Файл '{targetFileName}' уже существует!");
+                        if (config.skip_existing_files)
+                        {
+                            var message = $"Файл '{filename}' пропущен, так как уже был сконвертирован ранее!";
+                            wmain.Log(DataLog.LogImage.INFO, message);
+                            continue;
+                        }
+                    }
+
                     excel.OpenWorksheet(pathFull);
 
                     var form = findCorrectForm(excel.worksheet, config);
@@ -265,8 +279,6 @@ namespace ExcelToDbf.Sources
                         throw new ArgumentNullException(warning);
                     }
 
-                    string fileName = getOutputFilename(excel.worksheet, pathFull, config.outfile.simple, config.outfile.script);
-                    string pathOutput = Path.Combine(LastLaunch.Default.outputDirectory, fileName);
 
                     dbf = new DBF(pathTemp,form.DBF);
 

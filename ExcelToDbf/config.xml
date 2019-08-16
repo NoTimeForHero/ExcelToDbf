@@ -14,6 +14,8 @@
   <no_form_is_error>false</no_form_is_error>
   <!-- Показывать ли MessageBox со статусом выполнения задачи -->
   <show_messagebox_after>false</show_messagebox_after>
+  <!-- Пропускать ли существующие DBF файлы -->
+  <skip_existing_files>false</skip_existing_files>
   <extensions>
     <ext>*.xls</ext>
     <ext>*.xlsx</ext>
