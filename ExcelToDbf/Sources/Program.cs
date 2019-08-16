@@ -210,6 +210,7 @@ namespace ExcelToDbf.Sources
             StatusWindow window = (StatusWindow)data[0];
             MainWindow wmain = (MainWindow)data[1];
             List<string> files = (List<string>)data[2];
+            List<string> missingFiles = new List<string>();
             window.setState(true, "Подготовка файлов", 0, files.Count);
 
             wmain.Log(DataLog.LogImage.NONE, DateTime.Now.ToString("Начало конвертации dd.MM.yyyy в HH:mm:ss"));
@@ -259,7 +260,8 @@ namespace ExcelToDbf.Sources
                     {
                         string warning = $"Для документа '{filename}' не найдено подходящих форм обработки!";
                         Logger.warn(warning);
-                        wmain.Log(DataLog.LogImage.WARNING, warning);
+                        var icon = config.no_form_is_error ? DataLog.LogImage.ERROR : DataLog.LogImage.WARNING;
+                        wmain.Log(icon, warning);
                         throw new ArgumentNullException(warning);
                     }
 
@@ -322,6 +324,7 @@ namespace ExcelToDbf.Sources
 
                     skip_error_msgbox:
                     errcount++;
+                    missingFiles.Add(filename);
                     deleteDbf = true;
                 }
                 finally
@@ -347,6 +350,25 @@ namespace ExcelToDbf.Sources
             updateDirectory();
             wmain.BeginInvoke((MethodInvoker)wmain.fillElementsData);
             window.mayClose();
+
+
+            if (config.show_messagebox_after)
+            {
+                var icon = MessageBoxIcon.Information;
+                var title = "Конвертация успешно завершена";
+                var message = title + msgTotal;
+                if (errcount > 0)
+                {
+                    icon = MessageBoxIcon.Error;
+                    title = "Ошибка конвертации";
+                    message = "Ошибка! Не все файлы были сконвертированы!" + msgTotal;
+                    message += "\n\nНе удалось конвертировать следующие файлы:\n" + string.Join("\n", missingFiles);
+                }
+                wmain.BeginInvoke((System.Action) delegate
+                {
+                    MessageBox.Show(wmain, message, title, MessageBoxButtons.OK, icon);
+                });
+            }
         }
 
         protected void CheckRules(IList<string> files, StatusWindow window, MainWindow wmain)

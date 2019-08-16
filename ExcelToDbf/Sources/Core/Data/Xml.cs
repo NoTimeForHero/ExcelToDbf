@@ -15,6 +15,7 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
 
         public bool only_rules;
         public bool no_form_is_error;
+        public bool show_messagebox_after;
 
         public int buffer_size;
 

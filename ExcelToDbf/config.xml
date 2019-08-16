@@ -12,6 +12,8 @@
   <warning>Строка, отображаемая если хоть в одном документе прошла ошибка.\nЛегко переносится на несколько строк.\nДля удобства.</warning>
   <!-- Если true, значит при пропуске хоть одного документа из-за отсутствия форм будет показана ошибка из элемента выше -->
   <no_form_is_error>false</no_form_is_error>
+  <!-- Показывать ли MessageBox со статусом выполнения задачи -->
+  <show_messagebox_after>false</show_messagebox_after>
   <extensions>
     <ext>*.xls</ext>
     <ext>*.xlsx</ext>
