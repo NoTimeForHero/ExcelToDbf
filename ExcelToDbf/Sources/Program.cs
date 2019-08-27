@@ -269,7 +269,7 @@ namespace ExcelToDbf.Sources
 
                     excel.OpenWorksheet(pathFull);
 
-                    var form = findCorrectForm(excel.worksheet, config);
+                    var form = XmlTools.findCorrectForm(excel.worksheet, config.Forms);
                     if (form == null)
                     {
                         string warning = $"Для документа '{filename}' не найдено подходящих форм обработки!";
@@ -400,7 +400,7 @@ namespace ExcelToDbf.Sources
                 window.updateState(true, "Читаем документ " + docname, id+1);
                 excel.OpenWorksheet(fname);
 
-                var form = findCorrectForm(excel.worksheet, config);
+                var form = XmlTools.findCorrectForm(excel.worksheet, config.Forms);
                 if (form == null) failed++;
 
                 var icon = form == null ? DataLog.LogImage.WARNING : DataLog.LogImage.SUCCESS;
@@ -452,81 +452,6 @@ namespace ExcelToDbf.Sources
         }
 
         // <summary>
-        // Ищет подходящую XML форму для документа или null если ни одна не подходит
-        // </summary>
-        [SuppressMessage("ReSharper", "ReplaceWithSingleAssignment.False")]
-        public Xml_Form findCorrectForm(Worksheet worksheet, Xml_Config pConfig)
-        {
-            RegExCache regExCache = new RegExCache();
-
-            foreach (Xml_Form form in pConfig.Forms)
-            {
-                bool correct = true;
-                Logger.info("");
-                Logger.info($"Проверяем форму \"{form.Name}\"");
-                Logger.debug("==========================================");
-
-                int index = 1;
-                foreach (Xml_Equal rule in form.Rules)
-                {
-                    bool useRegex = rule.regex_pattern != null;
-                    bool validateRegex = rule.validate == "regex";
-
-                    string cell;
-
-                    try
-                    {
-                        cell = worksheet.Cells[rule.Y, rule.X].Value.ToString();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.debug($"Произошла ошибка при чтении ячейки Y={rule.Y},X={rule.X}!");
-                        Logger.debug($"Ожидалось: {rule.Text}");
-                        Logger.debug("Ошибка: " + ex.Message);
-                        Logger.info($"Форма не подходит по условию №{index}");
-                        correct = false;
-                        break;
-                    }
-
-                    string origcell = cell;
-                    if (useRegex && !validateRegex)
-                    {
-                        cell = regExCache.MatchGroup(cell, rule.regex_pattern, rule.regex_group);
-                    }
-
-                    bool failed = false;
-                    if (rule.Text != cell && !validateRegex) failed = true;
-                    if (validateRegex && !regExCache.IsMatch(cell, rule.Text)) failed = true;
-
-                    if (failed)
-                    {
-                        if (validateRegex || useRegex) Logger.debug("Провалена проверка по регулярному выражению!");
-                        Logger.debug($"Проверка провалена (Y={rule.Y},X={rule.X})");
-                        Logger.debug($"Ожидалось: {rule.Text}");
-                        Logger.debug($"Найдено: {cell}");
-                        if (useRegex)
-                        {
-                            Logger.debug($"Оригинальная ячейка: {origcell}");
-                            Logger.debug($"Регулярное выражение: {rule.regex_pattern}");
-                            Logger.debug($"Группа для поиска: {rule.regex_group}");
-                        }
-                        Logger.info($"Форма не подходит по условию №{index}");
-                        correct = false;
-                        break;
-                    }
-                    Logger.debug($"Y={rule.Y},X={rule.X}: {rule.Text}{(validateRegex ? " is match" : "==")}{cell}");
-                    index++;
-                }
-                if (correct)
-                {
-                    Logger.info($"Форма '{form.Name}' подходит для документа!");
-                    return form;
-                }
-            }
-            return null;
-        }
-
-        // <summary>
         // Метод считывает внутренний ресурс и записывает его в файл, возвращая статус существования ресурса
         // </summary>
         // <param name="resourceName">Имя внутренного ресурса</param>
@@ -544,5 +469,104 @@ namespace ExcelToDbf.Sources
             }
             return true;
         }
+
+
+        public class XmlTools
+        {
+            // <summary>
+            // Ищет подходящую XML форму для документа или null если ни одна не подходит
+            // </summary>
+            [SuppressMessage("ReSharper", "ReplaceWithSingleAssignment.False")]
+            public static Xml_Form findCorrectForm(Worksheet worksheet, List<Xml_Form> forms)
+            {
+                RegExCache regExCache = new RegExCache();
+
+                foreach (Xml_Form form in forms)
+                {
+                    bool correct = true;
+                    Logger.info("");
+                    Logger.info($"Проверяем форму \"{form.Name}\"");
+                    Logger.debug("==========================================");
+
+                    int index = 1;
+                    foreach (Xml_Equal_Base equalBase in form.Rules)
+                    {
+                        if (equalBase is Xml_Equal_Group group)
+                        {
+                            throw new NotImplementedException("Xml_EqualGroup under construction!");
+                        }
+                        if (equalBase is Xml_Equal rule)
+                        {
+                            int X = rule.X ?? throw new ArgumentException("X для условия не может быть пустым!", nameof(rule.X));
+                            int Y = rule.Y ?? throw new ArgumentException("Y для условия не может быть пустым!", nameof(rule.Y));
+                            if (!validateCell(worksheet, regExCache, ref index, rule, Y, X))
+                            {
+                                correct = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (correct)
+                    {
+                        Logger.info($"Форма '{form.Name}' подходит для документа!");
+                        return form;
+                    }
+                }
+                return null;
+            }
+
+            [SuppressMessage("ReSharper", "ReplaceWithSingleAssignment.False")]
+            protected static bool validateCell(Worksheet worksheet, RegExCache regExCache, ref int index, Xml_Equal rule, int Y, int X)
+            {
+                bool useRegex = rule.regex_pattern != null;
+                bool validateRegex = rule.validate == "regex";
+
+                string cell;
+
+                try
+                {
+                    cell = worksheet.Cells[Y, X].Value.ToString();
+                }
+                catch (Exception ex)
+                {
+                    Logger.debug($"Произошла ошибка при чтении ячейки Y={Y},X={X}!");
+                    Logger.debug($"Ожидалось: {rule.Text}");
+                    Logger.debug("Ошибка: " + ex.Message);
+                    Logger.info($"Форма не подходит по условию №{index}");
+                    return false;
+                }
+
+                string origcell = cell;
+                if (useRegex && !validateRegex)
+                {
+                    cell = regExCache.MatchGroup(cell, rule.regex_pattern, rule.regex_group);
+                }
+
+                bool failed = false;
+                // ReSharper disable once ConvertIfToOrExpression
+                if (rule.Text != cell && !validateRegex) failed = true;
+                if (validateRegex && !regExCache.IsMatch(cell, rule.Text)) failed = true;
+
+                if (failed)
+                {
+                    if (validateRegex || useRegex) Logger.debug("Провалена проверка по регулярному выражению!");
+                    Logger.debug($"Проверка провалена (Y={Y},X={X})");
+                    Logger.debug($"Ожидалось: {rule.Text}");
+                    Logger.debug($"Найдено: {cell}");
+                    if (useRegex)
+                    {
+                        Logger.debug($"Оригинальная ячейка: {origcell}");
+                        Logger.debug($"Регулярное выражение: {rule.regex_pattern}");
+                        Logger.debug($"Группа для поиска: {rule.regex_group}");
+                    }
+                    Logger.info($"Форма не подходит по условию №{index}");
+                    return false;
+                }
+                Logger.debug($"Y={Y},X={X}: {rule.Text}{(validateRegex ? " is match" : "==")}{cell}");
+                index++;
+                return true;
+            }
+        }
+
     }
 }

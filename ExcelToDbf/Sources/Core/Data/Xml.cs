@@ -55,8 +55,9 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
         public string Name;
 
         [XmlArray]
-        [XmlArrayItem("Equal")]
-        public List<Xml_Equal> Rules;
+        [XmlArrayItem("Equal", Type=typeof(Xml_Equal))]
+        [XmlArrayItem("Group", Type=typeof(Xml_Equal_Group))]
+        public List<Xml_Equal_Base> Rules;
 
         [XmlArray]
         [XmlArrayItem("field")]
@@ -133,14 +134,37 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
         }
     }
 
-    public class Xml_Equal
+    public abstract class Xml_Equal_Base
+    {
+        [XmlIgnore]
+        public int? X;
+
+        [XmlIgnore]
+        public int? Y;
+
+        [XmlAttribute("X")]
+        public string XmlSetterX
+        {
+            set => X = !string.IsNullOrEmpty(value) ? int.Parse(value) : default(int?);
+            get => X?.ToString();
+        }
+
+        [XmlAttribute("Y")]
+        public string XmlSetterY
+        {
+            set => Y = !string.IsNullOrEmpty(value) ? int.Parse(value) : default(int?);
+            get => Y?.ToString();
+        }
+    }
+
+    public class Xml_Equal_Group : Xml_Equal_Base
     {
         [XmlAttribute]
-        public int X;
+        public string Name;
+    }
 
-        [XmlAttribute]
-        public int Y;
-
+    public class Xml_Equal : Xml_Equal_Base
+    {
         [XmlText]
         public string Text;
 

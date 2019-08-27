@@ -215,5 +215,49 @@
         </Equal>
       </Validate>
     </Form>
+    <Form>
+      <!-- Форма, где неизвестна строка начала данных -->
+      <Name>Форма 2.21В</Name>
+      <Rules>
+        <!-- Именованная группа поиска с неизвестной Y кординатой -->
+        <Group Y="unknown" X="1" name="header">
+          <!-- Значения Y в группе относительны, условия ищутся по очереди как в списке -->
+          <Equal Y="0" X="0">№</Equal>
+          <Equal Y="1" X="1">лицевого</Equal>
+          <Equal Y="3" X="1">счета</Equal>
+          <Equal Y="0" X="2">Фамилия И.О.</Equal>
+          <Equal Y="0" X="5">Адрес</Equal>
+          <Equal Y="0" X="10">Оплачено</Equal>
+        </Group>
+      </Rules>
+      <Fields>
+        <StartY>
+          <!-- Данные начинаются через 4 строки после группы с именем "header" -->
+          <Group name="header" position="after" Y="4" />
+        </StartY>
+        <EndX>20</EndX>
+        <Dynamic X="2" name="KPA" />
+        <IF X="1" VALUE="Итого за период:">
+          <THEN>
+            <Dynamic X="11" name="XLS_SUMMA" type="numeric" />
+            <STOP_LOOP />
+          </THEN>
+          <ELSE>
+            <Dynamic X="2" name="KP" regex_pattern="\d(\d+)" />
+            <Dynamic X="3" name="FIO" />
+            <Dynamic X="6" name="ADRES" />
+            <Dynamic X="11" name="SUMMA" type="numeric" />
+            <Dynamic X="11" name="TOTAL_SUMMA" type="numeric" function="SUM" />
+          </ELSE>
+        </IF>
+      </Fields>
+      <DBF>
+        <field name="KP" type="string" length="9">$KP</field>
+        <field name="FIO" type="string" length="40">$FIO</field>
+        <field name="ADRES" type="string" length="40">$ADRES</field>
+        <field name="SUMMA" type="numeric" length="10,2">$SUMMA</field>
+        <field name="DATAOPL" type="date" format="yyyy-MM-dd" length="8">$DATEOPL</field>
+      </DBF>
+    </Form>
   </Forms>
 </config> 

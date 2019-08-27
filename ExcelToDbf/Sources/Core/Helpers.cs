@@ -40,7 +40,7 @@ namespace ExcelToDbf.Sources.Core
         }
     }
 
-    class RegExCache
+    public class RegExCache
     {
         protected Dictionary<String, Regex> regexes = new Dictionary<String, Regex>();
 

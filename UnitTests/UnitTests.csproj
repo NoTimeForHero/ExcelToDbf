@@ -75,6 +75,7 @@
     <Compile Include="Tests\DBFClass\FileTests.cs" />
     <Compile Include="Tests\DBFClass\NullTests.cs" />
     <Compile Include="Tests\JSTest.cs" />
+    <Compile Include="Tests\RulesTests.cs" />
     <Compile Include="Tests\TDataTests.cs" />
     <Compile Include="Tests\LoggerTests.cs" />
     <Compile Include="Tests\WorkTest.cs" />
