@@ -161,6 +161,9 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
     {
         [XmlAttribute]
         public string Name;
+
+        [XmlElement("Equal")]
+        public List<Xml_Equal> Rules;
     }
 
     public class Xml_Equal : Xml_Equal_Base

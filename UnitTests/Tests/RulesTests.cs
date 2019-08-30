@@ -13,15 +13,15 @@ using Action = System.Action;
 namespace UnitTests.Tests
 {
     [TestClass]
-    public class RulesTests
+    public class SimpleRulesTests
     {
-        private static Excel excel;
+        private static TestExcel excel;
         private static Worksheet ws => excel.Sheet;
 
         [ClassInitialize]
         public static void Init(TestContext ctx)
         {
-            excel = new Excel();
+            excel = new TestExcel();
             Logger.SetLevel(Logger.LogLevel.TRACER);
         }
 
@@ -141,29 +141,116 @@ namespace UnitTests.Tests
             form.Rules.Add(new Xml_Equal { Text = "TEST", Y = 1 });
             ExceptionAssert.Throws<ArgumentException>(testRules);
         }
+    }
 
-        private class Excel : IDisposable
+    [TestClass]
+    public class GroupRulesTests
+    {
+        private static TestExcel excel;
+        private static Worksheet ws => excel.Sheet;
+
+        [ClassInitialize]
+        public static void Init(TestContext ctx)
         {
-            private readonly ExcelApp app;
-            private readonly Workbook wb;
-            public Worksheet Sheet { get; }
+            excel = new TestExcel();
+            Logger.SetLevel(Logger.LogLevel.TRACER);
+        }
 
-            public Excel()
+        [ClassCleanup]
+        public static void Cleanup()
+        {
+            excel.Dispose();
+        }
+
+        [TestMethod]
+        public void RuleSimple()
+        {
+            int Y = 3;
+            int X = 1;
+            string[] titles = {"Фамилия", "Имя", "Отчество"};
+            for (int i = 0; i < titles.Length; i++)
             {
-                app = new ExcelApp
+                ws.Cells[Y, X+i] = titles[i];
+            }
+            int offsetY = 2;
+            string value = "Значение 1";
+            ws.Cells[Y + offsetY, X] = value;
+
+            Xml_Form form = new Xml_Form
+            {
+                Name = "Test",
+                Rules = new List<Xml_Equal_Base>
                 {
-                    SheetsInNewWorkbook = 1,
-                    Visible = false
-                };
-                wb = app.Workbooks.Add(Type.Missing);
-                Sheet = app.Worksheets[1];
-            }
+                    new Xml_Equal_Group
+                    {
+                        Y = Y,
+                        X = X,
+                        Rules = new List<Xml_Equal>
+                        {
+                            new Xml_Equal {Text = titles[0], X = 0, Y = 0},
+                            new Xml_Equal {Text = titles[1], X = 1, Y = 0},
+                            new Xml_Equal {Text = titles[2], X = 2, Y = 0},
+                            new Xml_Equal {Text = value, X = 0, Y = offsetY}
+                        }
+                    }
+                }
+            };
+            var finded = XmlTools.findCorrectForm(ws, new List<Xml_Form> { form });
+            Assert.AreEqual(form, finded);
+        }
 
-            public void Dispose()
+        [TestMethod]
+        public void RuleNotValid()
+        {
+            int Y = 3;
+            int X = 1;
+            ws.Cells[Y, X] = "Документ";
+
+            Xml_Form form = new Xml_Form
             {
-                wb.Close(false);
-                app.Quit();
-            }
+                Name = "Test",
+                Rules = new List<Xml_Equal_Base>
+                {
+                    new Xml_Equal_Group
+                    {
+                        Y = Y,
+                        X = X,
+                        Rules = new List<Xml_Equal>
+                        {
+                            new Xml_Equal {Text = "Документ", X = 0, Y = 0},
+                            new Xml_Equal {Text = "Простой", X = 1, Y = 0},
+                            new Xml_Equal {Text = "Сложный", X = 0, Y = 1},
+                        }
+                    }
+                }
+            };
+            var finded = XmlTools.findCorrectForm(ws, new List<Xml_Form> { form });
+            Assert.IsNull(finded);
+        }
+
+    }
+
+    public class TestExcel : IDisposable
+    {
+        private readonly ExcelApp app;
+        private readonly Workbook wb;
+        public Worksheet Sheet { get; }
+
+        public TestExcel()
+        {
+            app = new ExcelApp
+            {
+                SheetsInNewWorkbook = 1,
+                Visible = false
+            };
+            wb = app.Workbooks.Add(Type.Missing);
+            Sheet = app.Worksheets[1];
+        }
+
+        public void Dispose()
+        {
+            wb.Close(false);
+            app.Quit();
         }
     }
 }

@@ -477,6 +477,7 @@ namespace ExcelToDbf.Sources
             // Ищет подходящую XML форму для документа или null если ни одна не подходит
             // </summary>
             [SuppressMessage("ReSharper", "ReplaceWithSingleAssignment.False")]
+            [SuppressMessage("ReSharper", "PossibleInvalidOperationException")]
             public static Xml_Form findCorrectForm(Worksheet worksheet, List<Xml_Form> forms)
             {
                 RegExCache regExCache = new RegExCache();
@@ -493,7 +494,21 @@ namespace ExcelToDbf.Sources
                     {
                         if (equalBase is Xml_Equal_Group group)
                         {
-                            throw new NotImplementedException("Xml_EqualGroup under construction!");
+                            // TODO: Поиск по неизвестной координате
+                            int X = group.X ?? throw new ArgumentException("X для условия не может быть пустым!", nameof(group.X));
+                            int Y = group.Y ?? throw new ArgumentException("Y для условия не может быть пустым!", nameof(group.Y));
+                            if (group.Rules.Count < 1) throw new ArgumentException("В группе должно быть по меньшей мере одно условие!", nameof(group.Rules));
+                            foreach (Xml_Equal xmlEqual in group.Rules)
+                            {
+                                int innerX = X + xmlEqual.X.Value;
+                                int innerY = Y + xmlEqual.Y.Value;
+                                if (!validateCell(worksheet, regExCache, ref index, xmlEqual, innerY, innerX))
+                                {
+                                    correct = false;
+                                    break;
+                                }
+                            }
+                            if (correct == false) break;
                         }
                         if (equalBase is Xml_Equal rule)
                         {
