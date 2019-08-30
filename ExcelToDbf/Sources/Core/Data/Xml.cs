@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
+using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace ExcelToDbf.Sources.Core.Data.Xml
@@ -72,7 +73,7 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
 
     public class Xml_Form_Fields
     {
-        public int StartY;
+        public Xml_Start_Y StartY;
         public int EndX;
 
         [XmlAnyElement("Static")]
@@ -83,6 +84,49 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
 
         [XmlAnyElement("IF")]
         public XmlElement[] IF;
+    }
+
+    public class Xml_Start_Y : IXmlSerializable
+    {
+        public bool IsSimple => DangerValue.HasValue;
+        public int? DangerValue;
+        public Xml_Start_Y_Group group;
+
+        public XmlSchema GetSchema() => null;
+
+        public void ReadXml(XmlReader xmlReader)
+        {
+            var innerXML = xmlReader.ReadInnerXml();
+
+            if (int.TryParse(innerXML, out int number))
+            {
+                DangerValue = number;
+                return;
+            }
+
+            using (TextReader textReader = new StringReader(innerXML))
+            {
+                XmlRootAttribute root = new XmlRootAttribute("Group");
+                group = (Xml_Start_Y_Group) new XmlSerializer(typeof(Xml_Start_Y_Group), root).Deserialize(textReader);
+            }
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class Xml_Start_Y_Group
+    {
+        [XmlAttribute]
+        public string name;
+
+        [XmlAttribute]
+        public string position;
+
+        [XmlAttribute]
+        public int Y;
     }
 
     public class Xml_Validator

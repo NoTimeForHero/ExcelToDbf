@@ -30,7 +30,7 @@ namespace ExcelToDbf.Sources.Core
         public Work(Xml_Form form, int buffer)
         {
             InitVariables(form);
-            startY = form.Fields.StartY;
+            startY = form.Fields.StartY.DangerValue.Value;
             endX = form.Fields.EndX;
             validators = form.Validate;
             this.buffer = buffer;

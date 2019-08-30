@@ -282,7 +282,7 @@ namespace ExcelToDbf.Sources
 
                     dbf = new DBF(pathTemp,form.DBF);
 
-                    var total = excel.worksheet.UsedRange.Rows.Count - form.Fields.StartY;
+                    var total = excel.worksheet.UsedRange.Rows.Count - form.Fields.StartY.DangerValue.Value;
                     window.setState(false, $"Обработано записей: {0}/{total}", 0, total);
 
                     Work work = new Work(form, config.buffer_size);
@@ -305,7 +305,7 @@ namespace ExcelToDbf.Sources
 
                     Logger.info("Времени потрачено на обработку данных: " + elapsed);
                     Logger.info("Обработано записей: " + dbf.Writed);
-                    Logger.debug($"Начиная с {form.Fields.StartY} по {form.Fields.StartY + dbf.Writed}");
+                    Logger.debug($"Начиная с {form.Fields.StartY.DangerValue.Value} по {form.Fields.StartY.DangerValue.Value + dbf.Writed}");
                     Logger.info($"=============== Документ {Path.GetFileName(pathFull)} успешно обработан! ===============");
                 }
                 catch (Exception ex) when (!DEBUG)
