@@ -228,6 +228,98 @@ namespace UnitTests.Tests
             Assert.IsNull(finded);
         }
 
+        [TestMethod]
+        public void GroupSearch()
+        {
+            string[] values = { "Hello", "world", "!", "Again" };
+            ws.Cells[5, 2] = values[0];
+            ws.Cells[5, 3] = values[1];
+            ws.Cells[5, 5] = values[2];
+            ws.Cells[6, 1] = values[3];
+
+            Xml_Form form = new Xml_Form
+            {
+                Name = "Test",
+                Rules = new List<Xml_Equal_Base>()
+            };
+            var rule = new Xml_Equal_Group
+            {
+                Rules = new List<Xml_Equal>
+                {
+                    new Xml_Equal {Text = values[1], X = 1, Y = 0},
+                    new Xml_Equal {Text = values[0], X = 0, Y = 0},
+                }
+            };
+            form.Rules.Add(rule);
+            var finded = XmlTools.findCorrectForm(ws, new List<Xml_Form> { form });
+            Assert.AreEqual(form, finded);
+
+            rule.Rules.Insert(0, new Xml_Equal { Text = values[3], X = -1, Y = 1 });
+            finded = XmlTools.findCorrectForm(ws, new List<Xml_Form> { form });
+            Assert.AreEqual(form, finded);
+        }
+
+        [TestMethod]
+        public void GroupFailedSearch()
+        {
+            string value = "Hello world!";
+            ws.Cells[5, 2] = value;
+            Xml_Form form = new Xml_Form
+            {
+                Name = "Test",
+                Rules = new List<Xml_Equal_Base>
+                {
+                    new Xml_Equal_Group
+                    {
+                        Rules = new List<Xml_Equal>
+                        {
+                            new Xml_Equal {Text = "What is this?", X = 1, Y = 1},
+                        }
+                    }
+                }
+            };
+            var finded = XmlTools.findCorrectForm(ws, new List<Xml_Form> { form });
+            Assert.IsNull(finded);
+            ((Xml_Equal_Group)form.Rules[0]).Rules.Insert(0, new Xml_Equal
+            {
+                Text = value,
+                X = 0,
+                Y = 0
+            });
+            finded = XmlTools.findCorrectForm(ws, new List<Xml_Form> { form });
+            Assert.IsNull(finded);
+        }
+
+        [TestMethod]
+        public void GroupThrows()
+        {
+            Xml_Form form = new Xml_Form
+            {
+                Name = "Test",
+                Rules = new List<Xml_Equal_Base>
+                {
+                    new Xml_Equal_Group
+                    {
+                        Rules = new List<Xml_Equal>
+                        {
+                            new Xml_Equal {Text = "Проверка", X = 0, Y = 0},
+                        }
+                    }
+                }
+            };
+            Action testRules = () => XmlTools.findCorrectForm(ws, new List<Xml_Form> { form });
+            form.Rules[0].Y = null;
+            form.Rules[0].X = 1;
+            ExceptionAssert.Throws<ArgumentException>(testRules);
+            form.Rules[0].Y = 1;
+            form.Rules[0].X = null;
+            ExceptionAssert.Throws<ArgumentException>(testRules);
+            form.Rules[0].Y = 1;
+            form.Rules[0].X = 1;
+            ((Xml_Equal_Group)form.Rules[0]).Rules.Clear();
+            ExceptionAssert.Throws<ArgumentException>(testRules);
+        }
+
     }
 
     public class TestExcel : IDisposable

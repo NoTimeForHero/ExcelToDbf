@@ -489,15 +489,44 @@ namespace ExcelToDbf.Sources
                     Logger.info($"Проверяем форму \"{form.Name}\"");
                     Logger.debug("==========================================");
 
-                    int index = 1;
+                    int index = 0;
                     foreach (Xml_Equal_Base equalBase in form.Rules)
                     {
+                        index++;
                         if (equalBase is Xml_Equal_Group group)
                         {
-                            // TODO: Поиск по неизвестной координате
-                            int X = group.X ?? throw new ArgumentException("X для условия не может быть пустым!", nameof(group.X));
-                            int Y = group.Y ?? throw new ArgumentException("Y для условия не может быть пустым!", nameof(group.Y));
                             if (group.Rules.Count < 1) throw new ArgumentException("В группе должно быть по меньшей мере одно условие!", nameof(group.Rules));
+
+                            if ((!group.X.HasValue && group.Y.HasValue) || (!group.Y.HasValue && group.X.HasValue))
+                                throw new ArgumentException("Несогласованность: X и Y должны находиться в одинаковом состоянии!");
+
+                            int X;
+                            int Y;
+
+                            if (group.X.HasValue && group.Y.HasValue)
+                            {
+                                X = group.X.Value;
+                                Y = group.Y.Value;
+                            }
+                            else
+                            {
+                                Logger.debug($"Проверка группы №{index} с динамическим поиском!");
+                                var allCells = worksheet.UsedRange;
+                                var firstRule = group.Rules[0];
+                                var result = allCells.Find(firstRule.Text);
+                                Logger.debug($"Поиск динамического значения: {firstRule.Text}");
+                                if (result == null)
+                                {
+                                    Logger.info("Не удалось найти динамическое значение!");
+                                    correct = false;
+                                    break;
+                                }
+
+                                Logger.debug($"Найдено значение '{firstRule.Text}' по адресу 'Y={result.Row},X={result.Column}'!");
+                                Y = result.Row - firstRule.Y.Value;
+                                X = result.Column - firstRule.X.Value;
+                            }
+
                             foreach (Xml_Equal xmlEqual in group.Rules)
                             {
                                 int innerX = X + xmlEqual.X.Value;
@@ -578,7 +607,6 @@ namespace ExcelToDbf.Sources
                     return false;
                 }
                 Logger.debug($"Y={Y},X={X}: {rule.Text}{(validateRegex ? " is match" : "==")}{cell}");
-                index++;
                 return true;
             }
         }
