@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using ExcelToDbf.Sources.Core.Data.TData;
@@ -19,6 +20,9 @@ namespace ExcelToDbf.Sources.Core
         protected int startY;
         protected int endX;
         protected List<Xml_Validator> validators;
+        protected Worksheet worksheet;
+
+        public int StartY => startY;
 
         // Переменные для нахождения номера строки и переменной исключения
         protected int total;
@@ -27,16 +31,18 @@ namespace ExcelToDbf.Sources.Core
 
         public Dictionary<string, TVariable> stepScope = new Dictionary<string, TVariable>();
 
-        public Work(Xml_Form form, int buffer)
+        public Work(Worksheet worksheet, Xml_Form form, int buffer)
         {
+            this.worksheet = worksheet;
+            this.buffer = buffer;
+
             InitVariables(form);
-            startY = form.Fields.StartY.DangerValue.Value;
+            startY = findStartY(form);
             endX = form.Fields.EndX;
             validators = form.Validate;
-            this.buffer = buffer;
         }
 
-        public TimeSpan IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
+        public TimeSpan IterateRecords(Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
         {
             if (buffer <= 0) throw new ArgumentException("Буфер обработки должен быть больше ноля!");
             total = 0;
@@ -55,6 +61,28 @@ namespace ExcelToDbf.Sources.Core
             FinalChecks();
 
             return watch.Elapsed;
+        }
+
+        protected int findStartY(Xml_Form form)
+        {
+            var target = form.Fields.StartY;
+            if (target.IsSimple && target.SimpleValue.HasValue)
+            {
+                return target.SimpleValue.Value;
+            }
+
+            var group = form.Rules.OfType<Xml_Equal_Group>().FirstOrDefault(x => x.Name == target.group.name);
+            if (group == null) throw new InvalidOperationException($"Не удалось найти группу с именем '{target.group.name}'");
+
+            var point = Program.XmlTools.findGroupPosition(worksheet, group);
+            if (point == null) throw new InvalidOperationException($"Не удалось найти координаты для группы '{group.Name}'!");
+
+            if (target.group.position != "after")
+            {
+                throw new ArgumentException($"Недопустимое значение 'position': {target.group.position}",
+                    nameof(target.group.position));
+            }
+            return point.Value.Y + target.group.Y;
         }
 
         protected void __IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)

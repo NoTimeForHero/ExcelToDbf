@@ -282,11 +282,12 @@ namespace ExcelToDbf.Sources
 
                     dbf = new DBF(pathTemp,form.DBF);
 
-                    var total = excel.worksheet.UsedRange.Rows.Count - form.Fields.StartY.DangerValue.Value;
+                    Work work = new Work(excel.worksheet, form, config.buffer_size);
+
+                    var total = excel.worksheet.UsedRange.Rows.Count - work.StartY;
                     window.setState(false, $"Обработано записей: {0}/{total}", 0, total);
 
-                    Work work = new Work(form, config.buffer_size);
-                    TimeSpan elapsed = work.IterateRecords(excel.worksheet, dbf.appendRecord,
+                    TimeSpan elapsed = work.IterateRecords(dbf.appendRecord,
                         id => window.updateState(false, $"Обработано записей: {id}/{total}", id)
                     );
 
@@ -305,7 +306,7 @@ namespace ExcelToDbf.Sources
 
                     Logger.info("Времени потрачено на обработку данных: " + elapsed);
                     Logger.info("Обработано записей: " + dbf.Writed);
-                    Logger.debug($"Начиная с {form.Fields.StartY.DangerValue.Value} по {form.Fields.StartY.DangerValue.Value + dbf.Writed}");
+                    Logger.debug($"Начиная с {work.StartY} по {work.StartY + dbf.Writed}");
                     Logger.info($"=============== Документ {Path.GetFileName(pathFull)} успешно обработан! ===============");
                 }
                 catch (Exception ex) when (!DEBUG)
@@ -477,7 +478,6 @@ namespace ExcelToDbf.Sources
             // Ищет подходящую XML форму для документа или null если ни одна не подходит
             // </summary>
             [SuppressMessage("ReSharper", "ReplaceWithSingleAssignment.False")]
-            [SuppressMessage("ReSharper", "PossibleInvalidOperationException")]
             public static Xml_Form findCorrectForm(Worksheet worksheet, List<Xml_Form> forms)
             {
                 RegExCache regExCache = new RegExCache();
@@ -495,42 +495,20 @@ namespace ExcelToDbf.Sources
                         index++;
                         if (equalBase is Xml_Equal_Group group)
                         {
-                            if (group.Rules.Count < 1) throw new ArgumentException("В группе должно быть по меньшей мере одно условие!", nameof(group.Rules));
+                            Logger.debug($"Проверка группы №{index}!");
 
-                            if ((!group.X.HasValue && group.Y.HasValue) || (!group.Y.HasValue && group.X.HasValue))
-                                throw new ArgumentException("Несогласованность: X и Y должны находиться в одинаковом состоянии!");
-
-                            int X;
-                            int Y;
-
-                            if (group.X.HasValue && group.Y.HasValue)
+                            var point = findGroupPosition(worksheet, group);
+                            if (point == null)
                             {
-                                X = group.X.Value;
-                                Y = group.Y.Value;
-                            }
-                            else
-                            {
-                                Logger.debug($"Проверка группы №{index} с динамическим поиском!");
-                                var allCells = worksheet.UsedRange;
-                                var firstRule = group.Rules[0];
-                                var result = allCells.Find(firstRule.Text);
-                                Logger.debug($"Поиск динамического значения: {firstRule.Text}");
-                                if (result == null)
-                                {
-                                    Logger.info("Не удалось найти динамическое значение!");
-                                    correct = false;
-                                    break;
-                                }
-
-                                Logger.debug($"Найдено значение '{firstRule.Text}' по адресу 'Y={result.Row},X={result.Column}'!");
-                                Y = result.Row - firstRule.Y.Value;
-                                X = result.Column - firstRule.X.Value;
+                                correct = false;
+                                break;
                             }
 
                             foreach (Xml_Equal xmlEqual in group.Rules)
                             {
-                                int innerX = X + xmlEqual.X.Value;
-                                int innerY = Y + xmlEqual.Y.Value;
+                                int innerX = point.Value.X + xmlEqual.X.Value;
+                                int innerY = point.Value.Y + xmlEqual.Y.Value;
+
                                 if (!validateCell(worksheet, regExCache, ref index, xmlEqual, innerY, innerX))
                                 {
                                     correct = false;
@@ -557,6 +535,33 @@ namespace ExcelToDbf.Sources
                     }
                 }
                 return null;
+            }
+
+            public static Point? findGroupPosition(Worksheet worksheet, Xml_Equal_Group group)
+            {
+                if (group.Rules.Count < 1) throw new ArgumentException("В группе должно быть по меньшей мере одно условие!", nameof(group.Rules));
+
+                if ((!group.X.HasValue && group.Y.HasValue) || (!group.Y.HasValue && group.X.HasValue))
+                    throw new ArgumentException("Несогласованность: X и Y должны находиться в одинаковом состоянии!");
+
+                if (group.X.HasValue && group.Y.HasValue)
+                {
+                    return new Point(group.X.Value, group.Y.Value);
+                }
+
+                var firstRule = group.Rules[0];
+                Logger.debug($"Поиск динамического значения: {firstRule.Text}");
+                var result = worksheet.UsedRange.Find(firstRule.Text);
+                if (result == null)
+                {
+                    Logger.info("Не удалось найти динамическое значение!");
+                    return null;
+                }
+
+                Logger.debug($"Найдено значение '{firstRule.Text}' по адресу 'Y={result.Row},X={result.Column}'!");
+                int Y = result.Row - firstRule.Y.Value;
+                int X = result.Column - firstRule.X.Value;
+                return new Point(X, Y);
             }
 
             [SuppressMessage("ReSharper", "ReplaceWithSingleAssignment.False")]

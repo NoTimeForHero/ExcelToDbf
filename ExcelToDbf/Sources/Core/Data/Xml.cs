@@ -88,8 +88,8 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
 
     public class Xml_Start_Y : IXmlSerializable
     {
-        public bool IsSimple => DangerValue.HasValue;
-        public int? DangerValue;
+        public bool IsSimple => SimpleValue.HasValue;
+        public int? SimpleValue;
         public Xml_Start_Y_Group group;
 
         public XmlSchema GetSchema() => null;
@@ -100,7 +100,7 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
 
             if (int.TryParse(innerXML, out int number))
             {
-                DangerValue = number;
+                SimpleValue = number;
                 return;
             }
 

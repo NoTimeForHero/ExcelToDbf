@@ -322,6 +322,104 @@ namespace UnitTests.Tests
 
     }
 
+    [TestClass]
+    public class StartYRulesTest
+    {
+        private static TestExcel excel;
+        private static Worksheet ws => excel.Sheet;
+
+        [ClassInitialize]
+        public static void Init(TestContext ctx)
+        {
+            excel = new TestExcel();
+            Logger.SetLevel(Logger.LogLevel.TRACER);
+        }
+
+        [ClassCleanup]
+        public static void Cleanup()
+        {
+            excel.Dispose();
+        }
+
+        [TestMethod]
+        public void GroupSearch()
+        {
+            string[] values = { "Hello", "world", "!", "Again" };
+            int startY = 5;
+            int startYoffset = 5;
+
+            ws.Cells[startY, 2] = values[0];
+            ws.Cells[startY, 3] = values[1];
+            ws.Cells[startY, 5] = values[2];
+            ws.Cells[startY + 1, 1] = values[3];
+
+            Xml_Form form = new Xml_Form
+            {
+                Name = "Test",
+                Rules = new List<Xml_Equal_Base>(),
+                Fields = new Xml_Form_Fields()
+                {
+                    StartY = new Xml_Start_Y
+                    {
+                        group = new Xml_Start_Y_Group
+                        {
+                            name = "group1",
+                            position = "after",
+                            Y = startYoffset
+                        }
+                    }
+                }
+            };
+            var rule = new Xml_Equal_Group
+            {
+                Name = "group1",
+                Rules = new List<Xml_Equal>
+                {
+                    new Xml_Equal {Text = values[1], X = 1, Y = 0},
+                    new Xml_Equal {Text = values[0], X = 0, Y = 0},
+                }
+            };
+            form.Rules.Add(rule);
+
+            Work work = new Work(ws, form, 1);
+            Assert.AreEqual(startY + startYoffset, work.StartY);
+        }
+
+        [TestMethod]
+        public void FailedSearch()
+        {
+            string[] values = { "Hello", "world", "!", "Again" };
+            int startY = 5;
+            int startYoffset = 5;
+
+            ws.Cells[startY, 2] = values[0];
+            ws.Cells[startY, 3] = values[1];
+            ws.Cells[startY, 5] = values[2];
+            ws.Cells[startY + 1, 1] = values[3];
+
+            Xml_Form form = new Xml_Form
+            {
+                Name = "Test",
+                Rules = new List<Xml_Equal_Base>(),
+                Fields = new Xml_Form_Fields
+                {
+                    StartY = new Xml_Start_Y
+                    {
+                        group = new Xml_Start_Y_Group
+                        {
+                            name = "group2",
+                            position = "after",
+                            Y = startYoffset
+                        }
+                    }
+                }
+            };
+            Action testRules = () => new Work(ws, form, 1);
+            ExceptionAssert.Throws<InvalidOperationException>(testRules);
+        }
+
+    }
+
     public class TestExcel : IDisposable
     {
         private readonly ExcelApp app;

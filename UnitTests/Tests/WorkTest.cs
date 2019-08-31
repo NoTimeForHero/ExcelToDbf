@@ -62,7 +62,10 @@ namespace UnitTests.Tests
                 Fields = new Xml_Form_Fields
                 {
                     EndX = 8,
-                    StartY = 8,
+                    StartY = new Xml_Start_Y()
+                    {
+                        SimpleValue = 8
+                    },
                     Static = new[]
                     {
                         GetElement(@"<Static X=""2"" Y=""6"" name=""NACHIS"" type=""date"" regex_pattern=""на (\S+)"" language=""ru-RU"" format=""dd.MM.yyyy"" lastday=""true"" />")
@@ -124,10 +127,10 @@ namespace UnitTests.Tests
             {
                 excel.OpenWorksheet(pathExcel);
 
-                Work work = new Work(form, 120);
+                Work work = new Work(excel.worksheet, form, 120);
                 Logger.LogLevel old_level = Logger.Level;
                 Logger.SetLevel(Logger.LogLevel.TRACER);
-                work.IterateRecords(excel.worksheet, dbf.appendRecord);
+                work.IterateRecords(dbf.appendRecord);
                 Logger.SetLevel(old_level);
             }
             finally
