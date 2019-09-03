@@ -32,7 +32,7 @@
       /// string|null afterRegEx(string input, Regex regex, int id=1) - разделяет строку input по регулярному выражению regex и возвращает id элемент полученного массива (1 если не указано) или null
       /// string|null dir(int id) - возвращает сегмент пути по заданному пути
       /// void log(string message) - вывести сообщение через Console.WriteLine (по умолчанию)
-      /// void  string message) - кидает исключение класса Jint.Runtime.JavaScriptException с сообщением message
+      /// void error(string message) - кидает исключение класса Jint.Runtime.JavaScriptException с сообщением message
       ///
       /// ---- Доступные переменные: ----
       /// string file - оригинальное имя Excel файла
@@ -220,43 +220,68 @@
       <Name>Форма 2.21В</Name>
       <Rules>
         <!-- Именованная группа поиска с неизвестной Y кординатой -->
-        <Group name="header">
+        <Equal Y="2" X="2">Форма 2.21В</Equal>
+        <Group Name="header">
           <!-- Значения Y в группе относительны, условия ищутся по очереди как в списке -->
-          <Equal Y="0" X="0">№</Equal>
-          <Equal Y="1" X="1">лицевого</Equal>
-          <Equal Y="3" X="1">счета</Equal>
-          <Equal Y="0" X="2">Фамилия И.О.</Equal>
-          <Equal Y="0" X="5">Адрес</Equal>
-          <Equal Y="0" X="10">Оплачено</Equal>
+          <Equal Y="0" X="1">№</Equal>
+          <Equal Y="0" X="2">ФИО</Equal>
+          <Equal Y="0" X="3">Счёт</Equal>
+          <Equal Y="0" X="4">Сумма</Equal>
+          <Equal Y="0" X="5">Дата оплаты</Equal>
         </Group>
       </Rules>
       <Fields>
         <StartY>
-          <!-- Данные начинаются через 4 строки после группы с именем "header" -->
-          <Group name="header" position="after" Y="4" />
+          <!-- Данные начинаются через 1 строку после группы с именем "header" -->
+          <Group name="header" position="after" Y="1" />
         </StartY>
-        <EndX>20</EndX>
-        <Dynamic X="2" name="KPA" />
-        <IF X="1" VALUE="Итого за период:">
+        <!-- Максимальное значение X, которое будет вытянуто в массив -->
+        <EndX>7</EndX>
+        <!-- ВНИМАНИЕ: Static внутри THEN/ELSE будет ПРОИГНОРИРОВАН! -->
+        <Static X="2" Y="6" name="NACHDATE" type="date" format="dd.MM.yyyy" regex_pattern="по состоянию на (\d{2}\.\d{2}\.\d{4})" />
+        <IF X="2" VALUE="">
           <THEN>
-            <Dynamic X="11" name="XLS_SUMMA" type="numeric" />
+            <SKIP_RECORD />
+          </THEN>
+        </IF>
+        <IF X="2" VALUE="###">
+          <THEN>
+            <Dynamic X="3" name="ADDRESS"/>
+            <SKIP_RECORD />
+          </THEN>
+        </IF>
+        <IF X="2" VALUE="Итого по дому:">
+          <THEN>
+            <!-- Сумма из отчёта -->
+            <Dynamic X="5" name="XLS_SUMMA" type="numeric" />
+            <SKIP_RECORD />
+          </THEN>
+        </IF>
+        <IF X="2" VALUE="Итого:">
+          <THEN>
+            <!-- Сумма из отчёта -->
+            <Dynamic X="5" name="XLS_SUMMA" type="numeric" />
             <STOP_LOOP />
           </THEN>
-          <ELSE>
-            <Dynamic X="2" name="KP" regex_pattern="\d(\d+)" />
-            <Dynamic X="3" name="FIO" />
-            <Dynamic X="6" name="ADRES" />
-            <Dynamic X="11" name="SUMMA" type="numeric" />
-            <Dynamic X="11" name="TOTAL_SUMMA" type="numeric" function="SUM" />
-          </ELSE>
         </IF>
+        <!-- Тип по умолчанию - string -->
+        <Dynamic X="2" name="ID" />
+        <Dynamic X="3" name="FIO" />
+        <Dynamic X="4" name="KP" />
+        <Dynamic X="5" name="SUMMA" type="numeric" />
+        <!-- Суммирование для каждой записи -->
+        <Dynamic X="5" name="TOTAL_SUMMA" type="numeric" function="SUM" />
+        <!-- language - необязательный тэг, по умолчанию будет задан ru-ru -->
+        <!-- форматы даты: https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx -->
+        <Dynamic X="6" name="DATEOPL" type="date" format="dd.MM.yyyy" language="ru-ru" lastday="false"/>
       </Fields>
       <DBF>
-        <field name="KP" type="string" length="9">$KP</field>
-        <field name="FIO" type="string" length="40">$FIO</field>
-        <field name="ADRES" type="string" length="40">$ADRES</field>
-        <field name="SUMMA" type="numeric" length="10,2">$SUMMA</field>
+        <field name="ID" type="string" length="8">$ID</field>
+        <field name="KP" type="string" length="8">$KP</field>
+        <field name="PERSON" type="string" length="140">$FIO, проживающий(ая) по адресу $ADDRESS</field>
+        <field name="SUMMA" type="numeric" length="6,2">$SUMMA</field>
         <field name="DATAOPL" type="date" format="yyyy-MM-dd" length="8">$DATEOPL</field>
+        <field name="NACHDATE" type="date" format="yyyy-MM-dd" length="8">$NACHDATE</field>
       </DBF>
     </Form>
   </Forms>

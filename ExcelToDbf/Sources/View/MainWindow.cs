@@ -131,7 +131,7 @@ namespace ExcelToDbf.Sources.View
 
         private void buttonDirectory_Click(object sender, EventArgs e)
         {
-            string filename;
+            string filename = null;
             bool selected;
 
             if (!CommonFileDialog.IsPlatformSupported)
@@ -139,7 +139,7 @@ namespace ExcelToDbf.Sources.View
                 var dialog = new FolderBrowserDialog {SelectedPath = LastLaunch.Default.inputDirectory};
                 DialogResult result = dialog.ShowDialog();
                 selected = result == DialogResult.OK;
-                filename = dialog.SelectedPath;
+                if (selected) filename = dialog.SelectedPath;
             }
             else
             {
@@ -150,10 +150,10 @@ namespace ExcelToDbf.Sources.View
                 };
                 CommonFileDialogResult result = dialog.ShowDialog();
                 selected = result == CommonFileDialogResult.Ok;
-                filename = dialog.FileName;
+                if (selected) filename = dialog.FileName;
             }
 
-            if (selected)
+            if (selected && filename != null)
             {
                 textBoxPath.Text = filename;
                 LastLaunch.Default.inputDirectory = filename;
