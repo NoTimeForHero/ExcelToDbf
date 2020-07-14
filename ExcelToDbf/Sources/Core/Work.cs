@@ -392,6 +392,8 @@ namespace ExcelToDbf.Sources.Core
                     tdate.format = format.Value;
             }
 
+            variable.regex_replace = xml.Attribute("regex_replace")?.Value;
+
             var regex_pattern = xml.Attribute("regex_pattern");
             if (regex_pattern != null)
             {

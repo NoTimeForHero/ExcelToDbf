@@ -46,8 +46,8 @@ namespace ExcelToDbf.Sources.Core.Data.TData
 
         public object value;
 
-        public bool use_regex => regex_pattern != null;
         public Regex regex_pattern;
+        public String regex_replace;
         public int regex_group = 1;
 
         public TVariable(string name)
@@ -58,14 +58,20 @@ namespace ExcelToDbf.Sources.Core.Data.TData
         public virtual void Set(object val)
         {
             string str = ToStr(val);
-            if (use_regex)
-                str = MatchGroup(str, regex_pattern, regex_group);
+            str = RegExProcess(str);
             value = str;
         }
 
         protected string ToStr(object val)
         {
             return val?.ToString() ?? "";
+        }
+
+        protected string RegExProcess(String str)
+        {
+            if (regex_replace != null) return regex_pattern.Replace(str, regex_replace);
+            if (regex_pattern != null) return MatchGroup(str, regex_pattern, regex_group);
+            return str;
         }
 
         protected static String MatchGroup(String input, Regex regex, int group = 1)
@@ -112,10 +118,11 @@ namespace ExcelToDbf.Sources.Core.Data.TData
         {
             string str = ToStr(obj);
 
-            if (use_regex) str = MatchGroup(str, regex_pattern, regex_group);
-
+            str = RegExProcess(str);
             if (str == "") str = "0"; // Иначе Convert.ToSingle упадёт с ошибкой
+
             float flValue = Convert.ToSingle(str);
+
             switch (function)
             {
                 case Func.SUM:
@@ -167,8 +174,7 @@ namespace ExcelToDbf.Sources.Core.Data.TData
 
             string str = ToStr(val);
 
-            if (use_regex)
-                str = MatchGroup(str, regex_pattern, regex_group);
+            str = RegExProcess(str);
 
             DateTime date;
             try

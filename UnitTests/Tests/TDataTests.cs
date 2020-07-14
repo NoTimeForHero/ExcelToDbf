@@ -40,7 +40,7 @@ namespace UnitTests.Tests
         }
 
         [TestMethod]
-        public void TestRegEx()
+        public void TestRegExSearch()
         {
             var tstr = new TVariable("")
             {
@@ -73,6 +73,39 @@ namespace UnitTests.Tests
             };
             ((TVariable)tdate).Set("Санкт-Петербург был основан 27 мая 1703 года");
             Assert.AreEqual(new DateTime(1703,05,27), tdate.value);
+        }
+
+        [TestMethod]
+        public void TestRegExReplace()
+        {
+            var tstr = new TVariable("")
+            {
+                regex_pattern = new Regex(@"(\S+)а,\s*(\S+)"),
+                regex_replace = "район $2 города $1ы"
+            };
+            tstr.Set("Москва, ЦАО");
+            Assert.AreEqual("район ЦАО города Москвы", tstr.value);
+
+
+            var tnumeric = new TNumeric("")
+            {
+                regex_pattern = new Regex(@"(\d)(\d)(\d)"),
+                regex_replace = "$2$3$1"
+            };
+            ((TVariable)tnumeric).Set("123");
+            Assert.AreEqual(231f, tnumeric.value);
+
+
+            var tdate = new TDate("")
+            {
+                regex_pattern = new Regex(@".* (\d{4}) года за (\d) месяц"),
+                regex_replace = "1.$2.$1",
+                format = "d.M.yyyy",
+                lastday = true
+
+            };
+            tdate.Set("отчёт 2020 года за 2 месяц");
+            Assert.AreEqual(new DateTime(2020, 2, 29), tdate.value);
         }
 
         [TestMethod]
