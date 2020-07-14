@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -101,6 +102,11 @@ namespace ExcelToDbf.Sources.View
             Text += $" ({Application.ProductVersion})";
             fillElementsData();
 
+            if (LastLaunch.Default.positionX > 0 && LastLaunch.Default.positionY > 0)
+            {
+                Location = new Point(LastLaunch.Default.positionX, LastLaunch.Default.positionY);
+            }
+
             BSResults.DataSource = DataLog.Load();
         }
 
@@ -199,6 +205,8 @@ namespace ExcelToDbf.Sources.View
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
             DataLog.Save(BSResults.List.Cast<DataLog>().ToList());
+            LastLaunch.Default.positionX = Location.X;
+            LastLaunch.Default.positionY = Location.Y;
         }
     }
 }

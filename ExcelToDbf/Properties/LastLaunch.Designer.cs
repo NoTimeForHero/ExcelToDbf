@@ -12,7 +12,7 @@ namespace ExcelToDbf.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.3.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.9.0.0")]
     internal sealed partial class LastLaunch : global::System.Configuration.ApplicationSettingsBase {
         
         private static LastLaunch defaultInstance = ((LastLaunch)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new LastLaunch())));
@@ -56,6 +56,30 @@ namespace ExcelToDbf.Properties {
             }
             set {
                 this["LastLog"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int positionX {
+            get {
+                return ((int)(this["positionX"]));
+            }
+            set {
+                this["positionX"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int positionY {
+            get {
+                return ((int)(this["positionY"]));
+            }
+            set {
+                this["positionY"] = value;
             }
         }
     }
