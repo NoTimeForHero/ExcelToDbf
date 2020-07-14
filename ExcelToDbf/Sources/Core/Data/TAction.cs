@@ -170,7 +170,16 @@ namespace ExcelToDbf.Sources.Core.Data.TData
             if (use_regex)
                 str = MatchGroup(str, regex_pattern, regex_group);
 
-            DateTime date = DateTime.ParseExact(str, format, CultureInfo.GetCultureInfo(language));
+            DateTime date;
+            try
+            {
+                date = DateTime.ParseExact(str, format, CultureInfo.GetCultureInfo(language));
+            }
+            catch (FormatException ex)
+            {
+                throw new FormatException($"Не удалось распознать строку \"{str}\" как валидную дату формата \"{format}\"!", ex);
+            }
+
             if (lastday) date = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
             value = date;
         }
