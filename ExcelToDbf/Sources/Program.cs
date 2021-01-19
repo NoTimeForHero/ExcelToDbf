@@ -233,8 +233,6 @@ namespace ExcelToDbf.Sources
             {
                 string pathFull = files[idoc];
                 string filename = Path.GetFileName(pathFull);
-                string pathTemp = Path.GetTempFileName();
-
                 bool deleteDbf = false;
 
                 if (reopenExcel)
@@ -255,6 +253,7 @@ namespace ExcelToDbf.Sources
 
                     string targetFileName = getOutputFilename(excel.worksheet, pathFull, config.outfile.simple, config.outfile.script);
                     string pathOutput = Path.Combine(LastLaunch.Default.outputDirectory, targetFileName);
+                    string pathTemp = config.use_output_directory_as_temp ?  $"{pathOutput}.tmp" : Path.GetTempFileName();
 
                     if (File.Exists(pathOutput))
                     {

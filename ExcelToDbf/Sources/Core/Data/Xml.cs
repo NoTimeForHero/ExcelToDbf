@@ -18,6 +18,7 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
         public bool no_form_is_error;
         public bool show_messagebox_after;
         public bool skip_existing_files;
+        public bool use_output_directory_as_temp;
 
         public int buffer_size;
 

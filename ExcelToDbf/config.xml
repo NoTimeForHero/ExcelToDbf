@@ -16,6 +16,8 @@
   <show_messagebox_after>false</show_messagebox_after>
   <!-- Пропускать ли существующие DBF файлы -->
   <skip_existing_files>false</skip_existing_files>
+  <!-- если true, то временные файлы будут создавать в директории назначения, а не в %TEMP% -->
+  <use_output_directory_as_temp>false</use_output_directory_as_temp>
   <extensions>
     <ext>*.xls</ext>
     <ext>*.xlsx</ext>
