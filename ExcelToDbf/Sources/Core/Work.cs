@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using ExcelToDbf.Sources.Core.Data.TData;
 using ExcelToDbf.Sources.Core.Data.Xml;
+using Jint.Native;
 using Microsoft.Office.Interop.Excel;
 
 namespace ExcelToDbf.Sources.Core
@@ -21,6 +22,7 @@ namespace ExcelToDbf.Sources.Core
         protected int endX;
         protected List<Xml_Validator> validators;
         protected Worksheet worksheet;
+        protected string rowScript;
 
         public int StartY => startY;
 
@@ -40,6 +42,7 @@ namespace ExcelToDbf.Sources.Core
             startY = findStartY(form);
             endX = form.Fields.EndX;
             validators = form.Validate;
+            rowScript = form.Fields.Script;
         }
 
         public TimeSpan IterateRecords(Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
@@ -101,21 +104,46 @@ namespace ExcelToDbf.Sources.Core
             watch.Stop();
             Logger.debug("Заполнение массива локальных переменных: " + watch.ElapsedMilliseconds);
 
+            int i = 0;
+            bool skipRecord = false;
+            bool stopLoop = false;
+            object[,] tmp = null;
+
+            var engine = new Jint.Engine();
+            engine.SetValue("skipRecord", (System.Action)(() => skipRecord = true));
+            engine.SetValue("stopLoop", (System.Action)(() => stopLoop = true));
+            engine.SetValue("throwError", (Action<string>) ((message) =>
+                throw new ApplicationException($"JS ошибка: {message}")));
+            engine.SetValue("log", (Action<object>)Logger.info);
+            engine.SetValue("getRow", (Func<object>)(() => tmp.GetRow(i, 1)));
+            var getCache = new Dictionary<string, object>();
+            engine.SetValue("get", (Func<int,int,object>)((y, x) =>
+            {
+                bool hasValue = getCache.TryGetValue($"{y}/{x}", out var obj);
+                if (hasValue) return obj;
+                obj = worksheet.Cells[y, x]?.Value;
+                getCache[$"{y}/{x}"] = obj;
+                return obj;
+            }));
+
+            var funcScript = rowScript != null ?
+                engine.Execute(JSHelper.decodeXMLEntities(rowScript)).GetCompletionValue() : null;
+
             Stopwatch watchTotal = Stopwatch.StartNew();
             while (!EOF)
             {
                 var range_start = worksheet.Cells[begin, 1];
                 var range_end = worksheet.Cells[end, endX];
                 var range = worksheet.Range[range_start, range_end];
-                object[,] tmp = range.Value;
+                tmp = range.Value;
 
                 watch = Stopwatch.StartNew();
-                for (int i = 1; i <= buffer; i++)
+                for (i = 1; i <= buffer; i++)
                 {
+                    skipRecord = false;
+                    stopLoop = false;
                     total++;
-                    bool skipRecord = false;
-                    bool stopLoop = false;
-
+                    funcScript?.Invoke();
                     foreach (TCondition cond in conditions)
                     {
                         if (cond.mustBe.Equals(tmp[i, cond.x]) || cond.mustBe == "" && tmp[i, cond.x] == null)
@@ -183,7 +211,6 @@ namespace ExcelToDbf.Sources.Core
                         EOF = true;
                         break;
                     }
-
 
                     if (skipRecord) continue;
 

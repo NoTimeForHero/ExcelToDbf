@@ -58,6 +58,7 @@ namespace ExcelToDbf.Sources.Core.External
         /// </summary>
         public string Execute(string script)
         {
+            script = JSHelper.decodeXMLEntities(script);
             return engine.Execute(script).GetCompletionValue().ToObject().ToString();
         }
 

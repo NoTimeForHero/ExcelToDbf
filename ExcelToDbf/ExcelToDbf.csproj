@@ -119,6 +119,7 @@
     </Compile>
     <Compile Include="Sources\Core\Data\EnumState.cs" />
     <Compile Include="Sources\Core\Data\FormData.cs" />
+    <Compile Include="Sources\Extensions.cs" />
     <Compile Include="Sources\View\AboutBox.cs">
       <SubType>Form</SubType>
     </Compile>

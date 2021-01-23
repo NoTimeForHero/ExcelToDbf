@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -39,10 +41,14 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
         public static Xml_Config Load(String path)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(Xml_Config));
-            FileStream stream = new FileStream(path, FileMode.Open);
-            Xml_Config container = serializer.Deserialize(stream) as Xml_Config;
-            stream.Close();
-            return container;
+            //FileStream stream = new FileStream(path, FileMode.Open);
+            var data = File.ReadAllText(path);
+            data = JSHelper.encodeXMLEntities(data);
+            using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(data)))
+            {
+                Xml_Config container = serializer.Deserialize(stream) as Xml_Config;
+                return container;
+            }
         }
     }
 
@@ -76,6 +82,8 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
     {
         public Xml_Start_Y StartY;
         public int EndX;
+
+        public string Script;
 
         [XmlAnyElement("Static")]
         public XmlElement[] Static;

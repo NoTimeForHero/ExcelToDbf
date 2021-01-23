@@ -40,6 +40,21 @@ namespace ExcelToDbf.Sources.Core
         }
     }
 
+    public static class JSHelper
+    {
+        public static string encodeXMLEntities(string input)
+        {
+            input = Regex.Replace(input, @"(\(.*)<(.*\))", "$1&lt;$2");
+            input = Regex.Replace(input, @"(\(.*)>(.*\))", "$1&gt;$2");
+            return input;
+        }
+
+        public static string decodeXMLEntities(string input)
+        {
+            return input.Replace("&lt;", ">").Replace("&gt;", "<");
+        }
+    }
+
     public class RegExCache
     {
         protected Dictionary<String, Regex> regexes = new Dictionary<String, Regex>();
