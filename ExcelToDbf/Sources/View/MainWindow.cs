@@ -36,6 +36,7 @@ namespace ExcelToDbf.Sources.View
             this.program = program;
             InitializeComponent();
             dataGridViewResult.DataSource = BSResults;
+            dataGridViewExcel.AutoGenerateColumns = false;
             changeState();
         }
 
@@ -120,9 +121,12 @@ namespace ExcelToDbf.Sources.View
             textBoxPath.Text = Path.GetFullPath(LastLaunch.Default.inputDirectory);
             labelTitle.Text = program.config.title;
 
-            BSFileInfo.Clear();
+            var list = new List<DataFileInfo>();
             foreach (string fpath in program.filesExcel)
-                BSFileInfo.Add(new DataFileInfo(fpath, Update_LabelSelectionCount));
+                list.Add(new DataFileInfo(fpath, Update_LabelSelectionCount));
+
+            list = list.OrderBy(x => x.Filename).ToList();
+            BSFileInfo.DataSource = list;
 
             dataGridViewExcel.DataSource = BSFileInfo;
             dataGridViewExcel.Refresh();
