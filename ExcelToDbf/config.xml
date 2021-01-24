@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <config>
+  <!-- Данный конфиг лучше всего открывать как HTML из-за наличия JavaScript скриптов внутри -->
   <!-- записывать в LOG файл -->
   <log>true</log>
   <LogLevel>DEBUG</LogLevel>
@@ -104,6 +105,111 @@
           <Message>Итоговая сумма в DBF отличается от суммы в Excel!\nВ документе {0} ≠ {1} в экселе</Message>
         </Equal>
       </Validate>
+    </Form>
+    <Form>
+      <Name>Форма 4Г c JS</Name>
+      <Rules>
+        <Equal Y="2" X="2">Форма 4Г</Equal>
+        <Equal Y="7" X="2">№</Equal>
+        <Equal Y="7" X="3">ФИО</Equal>
+        <Equal Y="7" X="4">Счёт</Equal>
+        <Equal Y="7" X="5">Сумма</Equal>
+        <Equal Y="7" X="6">Дата оплаты</Equal>
+      </Rules>
+      <Fields>
+        <StartY>8</StartY>
+        <!-- Максимальное значение X, которое будет вытянуто в массив -->
+        <EndX>7</EndX>
+        <!-- IF подобно Dynamic будет вызван для каждой записи -->
+        <!-- 
+          Данный скрипт должен вернуть объект {key=value}, где key - тип хука, а value - функция
+          Типы хуков:
+            before - перед обходом файла
+            row - каждую строку
+            after - после обхода файла
+          Доступные функции:
+            void skipRecord() - пропустить запись
+            void stopLoop() - остановить обработку
+            void throwError(string message) - кинуть исключение
+            void log(object data) - вывести строку через Logger.info
+            void info(string message) - вывести строку с иконкой информации в GUI лога главного окна
+            void warn(string message) - вывести строку с иконкой предупреждения в GUI лога главного окна
+            object[] getRow() - [ТОЛЬКО ДЛЯ hook=row] получить текущую строку 
+            object cell(int y, int x) - получить значение ячейки (кэшируется)
+            bool set(string name, object value) - установить в переменную name значение value (если нет переменной то вернёт false)
+            object get(string name) - получить значение переменной name
+        -->
+        <Script>
+          (function(){
+
+          var maxSum = 0;
+          var maxName = "";
+          var minSum = 150;
+          var checkYear = 0;
+
+          var funcBefore = function() {
+          // TODO: Придумать пример
+          }
+
+          var funcRow = function() {
+
+          var name = get("FIO");
+          var sum = get("SUMMA");
+          var year = get("DATEOPL").getFullYear();
+
+          if (checkYear == 0) checkYear = year;
+          if (year !== checkYear) {
+          throwError("Запрещена конвертация файла с разными годами оплаты внутри!");
+          return;
+          }
+
+          if (sum > maxSum) {
+          maxSum = sum;
+          maxName = name;
+          }
+
+          if (sum < minSum) {
+                skipRecord();
+              }
+            }
+            var funcAfter = function() {
+              info("Максимальная сумма в " + maxSum + "р. у : " + maxName);
+            }
+
+            return {
+              row: funcRow,
+              after: funcAfter,
+              before: funcBefore
+            }
+
+          })();
+        </Script>
+        <IF X="2" VALUE="Пропуск">
+          <THEN>
+            <SKIP_RECORD />
+          </THEN>
+        </IF>
+        <IF X="2" VALUE="Итого:">
+          <THEN>
+            <STOP_LOOP />
+          </THEN>
+        </IF>
+        <!-- Тип по умолчанию - string -->
+        <Dynamic X="2" name="ID" />
+        <Dynamic X="3" name="FIO" />
+        <Dynamic X="4" name="KP" />
+        <Dynamic X="5" name="SUMMA" type="numeric" />
+        <!-- language - необязательный тэг, по умолчанию будет задан ru-ru -->
+        <!-- форматы даты: https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx -->
+        <Dynamic X="6" name="DATEOPL" type="date" format="dd.MM.yyyy" language="ru-ru" lastday="false"/>
+      </Fields>
+      <DBF>
+        <field name="ID" type="string" length="8">$ID</field>
+        <field name="KP" type="string" length="8">$KP</field>
+        <field name="FIO" type="string" length="60">$FIO</field>
+        <field name="SUMMA" type="numeric" length="6,2">$SUMMA</field>
+        <field name="DATAOPL" type="date" format="yyyy-MM-dd" length="8">$DATEOPL</field>
+      </DBF>
     </Form>
     <Form>
       <Name>Форма 2.21Б</Name>
@@ -287,4 +393,4 @@
       </DBF>
     </Form>
   </Forms>
-</config> 
+</config>
