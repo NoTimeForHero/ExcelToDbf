@@ -9,6 +9,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Windows.Forms;
 using ExcelToDbf.Properties;
+using ExcelToDbf.Sources.Core;
 using ExcelToDbf.Sources.Core.Data;
 using ExcelToDbf.Sources.Core.Data.FormData;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -37,7 +38,20 @@ namespace ExcelToDbf.Sources.View
             InitializeComponent();
             dataGridViewResult.DataSource = BSResults;
             dataGridViewExcel.AutoGenerateColumns = false;
+            loadIcon();
             changeState();
+        }
+
+        private void loadIcon()
+        {
+            var path = program.config.custom_logo;
+            if (path == null) return;
+            if (!File.Exists(path))
+            {
+                Logger.warn("Не найден файл логотипа: " + path);
+                return;
+            }
+            pictureBox1.Image = Image.FromFile(path);
         }
 
         public void Log(DataLog.LogImage type, string message)

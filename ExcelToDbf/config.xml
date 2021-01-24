@@ -8,6 +8,8 @@
   <only_rules>false</only_rules>
   <!-- Сколько записей будет обработано за один OLE запрос к Excel -->
   <buffer_size>2000</buffer_size>
+  <!-- Произвольный логотип -->
+  <custom_logo>Demo.jpg</custom_logo>
   <title>Название фирмы</title>
   <status>Дополнительная информация</status>
   <warning>Строка, отображаемая если хоть в одном документе прошла ошибка.\nЛегко переносится на несколько строк.\nДля удобства.</warning>

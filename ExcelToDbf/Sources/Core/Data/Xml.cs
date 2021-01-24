@@ -23,7 +23,7 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
         public bool use_output_directory_as_temp;
 
         public int buffer_size;
-
+        public string custom_logo;
         public string title;
         public string status;
         public string warning;

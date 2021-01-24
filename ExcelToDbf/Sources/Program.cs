@@ -51,7 +51,7 @@ namespace ExcelToDbf.Sources
         }
 
         readonly string confName;
-        public Xml_Config config;
+        public readonly Xml_Config config;
         public bool showStacktrace = false;
         private Thread process;
 
