@@ -51,7 +51,7 @@ namespace ExcelToDbf.Sources
         }
 
         readonly string confName;
-        public Xml_Config config;
+        public readonly Xml_Config config;
         public bool showStacktrace = false;
         private Thread process;
 
@@ -282,6 +282,7 @@ namespace ExcelToDbf.Sources
                     dbf = new DBF(pathTemp,form.DBF);
 
                     Work work = new Work(excel.worksheet, form, config.buffer_size);
+                    work.guiLogger = wmain.Log;
 
                     var total = excel.worksheet.UsedRange.Rows.Count - work.StartY;
                     window.setState(false, $"Обработано записей: {0}/{total}", 0, total);

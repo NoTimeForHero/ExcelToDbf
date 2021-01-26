@@ -9,6 +9,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Windows.Forms;
 using ExcelToDbf.Properties;
+using ExcelToDbf.Sources.Core;
 using ExcelToDbf.Sources.Core.Data;
 using ExcelToDbf.Sources.Core.Data.FormData;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -36,7 +37,21 @@ namespace ExcelToDbf.Sources.View
             this.program = program;
             InitializeComponent();
             dataGridViewResult.DataSource = BSResults;
+            dataGridViewExcel.AutoGenerateColumns = false;
+            loadIcon();
             changeState();
+        }
+
+        private void loadIcon()
+        {
+            var path = program.config.custom_logo;
+            if (path == null) return;
+            if (!File.Exists(path))
+            {
+                Logger.warn("Не найден файл логотипа: " + path);
+                return;
+            }
+            pictureBox1.Image = Image.FromFile(path);
         }
 
         public void Log(DataLog.LogImage type, string message)
@@ -120,9 +135,12 @@ namespace ExcelToDbf.Sources.View
             textBoxPath.Text = Path.GetFullPath(LastLaunch.Default.inputDirectory);
             labelTitle.Text = program.config.title;
 
-            BSFileInfo.Clear();
+            var list = new List<DataFileInfo>();
             foreach (string fpath in program.filesExcel)
-                BSFileInfo.Add(new DataFileInfo(fpath, Update_LabelSelectionCount));
+                list.Add(new DataFileInfo(fpath, Update_LabelSelectionCount));
+
+            list = list.OrderBy(x => x.Filename).ToList();
+            BSFileInfo.DataSource = list;
 
             dataGridViewExcel.DataSource = BSFileInfo;
             dataGridViewExcel.Refresh();

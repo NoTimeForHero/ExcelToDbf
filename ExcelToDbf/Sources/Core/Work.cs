@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using ExcelToDbf.Sources.Core.Data.FormData;
 using ExcelToDbf.Sources.Core.Data.TData;
 using ExcelToDbf.Sources.Core.Data.Xml;
+using Jint.Native;
 using Microsoft.Office.Interop.Excel;
 
 namespace ExcelToDbf.Sources.Core
@@ -21,6 +24,7 @@ namespace ExcelToDbf.Sources.Core
         protected int endX;
         protected List<Xml_Validator> validators;
         protected Worksheet worksheet;
+        protected string jScript;
 
         public int StartY => startY;
 
@@ -30,6 +34,7 @@ namespace ExcelToDbf.Sources.Core
         protected TVariable exception_var;
 
         public Dictionary<string, TVariable> stepScope = new Dictionary<string, TVariable>();
+        public Action<DataLog.LogImage, string> guiLogger;
 
         public Work(Worksheet worksheet, Xml_Form form, int buffer)
         {
@@ -40,6 +45,7 @@ namespace ExcelToDbf.Sources.Core
             startY = findStartY(form);
             endX = form.Fields.EndX;
             validators = form.Validate;
+            jScript = form.Fields.Script;
         }
 
         public TimeSpan IterateRecords(Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
@@ -85,6 +91,7 @@ namespace ExcelToDbf.Sources.Core
             return point.Value.Y + target.group.Y;
         }
 
+        [SuppressMessage("ReSharper", "ConditionIsAlwaysTrueOrFalse")]
         protected void __IterateRecords(Worksheet worksheet, Action<Dictionary<string, TVariable>> callback, Action<int> guiCallback = null)
         {
             int begin = startY;
@@ -101,24 +108,86 @@ namespace ExcelToDbf.Sources.Core
             watch.Stop();
             Logger.debug("Заполнение массива локальных переменных: " + watch.ElapsedMilliseconds);
 
+            int i = 0;
+            bool skipRecord = false;
+            bool stopLoop = false;
+            object[,] tmp = null;
+
+            var engine = new Jint.Engine();
+            engine.SetValue("skipRecord", (System.Action)(() => skipRecord = true));
+            engine.SetValue("stopLoop", (System.Action)(() => stopLoop = true));
+            engine.SetValue("throwError", (Action<string>) ((message) =>
+                throw new ApplicationException($"JS ошибка: {message}")));
+            engine.SetValue("log", (Action<object>)Logger.info);
+            engine.SetValue("info", (Action<string>) ((msg) => guiLogger?.Invoke(DataLog.LogImage.INFO, msg)));
+            engine.SetValue("warn", (Action<string>)((msg) => guiLogger?.Invoke(DataLog.LogImage.WARNING, msg)));
+            engine.SetValue("getRow", (Func<object>)(() => tmp?.GetRow(i, 1)));
+            var getCache = new Dictionary<string, object>();
+            engine.SetValue("cell", (Func<int,int,object>)((y, x) =>
+            {
+                bool hasValue = getCache.TryGetValue($"{y}/{x}", out var obj);
+                if (hasValue) return obj;
+                obj = worksheet.Cells[y, x]?.Value;
+                getCache[$"{y}/{x}"] = obj;
+                return obj;
+            }));
+            engine.SetValue("set", (Func<string,object,bool>)((name,value) =>
+            {
+                TVariable tVar = null;
+                bool hasValue = false;
+                if (!hasValue) hasValue = dynamicVars.TryGetValue(name, out tVar);
+                if (!hasValue) hasValue = staticVars.TryGetValue(name, out tVar);
+                if (hasValue) SetVar(tVar, value);
+                return hasValue;
+            }));
+            engine.SetValue("get", (Func<string, object>)((name) =>
+            {
+                TVariable tVar = null;
+                bool hasValue = false;
+                if (!hasValue) hasValue = dynamicVars.TryGetValue(name, out tVar);
+                if (!hasValue) hasValue = staticVars.TryGetValue(name, out tVar);
+                if (hasValue) return tVar.value;
+                return null;
+            }));
+
+            JsValue scriptEveryRow = null;
+            JsValue scriptBefore = null;
+            JsValue scriptAfter = null;
+
+            if (jScript != null)
+            {
+                var jVal = engine.Execute(JSHelper.decodeXMLEntities(jScript)).GetCompletionValue();
+                if (jVal.IsObject())
+                {
+                    var jObj = jVal.AsObject();
+                    scriptEveryRow = jObj.getOrDefault("row", null);
+                    scriptAfter = jObj.getOrDefault("after", null);
+                    scriptBefore = jObj.getOrDefault("before", null);
+                }
+            }
+
             Stopwatch watchTotal = Stopwatch.StartNew();
+            scriptBefore?.Invoke();
             while (!EOF)
             {
                 var range_start = worksheet.Cells[begin, 1];
                 var range_end = worksheet.Cells[end, endX];
                 var range = worksheet.Range[range_start, range_end];
-                object[,] tmp = range.Value;
+                tmp = range.Value;
 
                 watch = Stopwatch.StartNew();
-                for (int i = 1; i <= buffer; i++)
+                for (i = 1; i <= buffer; i++)
                 {
+                    skipRecord = false;
+                    stopLoop = false;
                     total++;
-                    bool skipRecord = false;
-                    bool stopLoop = false;
-
                     foreach (TCondition cond in conditions)
                     {
-                        if (cond.mustBe.Equals(tmp[i, cond.x]) || cond.mustBe == "" && tmp[i, cond.x] == null)
+                        var cellValue = tmp[i, cond.x]?.ToString() ?? "";
+                        bool equal = false;
+                        if (cond.isRegex) equal = Regex.Match(cellValue, cond.mustBe).Success;
+                        else equal = cellValue == cond.mustBe;
+                        if (equal)
                         {
                             foreach (TAction item in cond.onTrue)
                             {
@@ -183,12 +252,18 @@ namespace ExcelToDbf.Sources.Core
                         EOF = true;
                         break;
                     }
-
-
                     if (skipRecord) continue;
-
                     foreach (var var in dynamicVars.Values)
                         SetVar(var, tmp[i, var.x]);
+
+                    scriptEveryRow?.Invoke();
+                    if (skipRecord) continue;
+                    if (stopLoop)
+                    {
+                        Logger.debug("Выход из цикла вызван JS хуком row");
+                        EOF = true;
+                        break;
+                    }
 
                     callback(stepScope);
                 }
@@ -203,6 +278,7 @@ namespace ExcelToDbf.Sources.Core
             Logger.debug("Времени всего: " + watchTotal.ElapsedMilliseconds);
             Logger.debug("Строк обработано: " + total);
             Logger.debug("Размер буффера:" + buffer);
+            scriptAfter?.Invoke();
         }
 
         protected void SetVar(TVariable var, object value)
@@ -304,6 +380,7 @@ namespace ExcelToDbf.Sources.Core
                        throw new NullReferenceException("Attribute \"X\" can't be null!");
             string value = xml.Attribute("VALUE")?.Value ??
                            throw new NullReferenceException("Attribute \"VALUE\" can't be null!");
+            bool isRegex = new[] { "1", "true", "yes"}.Contains(xml.Attribute("REGEX")?.Value);
             var xthen = xml.Element("THEN") ??
                         throw new NullReferenceException("Element <THEN> can't be null!");
             var xelse = xml.Element("ELSE");
@@ -311,7 +388,8 @@ namespace ExcelToDbf.Sources.Core
             TCondition condition = new TCondition
             {
                 x = int.Parse(x),
-                mustBe = value
+                mustBe = value,
+                isRegex = isRegex
             };
 
             AddTActionsToList(condition.onTrue, xthen);

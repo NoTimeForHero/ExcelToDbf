@@ -31,6 +31,7 @@ namespace ExcelToDbf.Sources.Core.Data.TData
     {
         public int x;
         public string mustBe;
+        public bool isRegex;
 
         public List<TAction> onTrue = new List<TAction>();
         public List<TAction> onFalse = new List<TAction>();
