@@ -183,7 +183,11 @@ namespace ExcelToDbf.Sources.Core
                     total++;
                     foreach (TCondition cond in conditions)
                     {
-                        if (cond.mustBe.Equals(tmp[i, cond.x]) || cond.mustBe == "" && tmp[i, cond.x] == null)
+                        var cellValue = tmp[i, cond.x]?.ToString() ?? "";
+                        bool equal = false;
+                        if (cond.isRegex) equal = Regex.Match(cellValue, cond.mustBe).Success;
+                        else equal = cellValue == cond.mustBe;
+                        if (equal)
                         {
                             foreach (TAction item in cond.onTrue)
                             {
@@ -376,6 +380,7 @@ namespace ExcelToDbf.Sources.Core
                        throw new NullReferenceException("Attribute \"X\" can't be null!");
             string value = xml.Attribute("VALUE")?.Value ??
                            throw new NullReferenceException("Attribute \"VALUE\" can't be null!");
+            bool isRegex = new[] { "1", "true", "yes"}.Contains(xml.Attribute("REGEX")?.Value);
             var xthen = xml.Element("THEN") ??
                         throw new NullReferenceException("Element <THEN> can't be null!");
             var xelse = xml.Element("ELSE");
@@ -383,7 +388,8 @@ namespace ExcelToDbf.Sources.Core
             TCondition condition = new TCondition
             {
                 x = int.Parse(x),
-                mustBe = value
+                mustBe = value,
+                isRegex = isRegex
             };
 
             AddTActionsToList(condition.onTrue, xthen);
