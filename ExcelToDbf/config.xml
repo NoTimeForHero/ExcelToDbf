@@ -6,6 +6,8 @@
   <LogLevel>DEBUG</LogLevel>
   <!-- не создавать DBF, только проверить заголовки -->
   <only_rules>false</only_rules>
+  <!-- Выходная кодировка в DBF (число или название), по умолчанию 866 -->
+  <dbf_output_encoding>866</dbf_output_encoding>
   <!-- Сколько записей будет обработано за один OLE запрос к Excel -->
   <buffer_size>2000</buffer_size>
   <!-- Произвольный логотип -->

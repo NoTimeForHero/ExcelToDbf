@@ -132,8 +132,8 @@
             // 
             this.panelBackground.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(145)))), ((int)(((byte)(0)))));
             this.panelBackground.Controls.Add(this.pictureBox1);
-            this.panelBackground.Controls.Add(this.labelStatus);
             this.panelBackground.Controls.Add(this.labelTitle);
+            this.panelBackground.Controls.Add(this.labelStatus);
             this.panelBackground.Location = new System.Drawing.Point(0, 0);
             this.panelBackground.Name = "panelBackground";
             this.panelBackground.Size = new System.Drawing.Size(884, 81);
@@ -141,10 +141,11 @@
             // 
             // pictureBox1
             // 
+            this.pictureBox1.BackColor = System.Drawing.Color.Transparent;
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
             this.pictureBox1.Location = new System.Drawing.Point(12, 6);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(185, 72);
+            this.pictureBox1.Size = new System.Drawing.Size(148, 72);
             this.pictureBox1.TabIndex = 19;
             this.pictureBox1.TabStop = false;
             // 
@@ -153,9 +154,9 @@
             this.labelStatus.BackColor = System.Drawing.Color.Transparent;
             this.labelStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.labelStatus.ForeColor = System.Drawing.Color.White;
-            this.labelStatus.Location = new System.Drawing.Point(14, 47);
+            this.labelStatus.Location = new System.Drawing.Point(166, 47);
             this.labelStatus.Name = "labelStatus";
-            this.labelStatus.Size = new System.Drawing.Size(855, 26);
+            this.labelStatus.Size = new System.Drawing.Size(703, 26);
             this.labelStatus.TabIndex = 9;
             this.labelStatus.Text = "Status";
             this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -165,9 +166,9 @@
             this.labelTitle.BackColor = System.Drawing.Color.Transparent;
             this.labelTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.labelTitle.ForeColor = System.Drawing.Color.Yellow;
-            this.labelTitle.Location = new System.Drawing.Point(15, 9);
+            this.labelTitle.Location = new System.Drawing.Point(166, 9);
             this.labelTitle.Name = "labelTitle";
-            this.labelTitle.Size = new System.Drawing.Size(855, 38);
+            this.labelTitle.Size = new System.Drawing.Size(704, 38);
             this.labelTitle.TabIndex = 8;
             this.labelTitle.Text = "Example";
             this.labelTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;

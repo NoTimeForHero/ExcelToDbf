@@ -38,6 +38,16 @@ namespace ExcelToDbf.Sources.Core.Data.Xml
         [XmlArrayItem("Form")]
         public List<Xml_Form> Forms;
 
+        [XmlElement("dbf_output_encoding")]
+        public string setter_dbf_encoding
+        {
+            set => dbf_output_encoding = int.TryParse(value, out int codepage) ? Encoding.GetEncoding(codepage) : Encoding.GetEncoding(value);
+            get => dbf_output_encoding.EncodingName;
+        }
+
+        [XmlIgnore]
+        public Encoding dbf_output_encoding = Encoding.GetEncoding(866);
+
         public static Xml_Config Load(String path)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(Xml_Config));

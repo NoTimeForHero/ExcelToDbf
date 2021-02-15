@@ -83,6 +83,9 @@ namespace ExcelToDbf.Sources
 
             Logger.info("Версия программы: " + Application.ProductVersion);
             Logger.info("Уровень логирования: " + Logger.Level);
+
+            var encoding = config.dbf_output_encoding;
+            Logger.info($"Кодировка DBF файлов (страница {encoding.CodePage}): {encoding.EncodingName}");
         }
 
         /// <summary>
@@ -279,7 +282,7 @@ namespace ExcelToDbf.Sources
                     }
 
 
-                    dbf = new DBF(pathTemp,form.DBF);
+                    dbf = new DBF(pathTemp,form.DBF, config.dbf_output_encoding);
 
                     Work work = new Work(excel.worksheet, form, config.buffer_size);
                     work.guiLogger = wmain.Log;
