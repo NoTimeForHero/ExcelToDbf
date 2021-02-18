@@ -107,15 +107,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>IconCredits.resx</DependentUpon>
     </Compile>
+    <Compile Include="Properties\LastLaunch.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\LastLaunch.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>LastLaunch.settings</DependentUpon>
     </Compile>
     <Compile Include="Sources\Core\Data\EnumState.cs" />
     <Compile Include="Sources\Core\Data\FormData.cs" />
@@ -245,12 +241,6 @@
     <EmbeddedResource Include="Sources\View\StatusWindow.resx">
       <DependentUpon>StatusWindow.cs</DependentUpon>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Properties\LastLaunch.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>LastLaunch.Designer.cs</LastGenOutput>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\1488562050_export_excel.ico" />
