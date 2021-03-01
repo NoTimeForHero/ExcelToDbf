@@ -38,8 +38,14 @@ namespace ExcelToDbf.Sources
                 return;
             }
 
-            // Распаковка DLL, которая не находится при упаковке через LibZ
-            File.WriteAllBytes("Microsoft.WindowsAPICodePack.dll", Resources.Microsoft_WindowsAPICodePack);
+            AppDomain.CurrentDomain.AssemblyResolve += (o, ev) =>
+            {
+                string folderPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string assemblyPath = Path.Combine(folderPath, "lib", new AssemblyName(ev.Name).Name + ".dll");
+                if (!File.Exists(assemblyPath)) return null;
+                Assembly assembly = Assembly.LoadFrom(assemblyPath);
+                return assembly;
+            };
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

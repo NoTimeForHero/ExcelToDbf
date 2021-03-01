@@ -292,14 +292,16 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>if "Release" NEQ "$(ConfigurationName)" (exit /b 0)
-"$(SolutionDir)packages\LibZ.Tool.1.2.0.0\tools\libz.exe" inject-dll --assembly $(TargetFileName) --include *.dll --move
-del /q *.config
-verify &gt; nul
+    <PostBuildEvent>mkdir "$(TargetDir)\lib"
+copy "$(SolutionDir)\packages\WindowsAPICodePack-Core.1.1.2\lib\*.dll"  "$(TargetDir)\lib"
+move "$(TargetDir)*.dll" "$(TargetDir)\lib"
+
 ren $(TargetName).xml config.bin
+
 del /q *.xml
+
 ren config.bin $(TargetName).xml
-verify &gt; nul</PostBuildEvent>
+del SocialExplorer.FastDBF.pdb</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>
