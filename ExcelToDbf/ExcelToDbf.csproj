@@ -290,16 +290,23 @@
   <ItemGroup>
     <None Include="Resources\if_info_3238.png" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Test1\CSV_Converter.csproj">
+      <Project>{63a01389-cfe5-41aa-ae5e-de817ca43ff8}</Project>
+      <Name>CSV_Converter</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>mkdir "$(TargetDir)\lib"
 copy "$(SolutionDir)\packages\WindowsAPICodePack-Core.1.1.2\lib\*.dll"  "$(TargetDir)\lib"
 move "$(TargetDir)*.dll" "$(TargetDir)\lib"
+move "$(TargetDir)CSV_Converter.exe" "$(TargetDir)\lib"
 
 ren $(TargetName).xml config.bin
-
+rem 
 del /q *.xml
-
+2
 ren config.bin $(TargetName).xml
 del SocialExplorer.FastDBF.pdb</PostBuildEvent>
   </PropertyGroup>

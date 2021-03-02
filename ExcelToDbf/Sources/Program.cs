@@ -302,6 +302,7 @@ namespace ExcelToDbf.Sources
 
                     dbf.close();
 
+
                     // Перемещение файла
                     if (File.Exists(pathOutput)) File.Delete(pathOutput);
                     File.Move(pathTemp, pathOutput);
