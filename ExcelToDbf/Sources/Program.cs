@@ -41,10 +41,10 @@ namespace ExcelToDbf.Sources
             AppDomain.CurrentDomain.AssemblyResolve += (o, ev) =>
             {
                 string folderPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                string assemblyPath = Path.Combine(folderPath, "lib", new AssemblyName(ev.Name).Name + ".dll");
-                if (!File.Exists(assemblyPath)) return null;
-                Assembly assembly = Assembly.LoadFrom(assemblyPath);
-                return assembly;
+                string assemblyPath = Path.Combine(folderPath, "lib", new AssemblyName(ev.Name).Name);
+                if (File.Exists(assemblyPath + ".dll")) return Assembly.LoadFrom(assemblyPath + ".dll");
+                if (File.Exists(assemblyPath + ".exe")) return Assembly.LoadFrom(assemblyPath + ".exe");
+                return null;
             };
 
             Application.EnableVisualStyles();
