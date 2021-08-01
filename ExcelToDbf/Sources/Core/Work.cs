@@ -97,7 +97,7 @@ namespace ExcelToDbf.Sources.Core
             int begin = startY;
             int end = startY + buffer;
 
-            var maxY = worksheet.UsedRange.Rows.Count;
+            var maxY = worksheet.UsedRange.Rows.Count + 1;
 
             bool EOF = false;
 
@@ -192,7 +192,7 @@ namespace ExcelToDbf.Sources.Core
                             foreach (TAction item in cond.onTrue)
                             {
                                 switch (item)
-                                {
+                                { 
                                     case TInterrupt tinter:
                                         switch (tinter.action)
                                         {

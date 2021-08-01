@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 
 // Работает только на NET Framework 3.5
@@ -27,10 +28,18 @@ namespace CSV_Converter
             string outputPath = args[1];
             string delimiter = (args.Length >= 3) ? args[2] : ";";
             if (args.Length >= 3) delimiter = args[2];
-            SaveAs(inputPath, outputPath, delimiter);
+            try
+            {
+                SaveAs(inputPath, outputPath, delimiter);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка конвертации в CSV!\nФайл {inputPath} не был сконвертирован:\n{ex}",
+                    "Ошибка конвертации", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
-        public static string Open(string inputFilename, string delimiter)
+        public static ConvResult Open(string inputFilename, string delimiter)
         {
             var tempDir = Path.Combine(Path.GetTempPath(), "ExcelToDbf");
             Directory.CreateDirectory(tempDir);
@@ -39,8 +48,9 @@ namespace CSV_Converter
             var outputFilename = Path.Combine(tempDir, filename);
 
             Run(inputFilename, outputFilename, delimiter).WaitForExit();
-            if (!File.Exists(outputFilename)) return null;
-            return outputFilename;
+            var result = new ConvResult {Filename = outputFilename};
+            if (File.Exists(outputFilename)) result.Success = true;
+            return result;
         }
 
         internal static Process Run(string inputPath, string outputPath, string delimiter=";")
@@ -73,6 +83,12 @@ namespace CSV_Converter
                 wb?.Close();
                 app?.Quit();
             }
+        }
+
+        public class ConvResult
+        {
+            public string Filename;
+            public bool Success;
         }
 
     }

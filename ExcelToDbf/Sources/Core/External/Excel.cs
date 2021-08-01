@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using Microsoft.Office.Interop.Excel;
@@ -27,12 +28,11 @@ namespace ExcelToDbf.Sources.Core.External
 
             if (Path.GetExtension(path) == ".csv")
             {
-                var csvFilename = CSV_Converter.Runner.Open(@"C:\TEMP\TEST_0203\КО БВ 22.02-27.02.2021 .csv", ";");
-                if (csvFilename != null)
-                {
-                    path = csvFilename;
-                    filesToRemove.Add(csvFilename);
-                }
+                var convResult = CSV_Converter.Runner.Open(path, ";");
+                Logger.info($"Конвертация CSV файла из \"{path}\" в \"{convResult.Filename}\".");
+                path = convResult.Filename;
+                filesToRemove.Add(convResult.Filename);
+                if (!convResult.Success) throw new ApplicationException("Ошибка конвертации файла!");
             }
 
             wb = app.Workbooks.Open(path, Type.Missing, Type.Missing, Type.Missing, Type.Missing,
@@ -53,6 +53,8 @@ namespace ExcelToDbf.Sources.Core.External
             }
             finally
             {
+                // if (filesToRemove.Count > 0)
+                //     Process.Start("explorer.exe", Path.GetDirectoryName(filesToRemove[0]));
                 foreach (var file in filesToRemove)
                 {
                     File.Delete(file);
