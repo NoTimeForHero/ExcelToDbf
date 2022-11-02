@@ -9,7 +9,7 @@ using System.Windows;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-namespace ExcelToDbf.ViewModels
+namespace ExcelToDbf.Core.ViewModels
 {
     public class MainViewModel : ReactiveObject
     {
@@ -31,10 +31,16 @@ namespace ExcelToDbf.ViewModels
         public ReactiveCommand<Unit, Unit> ActionCommand { get; set; }
 
         [Reactive]
-        public FrameworkElement ViewBody { get; set; } = null;
+        public ReactiveObject ViewBody { get; set; } = null;
 
         public MainViewModel()
         {
+        }
+
+        public MainViewModel(Config config)
+        {
+            HeaderTitle = config.Header.Title;
+            HeaderDescription = config.Header.Status;
             ActionCommand = ReactiveCommand.CreateFromTask(() =>
             {
                 MessageBox.Show("Кнопка нажата?");

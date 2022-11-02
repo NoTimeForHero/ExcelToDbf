@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using ExcelToDbf.Core;
-using ExcelToDbf.ViewModels;
 
 namespace ExcelToDbf
 {

@@ -12,8 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ExcelToDbf.Core.ViewModels;
 using ExcelToDbf.Sources.View;
-using ExcelToDbf.ViewModels;
 
 namespace ExcelToDbf
 {
