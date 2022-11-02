@@ -24,6 +24,7 @@ namespace ExcelToDbf.Core
             container = new UnityContainer();
             container.AddNewExtension<NLogExtension>();
             container.RegisterSingleton<ScriptEngine>();
+            container.RegisterSingleton<FolderService>();
             container.RegisterSingletonMVVM<MainView, MainViewModel>();
             container.RegisterSingletonMVVM<FileSelectorView, FileSelectorVM>();
             container.RegisterFactory<Config>((u) => u.Resolve<ScriptEngine>().GetConfig());
@@ -35,7 +36,7 @@ namespace ExcelToDbf.Core
         {
             var model = container.Resolve<MainViewModel>();
             model.ButtonActionTitle = "Конвертировать!";
-            model.ViewBody = container.Resolve<FileSelectorVM>();
+            model.ChildVM = container.Resolve<FileSelectorVM>();
 
             container.Resolve<MainView>().Show();
         }

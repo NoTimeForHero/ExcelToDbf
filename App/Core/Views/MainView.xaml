@@ -12,22 +12,11 @@
         Height="450"
         Width="800">
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis" />
-        <Brush x:Key="bgMain">#c3e085</Brush>
-        <Brush x:Key="bgSecondary">#009100</Brush>
-        <Brush x:Key="brushTitle">Yellow</Brush>
-        <Brush x:Key="brushText">White</Brush>
-        <Style x:Key="btnLarge" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource bgSecondary}" />
-            <Setter Property="Foreground" Value="{StaticResource brushTitle}" />
-            <Setter Property="Margin" Value="2, 5" />
-            <Setter Property="Padding" Value="30, 10" />
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="FontWeight" Value="Bold" />
-        </Style>
-        <Style x:Key="btnImage" TargetType="Button" BasedOn="{StaticResource btnLarge}">
-            <Setter Property="Padding" Value="10, 0" />
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="ThemeDictionary.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Window.Resources>
     <Window.Background>
         <StaticResource ResourceKey="bgMain"/>
@@ -36,7 +25,7 @@
     <!-- <Window.DataContext> -->
     <!--     <vm:MainViewModel /> -->
     <!-- </Window.DataContext> -->
-    <Grid>
+    <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="1*" />
@@ -57,8 +46,8 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="1" Margin="5">
-            <ContentControl Content="{Binding ViewBody}">
+        <Border Grid.Row="1" Margin="0,5" BorderThickness="0,0,0,1" BorderBrush="{StaticResource bgDark}">
+            <ContentControl Content="{Binding ChildVM}">
                 <ContentControl.Resources>
                     <DataTemplate DataType="{x:Type vm:FileSelectorVM}">
                         <v:FileSelectorView />
@@ -67,17 +56,17 @@
             </ContentControl>
         </Border>
 
-        <DockPanel Grid.Row="2" Margin="5">
+        <DockPanel Grid.Row="2" Margin="0">
             <Button Style="{StaticResource btnLarge}" Command="{Binding ActionCommand}" Content="{Binding ButtonActionTitle}" />
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Style="{StaticResource btnImage}" x:Name="BtnAbout">
+                <Button Style="{StaticResource btnThemed}" x:Name="BtnAbout">
                     <StackPanel Orientation="Horizontal">
                         <Image Source="../../Resources/if_userconfig_7388.png" Height="32" Width="32" />
                         <TextBlock VerticalAlignment="Center" Margin="10,0,0,0">Авторы</TextBlock>
                     </StackPanel>
                 </Button>
-                <Button Style="{StaticResource btnImage}" x:Name="BtnExit">
+                <Button Style="{StaticResource btnThemed}" x:Name="BtnExit">
                     <StackPanel Orientation="Horizontal">
                         <Image Source="../../Resources/if_Gnome-Application-Exit-32_54914.png" Height="32" Width="32" />
                         <TextBlock VerticalAlignment="Center" Margin="10,0,0,0">Выход</TextBlock>

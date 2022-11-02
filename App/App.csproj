@@ -127,6 +127,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Core\Models\FileModel.cs" />
+    <Compile Include="Core\Services\FolderService.cs" />
+    <Compile Include="Utils\DirectoryUtils.cs" />
+    <Compile Include="Utils\Extensions\ModelsExtensions.cs" />
     <Compile Include="Utils\UniversalFolderSelector.cs" />
     <Page Include="Core\Views\FileSelectorView.xaml">
       <SubType>Designer</SubType>
@@ -159,6 +163,10 @@
       <DependentUpon>MainView.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Core\Views\ThemeDictionary.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Utils\Extensions\UnityExtensions.cs" />

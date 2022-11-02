@@ -10,6 +10,7 @@ namespace ExcelToDbf.Core
     {
         public JSystem System { get; set; } = new JSystem();
         public JHeader Header { get; set; } = new JHeader();
+        public string[] Extensions { get; set; } = Array.Empty<string>();
 
         public class JSystem
         {

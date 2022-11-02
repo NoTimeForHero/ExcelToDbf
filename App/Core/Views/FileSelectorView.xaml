@@ -8,10 +8,18 @@
       d:DataContext="{d:DesignInstance Type=vm:FileSelectorVM, IsDesignTimeCreatable=True}"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="ThemeDictionary.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="1*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid>
             <Grid.ColumnDefinitions>
@@ -25,12 +33,40 @@
             <Button Grid.Column="1" 
                     Command="{Binding SelectPathCommand}"
                     HorizontalAlignment="Center"
-                    Padding="4">
+                    Padding="2">
                 <Image Source="../../Resources/if_FolderOpened_Yellow_34223.png" Height="26" Width="26" />
             </Button>
         </Grid>
-        <ListBox Grid.Row="1" Margin="0,5,0,0">
+        <DataGrid Grid.Row="1" Margin="0,2,0,0" ItemsSource="{Binding Files}">
 
-        </ListBox>
+        </DataGrid>
+        <DockPanel Grid.Row="2">
+            <TextBlock VerticalAlignment="Center" Margin="10,0,0,0">
+                Файлов выделено:
+                <Run FontWeight="Bold" Text="{Binding SelectedCount, Mode=OneWay}" /> 
+            </TextBlock>
+            <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button HorizontalAlignment="Center" 
+                        Command="{Binding CheckedCommand}"
+                        CommandParameter="true"
+                        Style="{StaticResource btnThemed}" 
+                        Padding="5,4" FontSize="13">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="../../Resources/if_checkbox-checked_83249.png" Height="16" Width="16" />
+                        <TextBlock VerticalAlignment="Center" Margin="10,0,0,0">Выделить всё</TextBlock>
+                    </StackPanel>
+                </Button>
+                <Button HorizontalAlignment="Center" 
+                        Command="{Binding CheckedCommand}"
+                        CommandParameter="false"
+                        Style="{StaticResource btnThemed}" 
+                        Padding="5,4" FontSize="13">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="../../Resources/if_checkbox-unchecked_83251.png" Height="16" Width="16" />
+                        <TextBlock VerticalAlignment="Center" Margin="10,0,0,0">Снять всё</TextBlock>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </DockPanel>
     </Grid>
 </UserControl>

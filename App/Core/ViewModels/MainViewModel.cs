@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
@@ -31,7 +31,7 @@ namespace ExcelToDbf.Core.ViewModels
         public ReactiveCommand<Unit, Unit> ActionCommand { get; set; }
 
         [Reactive]
-        public ReactiveObject ViewBody { get; set; } = null;
+        public ReactiveObject ChildVM { get; set; } = null;
 
         public MainViewModel()
         {

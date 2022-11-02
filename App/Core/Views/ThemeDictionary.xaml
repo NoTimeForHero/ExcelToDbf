@@ -1,0 +1,19 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Brush x:Key="bgMain">#c3e085</Brush>
+    <Brush x:Key="bgSecondary">#009100</Brush>
+    <Brush x:Key="bgDark">#009100</Brush>
+    <Brush x:Key="brushTitle">Yellow</Brush>
+    <Brush x:Key="brushText">White</Brush>
+    <Style x:Key="btnThemed" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource bgSecondary}" />
+        <Setter Property="Foreground" Value="{StaticResource brushTitle}" />
+        <Setter Property="Margin" Value="2, 5" />
+        <Setter Property="Padding" Value="10, 0" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style x:Key="btnLarge" TargetType="Button" BasedOn="{StaticResource btnThemed}">
+        <Setter Property="Padding" Value="30, 10" />
+    </Style>
+</ResourceDictionary>
