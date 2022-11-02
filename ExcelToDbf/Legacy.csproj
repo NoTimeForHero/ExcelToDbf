@@ -28,6 +28,8 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -229,6 +231,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Sources\View\AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Sources\View\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
@@ -243,52 +246,52 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\1488562050_export_excel.ico" />
+    <Resource Include="Resources\1488562050_export_excel.ico" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="bin\Debug\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\if_Folder_27849.png" />
+    <Resource Include="Resources\if_Folder_27849.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\if_run_3251.png" />
+    <Resource Include="Resources\if_run_3251.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\if_Gnome-Application-Exit-32_54914.png" />
+    <Resource Include="Resources\if_Gnome-Application-Exit-32_54914.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\if_checkbox-unchecked_83251.png" />
+    <Resource Include="Resources\if_checkbox-unchecked_83251.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\if_checkbox-checked_83249.png" />
+    <Resource Include="Resources\if_checkbox-checked_83249.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\if_userconfig_7388.png" />
+    <Resource Include="Resources\if_userconfig_7388.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\xl.png" />
+    <Resource Include="Resources\xl.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\folder.png" />
+    <Resource Include="Resources\folder.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\if_eps_extension_file_name-13_1572493.png" />
+    <Resource Include="Resources\if_eps_extension_file_name-13_1572493.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\if_agt_action_success_3807.png" />
+    <Resource Include="Resources\if_agt_action_success_3807.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\if_error_14415.png" />
+    <Resource Include="Resources\if_error_14415.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\if_error_16263.png" />
+    <Resource Include="Resources\if_error_16263.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\if_FolderOpened_Yellow_34223.png" />
+    <Resource Include="Resources\if_FolderOpened_Yellow_34223.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\if_info_3238.png" />
+    <Resource Include="Resources\if_info_3238.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Test1\CSV_Converter.csproj">
