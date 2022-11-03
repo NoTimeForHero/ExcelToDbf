@@ -27,12 +27,20 @@ namespace ExcelToDbf.Utils
                     {
                         FullPath = path,
                         FileName = name,
-                        Size = BytesToString(info.Length),
+                        Size = info.Length,
                         Created = info.LastWriteTime
                     });
                 }
             }
             return results;
+        }
+
+        public class File
+        {
+            public string FullPath { get; set; }
+            public string FileName { get; set; }
+            public long Size { get; set; }
+            public DateTime Created { get; set; }
         }
 
         public static string BytesToString(long byteCount)
@@ -44,14 +52,6 @@ namespace ExcelToDbf.Utils
             int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
             double num = Math.Round(bytes / Math.Pow(1024, place), 1);
             return Math.Sign(byteCount) * num + " " + suf[place];
-        }
-
-        public class File
-        {
-            public string FullPath { get; set; }
-            public string FileName { get; set; }
-            public string Size { get; set; }
-            public DateTime Created { get; set; }
         }
     }
 }

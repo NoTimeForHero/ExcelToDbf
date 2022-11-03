@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using DynamicData;
+using DynamicData.Aggregation;
+using DynamicData.Binding;
 using ExcelToDbf.Core.Models;
 using ExcelToDbf.Core.Services;
 using ExcelToDbf.Utils;
@@ -28,12 +30,31 @@ namespace ExcelToDbf.Core.ViewModels
         public ReactiveCommand<Unit, Unit> SelectPathCommand { get; }
         public ReactiveCommand<string, Unit> CheckedCommand { get; }
 
-        public string SelectedCount { [ObservableAsProperty] get; }
+        public int SelectedCount { [ObservableAsProperty] get; }
+
+        //[Reactive]
+        //public int SelectedCount { get; set; } = -1;
+
 
         public FileSelectorVM()
         {
         }
 
+        private void Generate(SourceList<FileModel> list, int count, bool? isChecked = null)
+        {
+            var random = new Random();
+            list.Clear();
+            list.Edit(innerList =>
+            {
+                foreach (var index in Enumerable.Range(1, count))
+                {
+                    var chk = isChecked ?? random.Next(100) > 50;
+                    list.Add(new FileModel { FileName = $"File #{index}", MustConvert = chk });
+                }
+            });
+        }
+
+        // TODO: Добавить IDisposable
         public FileSelectorVM(FolderService service)
         {
             SelectPathCommand = ReactiveCommand.Create(() =>
@@ -43,19 +64,24 @@ namespace ExcelToDbf.Core.ViewModels
 
             CheckedCommand = ReactiveCommand.Create<string>((arg) =>
             {
-                MessageBox.Show($"Checked all: " + (arg == "true" ? "YES" : "NO"));
+                service.SelectAll(arg == "true");
             });
 
             this.WhenAnyValue(x => x.Path).Subscribe(service.Update);
 
             service.Connect()
+                //.Sort(SortExpressionComparer<FileModel>.Ascending(vm => vm.Size))
                 .ObserveOn(RxApp.MainThreadScheduler)
+                //.ObserveOnDispatcher()
                 .Bind(out _files)
-                .DisposeMany()
+                //.DisposeMany()
                 .Subscribe();
 
-            service.Connect()
-                .Select(x => x.Count.ToString())
+            service
+                .Connect()
+                .AutoRefresh(x => x.MustConvert)
+                .Filter(x => x.MustConvert)
+                .Count()
                 .ToPropertyEx(this, x => x.SelectedCount);
         }
     }

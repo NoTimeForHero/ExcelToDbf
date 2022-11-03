@@ -5,6 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:ExcelToDbf.Core.Views"
       xmlns:vm="clr-namespace:ExcelToDbf.Core.ViewModels"
+      xmlns:m="clr-namespace:ExcelToDbf.Core.Models"
       d:DataContext="{d:DesignInstance Type=vm:FileSelectorVM, IsDesignTimeCreatable=True}"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800">
@@ -12,6 +13,19 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="ThemeDictionary.xaml"/>
+                <ResourceDictionary>
+                    <DataTemplate DataType="{x:Type m:FileModel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90" />
+                                <ColumnDefinition Width="25" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="{Binding  FileName}" />
+                            <CheckBox Grid.Column="1" IsChecked="{Binding MustConvert}" />
+                        </Grid>
+                    </DataTemplate>
+                </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -37,9 +51,9 @@
                 <Image Source="../../Resources/if_FolderOpened_Yellow_34223.png" Height="26" Width="26" />
             </Button>
         </Grid>
-        <DataGrid Grid.Row="1" Margin="0,2,0,0" ItemsSource="{Binding Files}">
+        <!-- <ItemsControl Grid.Row="1" ItemsSource="{Binding Files}" /> -->
+        <DataGrid Grid.Row="1" Margin="0,2,0,0" ItemsSource="{Binding Files}" />
 
-        </DataGrid>
         <DockPanel Grid.Row="2">
             <TextBlock VerticalAlignment="Center" Margin="10,0,0,0">
                 Файлов выделено:

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DynamicData.Binding;
 using ExcelToDbf.Utils;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -13,10 +14,10 @@ namespace ExcelToDbf.Core.Models
     {
         public string FullPath { get; set; }
         public string FileName { get; set; }
-        public string Size { get; set; }
+        public long Size { get; set; }
         public DateTime Created { get; set; }
 
         [Reactive]
-        public bool Selected { get; set; }
+        public bool MustConvert { get; set; }
     }
 }
