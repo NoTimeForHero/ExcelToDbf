@@ -6,6 +6,7 @@
       xmlns:local="clr-namespace:ExcelToDbf.Core.Views"
       xmlns:vm="clr-namespace:ExcelToDbf.Core.ViewModels"
       xmlns:m="clr-namespace:ExcelToDbf.Core.Models"
+      xmlns:conv="clr-namespace:ExcelToDbf.Utils.Converters"
       d:DataContext="{d:DesignInstance Type=vm:FileSelectorVM, IsDesignTimeCreatable=True}"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800">
@@ -14,17 +15,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="ThemeDictionary.xaml"/>
                 <ResourceDictionary>
-                    <DataTemplate DataType="{x:Type m:FileModel}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="90" />
-                                <ColumnDefinition Width="25" />
-                            </Grid.ColumnDefinitions>
-
-                            <TextBlock Text="{Binding  FileName}" />
-                            <CheckBox Grid.Column="1" IsChecked="{Binding MustConvert}" />
-                        </Grid>
-                    </DataTemplate>
+                    <conv:SizeConverter x:Key="convSize" />
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -52,7 +43,37 @@
             </Button>
         </Grid>
         <!-- <ItemsControl Grid.Row="1" ItemsSource="{Binding Files}" /> -->
-        <DataGrid Grid.Row="1" Margin="0,2,0,0" ItemsSource="{Binding Files}" />
+        <DataGrid Grid.Row="1" Margin="0,2,0,0" ItemsSource="{Binding Files}"
+                  AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <!-- <DataGridCheckBoxColumn Header="#" Binding="{Binding MustConvert}" /> -->
+                <DataGridTemplateColumn Header="#" Width="50">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding Path=MustConvert, UpdateSourceTrigger=PropertyChanged}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Width="40*" Header="Имя файла" Binding="{Binding FileName}" IsReadOnly="True" />
+                <DataGridTextColumn Width="10*" Header="Размер" Binding="{Binding Size, Converter={StaticResource convSize}}" IsReadOnly="True" />
+                <DataGridTextColumn Width="10*" Header="Дата создания" Binding="{Binding Created, StringFormat='HH:mm - dd/MM/yyyy'}" IsReadOnly="True" />
+            </DataGrid.Columns>
+            <DataGrid.Resources>
+                <Style BasedOn="{StaticResource {x:Type DataGridColumnHeader}}" TargetType="{x:Type DataGridColumnHeader}" >
+                    <Setter Property="Background" Value="{StaticResource bgDarkest}" />
+                    <Setter Property="Foreground" Value="{StaticResource brushTitle}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource brushTitle}"/>
+                    <Setter Property="BorderThickness" Value="1 1 1 1"/>
+                    <Setter Property="Margin" Value="-1,-1,0,0" />
+                    <Setter Property="Padding" Value="5,4" />
+                    <Setter Property="Height" Value="28" />
+                    <Setter Property="Width" Value="auto"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                </Style>
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="{Binding Source={StaticResource bgHighlight}, Path=Color}" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black" />
+            </DataGrid.Resources>
+        </DataGrid>
 
         <DockPanel Grid.Row="2">
             <TextBlock VerticalAlignment="Center" Margin="10,0,0,0">

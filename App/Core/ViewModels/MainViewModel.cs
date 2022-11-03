@@ -23,12 +23,7 @@ namespace ExcelToDbf.Core.ViewModels
         public string HeaderDescription { get; set; } = "Дополнительная информация";
 
         [Reactive]
-        public string ButtonActionTitle { get; set; } = "Действие";
-
-        [Reactive]
-        public bool ButtonActionEnabled { get; set; } = true;
-
-        public ReactiveCommand<Unit, Unit> ActionCommand { get; set; }
+        public RActionButton ActionButton { get; set; } = new RActionButton();
 
         [Reactive]
         public ReactiveObject ChildVM { get; set; } = null;
@@ -41,11 +36,40 @@ namespace ExcelToDbf.Core.ViewModels
         {
             HeaderTitle = config.Header.Title;
             HeaderDescription = config.Header.Status;
-            ActionCommand = ReactiveCommand.CreateFromTask(() =>
+        }
+
+
+        public class RActionButton : ReactiveObject
+        {
+            [Reactive]
+            public string Title { get; set; } = "Действие";
+
+            [Reactive]
+            public bool Enabled { get; set; } = true;
+
+            [Reactive]
+            public bool Visible { get; set; } = true;
+
+            [Reactive]
+            public ImageType Image { get; set; } = ImageType.None;
+
+            public ReactiveCommand<Unit, Unit> Command { get; set; }
+
+            public RActionButton()
             {
-                MessageBox.Show("Кнопка нажата?");
-                return Task.CompletedTask;
-            }, canExecute: this.WhenAnyValue(x => x.ButtonActionEnabled));
+                Command = ReactiveCommand.CreateFromTask(() =>
+                {
+                    MessageBox.Show("Кнопка нажата?");
+                    return Task.CompletedTask;
+                }, canExecute: this.WhenAnyValue(x => x.Enabled));
+            }
+
+            public enum ImageType
+            {
+                None,
+                Settings,
+                Folder
+            }
         }
     }
 }

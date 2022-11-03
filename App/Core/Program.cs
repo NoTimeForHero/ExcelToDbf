@@ -35,8 +35,17 @@ namespace ExcelToDbf.Core
         public void Run(string[] args)
         {
             var model = container.Resolve<MainViewModel>();
-            model.ButtonActionTitle = "Конвертировать!";
             model.ChildVM = container.Resolve<FileSelectorVM>();
+
+            model.ActionButton.Title = "Конвертировать";
+            model.ActionButton.Image = MainViewModel.RActionButton.ImageType.Settings;
+
+            model.ActionButton.Command = ReactiveCommand.CreateFromTask(async() =>
+            {
+                model.ActionButton.Visible = false;
+                await Task.Delay(3000);
+                model.ActionButton.Visible = true;
+            });
 
             container.Resolve<MainView>().Show();
         }

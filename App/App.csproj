@@ -129,6 +129,7 @@
     </ApplicationDefinition>
     <Compile Include="Core\Models\FileModel.cs" />
     <Compile Include="Core\Services\FolderService.cs" />
+    <Compile Include="Utils\Converters\SizeConverter.cs" />
     <Compile Include="Utils\DirectoryUtils.cs" />
     <Compile Include="Utils\Extensions\ModelsExtensions.cs" />
     <Compile Include="Utils\UniversalFolderSelector.cs" />

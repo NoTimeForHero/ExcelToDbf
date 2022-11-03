@@ -3,6 +3,8 @@
     <Brush x:Key="bgMain">#c3e085</Brush>
     <Brush x:Key="bgSecondary">#009100</Brush>
     <Brush x:Key="bgDark">#009100</Brush>
+    <Brush x:Key="bgDarkest">#274515</Brush>
+    <Brush x:Key="bgHighlight">#f0e68c</Brush>
     <Brush x:Key="brushTitle">Yellow</Brush>
     <Brush x:Key="brushText">White</Brush>
     <Style x:Key="btnThemed" TargetType="Button">

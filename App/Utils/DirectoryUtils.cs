@@ -43,15 +43,14 @@ namespace ExcelToDbf.Utils
             public DateTime Created { get; set; }
         }
 
-        public static string BytesToString(long byteCount)
+        public static string BytesToString(long byteCount, string[] suffixes = null)
         {
-            string[] suf = { "Б", "Кб", "Мб", "Гб", "Тб" }; //Longs run out around EB
-            if (byteCount == 0)
-                return "0" + suf[0];
+            suffixes = suffixes ??  new[] { "Б", "Кб", "Мб", "Гб", "Тб" };
+            if (byteCount == 0) return "0" + suffixes[0];
             long bytes = Math.Abs(byteCount);
             int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
             double num = Math.Round(bytes / Math.Pow(1024, place), 1);
-            return Math.Sign(byteCount) * num + " " + suf[place];
+            return Math.Sign(byteCount) * num + " " + suffixes[place];
         }
     }
 }

@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 using ExcelToDbf.Core.ViewModels;
 using ExcelToDbf.Sources.View;
 
-namespace ExcelToDbf
+namespace ExcelToDbf.Core.Views
 {
     /// <summary>
     /// Логика взаимодействия для MainView.xaml
