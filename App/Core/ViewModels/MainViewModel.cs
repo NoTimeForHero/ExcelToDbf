@@ -14,7 +14,7 @@ namespace ExcelToDbf.Core.ViewModels
     public class MainViewModel : ReactiveObject
     {
         [Reactive]
-        public string Title { get; set; } = "Конвертирование Excel документов в DBF";
+        public string Title { get; set; } = Constants.ApplicationTitle;
 
         [Reactive]
         public string HeaderTitle { get; set; } = "Название фирмы";
@@ -27,6 +27,9 @@ namespace ExcelToDbf.Core.ViewModels
 
         [Reactive]
         public ReactiveObject ChildVM { get; set; } = null;
+
+        [Reactive]
+        public bool CloseConfirmation { get; set; }
 
         public MainViewModel()
         {

@@ -55,6 +55,9 @@
                     <DataTemplate DataType="{x:Type vm:FileSelectorVM}">
                         <v:FileSelectorView />
                     </DataTemplate>
+                    <DataTemplate DataType="{x:Type vm:ProgressVM}">
+                        <v:ProgressView />
+                    </DataTemplate>
                 </ContentControl.Resources>
             </ContentControl>
         </Border>

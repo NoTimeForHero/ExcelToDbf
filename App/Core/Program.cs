@@ -9,6 +9,7 @@ using ExcelToDbf.Core.Services;
 using ExcelToDbf.Core.ViewModels;
 using ExcelToDbf.Core.Views;
 using ExcelToDbf.Utils.Extensions;
+using NLog;
 using ReactiveUI;
 using Unity;
 using Unity.NLog;
@@ -25,29 +26,20 @@ namespace ExcelToDbf.Core
             container.AddNewExtension<NLogExtension>();
             container.RegisterSingleton<ScriptEngine>();
             container.RegisterSingleton<FolderService>();
+            container.RegisterSingleton<ConvertService>();
             container.RegisterSingletonMVVM<MainView, MainViewModel>();
             container.RegisterSingletonMVVM<FileSelectorView, FileSelectorVM>();
+            container.RegisterSingletonMVVM<ProgressView, ProgressVM>();
             container.RegisterFactory<Config>((u) => u.Resolve<ScriptEngine>().GetConfig());
             container.RegisterInstance(this);
         }
 
-
         public void Run(string[] args)
         {
-            var model = container.Resolve<MainViewModel>();
-            model.ChildVM = container.Resolve<FileSelectorVM>();
+            var logger = NLog.LogManager.GetCurrentClassLogger();
+            logger.Info("Приложение было запущено");
 
-            model.ActionButton.Title = "Конвертировать";
-            model.ActionButton.Image = MainViewModel.RActionButton.ImageType.Settings;
-
-            model.ActionButton.Command = ReactiveCommand.CreateFromTask(async() =>
-            {
-                model.ActionButton.Visible = false;
-                await Task.Delay(3000);
-                model.ActionButton.Visible = true;
-            });
-
-            container.Resolve<MainView>().Show();
+            new RuntimeGUI(container).Run();
         }
 
     }

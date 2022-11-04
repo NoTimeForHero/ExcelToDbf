@@ -33,6 +33,13 @@ namespace ExcelToDbf.Core.Services
             });
         }
 
+        public IEnumerable<FileModel> GetFiles(bool? isChecked = false)
+        {
+            if (isChecked == null) return _files.Items;
+            // ReSharper disable once PossibleInvalidOperationException
+            return _files.Items.Where(file => file.MustConvert == isChecked.Value);
+        }
+
         public void Update(string path)
         {
             var range = DirectoryUtils.GetFilesByExtension(path, config.Extensions)

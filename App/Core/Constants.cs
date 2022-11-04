@@ -8,6 +8,7 @@ namespace ExcelToDbf.Core
 {
     internal static class Constants
     {
+        public static readonly string ApplicationTitle = "Конвертирование Excel документов в DBF";
         public static readonly string SettingsFile = "config.js";
     }
 }
