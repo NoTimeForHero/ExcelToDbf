@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ExcelToDbf.Core.Models;
+using ExcelToDbf.Core.Services.Scripts;
 using ExcelToDbf.Utils.Extensions;
 using NLog;
 using Unity;
@@ -16,8 +18,7 @@ namespace ExcelToDbf.Core.Services
         private readonly ILogger logger;
         private readonly ScriptEngine engine;
         private readonly Random random = new Random(100);
-        private readonly IUnityContainer container;
-        private Lazy<ExcelService> excel;
+        private readonly Lazy<ExcelService> excel;
 
         public ConvertService(ILogger logger, IUnityContainer container)
         {
@@ -56,7 +57,8 @@ namespace ExcelToDbf.Core.Services
                 Progress.FileInitialize(curFile+1, filename);
                 try
                 {
-                    await ProcessFile(file);
+                    var outputFile = engine.GetOutputFilename(file);
+                    await ProcessFile(file.FullPath, outputFile);
                 }
                 catch (Exception ex)
                 {
@@ -66,9 +68,9 @@ namespace ExcelToDbf.Core.Services
             }
         }
 
-        private Task ProcessFile(FileModel file)
+        private Task ProcessFile(string inputFile, string outputFile)
         {
-            excel.Value.OpenWorksheet(file.FullPath);
+            excel.Value.OpenWorksheet(inputFile);
             Thread.Sleep(2000);
             //await random.Delay(500, 3000);
 
@@ -82,6 +84,7 @@ namespace ExcelToDbf.Core.Services
                 Thread.Sleep(20);
                 //await random.Delay(5, 50);
             }
+            File.WriteAllText(outputFile, "Test");
             return Task.CompletedTask;
         }
     }

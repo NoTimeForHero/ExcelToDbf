@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using ExcelToDbf.Core.Services;
+using ExcelToDbf.Core.Services.Scripts;
 using ExcelToDbf.Core.ViewModels;
 using ExcelToDbf.Core.Views;
 using ExcelToDbf.Utils.Extensions;

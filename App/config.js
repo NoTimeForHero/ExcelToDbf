@@ -21,6 +21,8 @@
 }
 
 // ====== БАЗОВЫЙ СПИСОК ФУНКЦИЙ =======
+// string translit(input: string) - возвращает строку input в транслите
+// string nospace(input: string, replaced: string) - заменяет в строке input все пробелы на replaced и возвращает строку
 // string|null cell(y: int, x: int) - читает значение из ячейки Excel, возвращает null если произошла ошибка
 // string|null matched(input: string, regex: Regex, id = 1: int) - разделяет строку input по регулярному выражению regex и возвращает id элемент полученного массива (1 если не указано) или null
 // boolean match(input: string, regex: Regex) - попадает ли строка под регулярку
@@ -30,11 +32,9 @@
 
 app.getOutputFilename = function(file) {
         // Функция
-        // На выход должна подаваться единственная строка с новым именем файла  
-        // 
+        // На выход должна подаваться единственная строка с новым именем файла
+        //
         // Функции (помимо базовых):
-        // string translit(input: string) - возвращает строку input в транслите
-        // string nospace(input: string, replaced: string) - заменяет в строке input все пробелы на replaced и возвращает строку        
         // string|null dir(id: in) - возвращает сегмент пути по заданному индексу
         //
         // Переменные:
@@ -42,7 +42,7 @@ app.getOutputFilename = function(file) {
         // string dirCount - количество сегментов в пути
         file = nospace(file);
         file = translit(file);
-        file = file + ".dbf";
+        file = "../" + file + ".dbf";
         return file;
 }
 
