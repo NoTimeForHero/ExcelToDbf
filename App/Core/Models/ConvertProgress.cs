@@ -26,19 +26,20 @@ namespace ExcelToDbf.Core.Models
             $"Local=\"{LocalText}\"" +
             "]";
 
-        public void GlobalInitialize(int filesTotal)
+        public void GlobalInitialize(int filesTotal, string message = null)
         {
             FilesCurrent = 0;
             FilesTotal = filesTotal;
+            GlobalText = message ?? GlobalText;
         }
 
-        public void FileInitialize(int current, string local, string global)
+        public void FileInitialize(int current, string filename)
         {
             FilesCurrent = current;
             DocumentCurrent = 0;
             DocumentTotal = 0;
-            GlobalText = global;
-            LocalText = local;
+            GlobalText = $"Обработка файла: {filename}";
+            LocalText = $"Открытие файла: {filename}";
         }
 
         public void SetProgress(int current, int max, string message)

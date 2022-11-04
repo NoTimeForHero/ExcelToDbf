@@ -27,6 +27,7 @@ namespace ExcelToDbf.Core
             container.RegisterSingleton<ScriptEngine>();
             container.RegisterSingleton<FolderService>();
             container.RegisterSingleton<ConvertService>();
+            container.RegisterSingleton<ExcelService>();
             container.RegisterSingletonMVVM<MainView, MainViewModel>();
             container.RegisterSingletonMVVM<FileSelectorView, FileSelectorVM>();
             container.RegisterSingletonMVVM<ProgressView, ProgressVM>();
@@ -44,15 +45,16 @@ namespace ExcelToDbf.Core
                 logger.Info("Приложение было запущено");
 
                 new RuntimeGUI(container).Run();
+                container.Dispose();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
                     ex.NestedMessages(),
                     "Критическая ошибка!",
-                    MessageBoxButton.OK, 
+                    MessageBoxButton.OK,
                     MessageBoxImage.Error
-                    );
+                );
                 LogManager.GetCurrentClassLogger().Error(ex);
             }
         }

@@ -52,7 +52,7 @@ namespace ExcelToDbf.Core
                 model.ActionButton.Visible = true;
                 model.CloseConfirmation = false;
             });
-            container.Resolve<MainView>().Show();
+            container.Resolve<MainView>().ShowDialog();
         }
 
     }
