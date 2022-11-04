@@ -53,20 +53,22 @@ app.forms = [
             startY: 8,
             endX: 7,
         },
-        rules: function() {
-            return [
-                cell(2,2) === 'Форма 2.21А',
-                cell(7,2) === '№',
-                cell(7,3) === 'ФИО',
-                cell(7,4) === 'Счёт',
-                cell(7,5) === 'Сумма',
-                cell(7,6) === 'Дата оплаты',
-            ].every(x => !!x);
+        rules: function () {
+            // Функции (помимо базовых):
+            // Cell|null cell(y: int, x: int) - возвращает null при ошибки или interface Cell { x: int, y: int, value: object }
+            // void assert(current: string, expected: string, checkRegex: boolean = false)
+            // void assertCell(y: int, x: int, expected: string, checkRegex: boolean = false)
+            assertCell(2, 2, 'Форма 2.21А');
+            assertCell(7, 2, '№');
+            assertCell(7, 3, 'ФИО');
+            assertCell(7, 4, 'Счёт');
+            assertCell(7, 5, 'Сумма');
+            assertCell(7, 6, 'Дата оплаты');
         },
         dbfFields: [
-            {name: 'ID', length: 8 },
-            {name: 'KP', length: 8 },
-            {name: 'FIO', length: 60 },
+            {name: 'ID', length: '8' },
+            {name: 'KP', length: '8' },
+            {name: 'FIO', length: '60' },
             {name: 'SUMMA', type: 'numeric', length: '10,2' },                
             {name: 'DATEOPL', type: 'date' },        
         ],

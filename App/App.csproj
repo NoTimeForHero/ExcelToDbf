@@ -141,6 +141,8 @@
     <Compile Include="Core\Services\ConvertService.cs" />
     <Compile Include="Core\Services\ExcelService.cs" />
     <Compile Include="Core\Services\FolderService.cs" />
+    <Compile Include="Core\Services\Scripts\DocForm.cs" />
+    <Compile Include="Core\Services\Scripts\ExcelContext.cs" />
     <Compile Include="Core\Services\Scripts\GenericContext.cs" />
     <Compile Include="Core\Services\Scripts\JSException.cs" />
     <Compile Include="Core\ViewModels\ProgressVM.cs" />

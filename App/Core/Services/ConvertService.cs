@@ -18,13 +18,13 @@ namespace ExcelToDbf.Core.Services
         private readonly ILogger logger;
         private readonly ScriptEngine engine;
         private readonly Random random = new Random(100);
-        private readonly Lazy<ExcelService> excel;
+        private readonly Lazy<ExcelService> lazyExcel;
 
         public ConvertService(ILogger logger, IUnityContainer container)
         {
             this.logger = logger;
             engine = container.Resolve<ScriptEngine>();
-            excel = new Lazy<ExcelService>(() => container.Resolve<ExcelService>());
+            lazyExcel = new Lazy<ExcelService>(() => container.Resolve<ExcelService>());
         }
 
         public ConvertProgress Progress { get; } = new ConvertProgress();
@@ -48,7 +48,6 @@ namespace ExcelToDbf.Core.Services
 
             Progress.Reset();
             Progress.GlobalInitialize(filesTotal, "Ожидание загрузки Excel...");
-            var _ = excel.Value;
 
             foreach (var (file, curFile) in files.WithIndex())
             {
@@ -70,21 +69,21 @@ namespace ExcelToDbf.Core.Services
 
         private Task ProcessFile(string inputFile, string outputFile)
         {
-            excel.Value.OpenWorksheet(inputFile);
-            Thread.Sleep(2000);
-            //await random.Delay(500, 3000);
+            var excel = lazyExcel.Value;
+            excel.OpenWorksheet(inputFile);
 
-            var rows = random.Next(5000, 60000);
-            Progress.DocumentTotal = rows;
-            int curRow = 0;
-            while (curRow < rows)
-            {
-                Progress.SetProgress(curRow, rows, $"Обработка массива строк");
-                curRow += random.Next(100, 400);
-                Thread.Sleep(20);
-                //await random.Delay(5, 50);
-            }
-            File.WriteAllText(outputFile, "Test");
+            // engine.Excel.FindForm(excel.worksheet);
+
+            // Progress.DocumentTotal = rows;
+            // int curRow = 0;
+            // while (curRow < rows)
+            // {
+            //     Progress.SetProgress(curRow, rows, $"Обработка массива строк");
+            //     curRow += random.Next(100, 400);
+            //     Thread.Sleep(20);
+            //     //await random.Delay(5, 50);
+            // }
+            // File.WriteAllText(outputFile, "Test");
             return Task.CompletedTask;
         }
     }

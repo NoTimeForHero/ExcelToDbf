@@ -32,7 +32,7 @@ namespace ExcelToDbf.Core
             container.RegisterSingletonMVVM<MainView, MainViewModel>();
             container.RegisterSingletonMVVM<FileSelectorView, FileSelectorVM>();
             container.RegisterSingletonMVVM<ProgressView, ProgressVM>();
-            container.RegisterFactory<Config>((u) => u.Resolve<ScriptEngine>().GetConfig());
+            container.RegisterFactory<Config>((u) => u.Resolve<ScriptEngine>().Config);
             container.RegisterInstance(this);
         }
 

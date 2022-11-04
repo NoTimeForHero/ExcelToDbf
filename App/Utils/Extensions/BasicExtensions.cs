@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Jint;
+using Jint.Native;
+using Newtonsoft.Json;
 
 namespace ExcelToDbf.Utils.Extensions
 {
@@ -32,6 +35,16 @@ namespace ExcelToDbf.Utils.Extensions
                 level++;
             }
             return builder.ToString();
+        }
+
+        public static Engine ClearValue(this Engine engine, JsValue name) =>
+            // ReSharper disable once AssignNullToNotNullAttribute
+            engine.SetValue(name, (object)null);
+
+        public static T Deserialize<T>(this Jint.Native.Json.JsonSerializer serializer, JsValue value)
+        {
+            var json = serializer.Serialize(value, Undefined.Instance, Undefined.Instance).AsString();
+            return JsonConvert.DeserializeObject<T>(json);
         }
     }
 }
