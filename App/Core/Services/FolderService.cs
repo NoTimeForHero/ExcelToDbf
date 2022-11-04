@@ -6,19 +6,22 @@ using System.Threading.Tasks;
 using DynamicData;
 using ExcelToDbf.Core.Models;
 using ExcelToDbf.Utils;
+using NLog;
 
 namespace ExcelToDbf.Core.Services
 {
     internal class FolderService
     {
+        private readonly ILogger logger;
         private readonly Config config;
         private readonly SourceList<FileModel> _files;
 
         public IObservable<IChangeSet<FileModel>> Connect() => _files.Connect();
 
-        public FolderService(Config config)
+        public FolderService(ILogger logger, Config config)
         {
             _files = new SourceList<FileModel>();
+            this.logger = logger;
             this.config = config;
         }
 
@@ -42,14 +45,17 @@ namespace ExcelToDbf.Core.Services
 
         public void Update(string path)
         {
+            logger.Info($"Пользователем выбрана директория: {path}");
             var range = DirectoryUtils.GetFilesByExtension(path, config.Extensions)
                 .Select(x => new FileModel
                 {
+                    MustConvert = true,
                     FileName = x.FileName,
                     FullPath = x.FullPath,
                     Created = x.Created,
                     Size = x.Size,
-                });
+                }).ToList();
+            logger.Info($"Файлов было найдено: {range.Count}");
             _files.Clear();
             _files.AddRange(range);
         }

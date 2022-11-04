@@ -5,15 +5,18 @@ using System.Text;
 using System.Threading.Tasks;
 using ExcelToDbf.Core.Models;
 using ExcelToDbf.Utils.Extensions;
+using NLog;
 
 namespace ExcelToDbf.Core.Services
 {
     internal class ConvertService
     {
+        private ILogger logger;
         private Config config;
 
-        public ConvertService(Config config)
+        public ConvertService(ILogger logger, Config config)
         {
+            this.logger = logger;
             this.config = config;
         }
 
@@ -22,11 +25,15 @@ namespace ExcelToDbf.Core.Services
 
         public async Task Run(IEnumerable<FileModel> filesToConvert)
         {
+            var files = filesToConvert.ToList();
+            logger.Debug($"Набор {files.Count} файлов для конвертации: " +
+                         files.Select(x => $"\"{x.FileName}\"").JoinString(", ")
+                         );
             //await Task.Factory.StartNew(() => DemoRun(filesToConvert), TaskCreationOptions.LongRunning);
-            await DemoRun(filesToConvert);
+            await DemoRun(files);
         }
 
-        private async Task DemoRun(IEnumerable<FileModel> input)
+        private async Task DemoRun(List<FileModel> input)
         {
             var random = new Random(100);
 
@@ -41,6 +48,7 @@ namespace ExcelToDbf.Core.Services
             foreach (var (file, curFile) in files.WithIndex())
             {
                 var filename = file.FileName;
+                logger.Info($"Конвертация файла: {filename}");
 
                 Progress.FileInitialize(
                     curFile+1,

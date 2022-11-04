@@ -36,10 +36,25 @@ namespace ExcelToDbf.Core
 
         public void Run(string[] args)
         {
-            var logger = NLog.LogManager.GetCurrentClassLogger();
-            logger.Info("Приложение было запущено");
+            try
+            {
+                LogManager.ThrowExceptions = true;
+                LogManager.ThrowConfigExceptions = true;
+                var logger = LogManager.GetCurrentClassLogger();
+                logger.Info("Приложение было запущено");
 
-            new RuntimeGUI(container).Run();
+                new RuntimeGUI(container).Run();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.NestedMessages(),
+                    "Критическая ошибка!",
+                    MessageBoxButton.OK, 
+                    MessageBoxImage.Error
+                    );
+                LogManager.GetCurrentClassLogger().Error(ex);
+            }
         }
 
     }
