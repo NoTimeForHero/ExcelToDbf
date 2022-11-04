@@ -11,7 +11,7 @@ using Jint.Native.Function;
 using Jint.Native.Json;
 using Jint.Native.Object;
 
-namespace ExcelToDbf.Core.Services.Scripts
+namespace ExcelToDbf.Core.Models
 {
     internal class DocForm
     {

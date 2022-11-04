@@ -10,11 +10,12 @@ using NickBuhro.Translit;
 using NLog;
 using NLog.Fluent;
 
-namespace ExcelToDbf.Core.Services.Scripts
+namespace ExcelToDbf.Core.Services.Scripts.Context
 {
-    internal class GenericContext
+    internal class GenericContext : AbstractContext
     {
-        public static void Apply(Engine engine)
+
+        public GenericContext(Engine engine) : base(engine)
         {
             engine.SetValue("translit", (Func<string, string>)FuncTranslit);
             engine.SetValue("nospace", (Func<string, string, string>)FuncReplaceSpace);
@@ -22,18 +23,19 @@ namespace ExcelToDbf.Core.Services.Scripts
             engine.SetValue("error", (Action<string>)FuncThrowException);
         }
 
-        public static void AddLogger(Engine engine, ILogger logger)
+        public GenericContext AddLogger(ILogger logger)
         {
             void Log(object data) => logger.Info($"{data}");
             engine.SetValue("log", (Action<string>)Log);
+            return this;
         }
 
-        protected static Regex regexSpace = new Regex(@"\s+", RegexOptions.Compiled);
+        protected Regex regexSpace = new Regex(@"\s+", RegexOptions.Compiled);
 
         /// <summary>
         /// Переводит строку в транслит
         /// </summary>
-        protected static string FuncTranslit(string input)
+        protected string FuncTranslit(string input)
         {
             return SafeString(Transliteration.CyrillicToLatin(input, Language.Russian));
         }
@@ -41,7 +43,7 @@ namespace ExcelToDbf.Core.Services.Scripts
         /// <summary>
         /// Удаляет из строки все недопустимые для файловой системы символы
         /// </summary>
-        protected static string SafeString(string result)
+        protected string SafeString(string result)
         {
             Array.ForEach(Path.GetInvalidFileNameChars(),
                   c => result = result.Replace(c.ToString(), String.Empty));
@@ -51,13 +53,13 @@ namespace ExcelToDbf.Core.Services.Scripts
         /// <summary>
         /// Заменяет все пробельные символы в строке на указанную строку
         /// </summary>
-        protected static string FuncReplaceSpace(string input, string replace) => regexSpace.Replace(input, replace ?? "");
+        protected string FuncReplaceSpace(string input, string replace) => regexSpace.Replace(input, replace ?? "");
 
         /// <summary>
         /// Разбивает подстроку input по регулярному выражению  info и возвращает nid группу
         /// Например: для построки abc с регуляркой one(two)(three)(four) и nid=2 вернёт "three"
         /// </summary>
-        protected static string FuncAfterRegEx(String input, Regex info, object nid)
+        protected string FuncAfterRegEx(String input, Regex info, object nid)
         {
             int id = nid != null ? Convert.ToInt32(nid) : 1; // 1 == default
             string[] groups = info.Split(input);
@@ -68,7 +70,7 @@ namespace ExcelToDbf.Core.Services.Scripts
         /// <summary>
         /// Бросает исключение с заданным сообщением
         /// </summary>
-        protected static void FuncThrowException(String text)
+        protected void FuncThrowException(String text)
         {
             throw new JSException("Исключение вызванное из JavaScript:\n" + text);
         }

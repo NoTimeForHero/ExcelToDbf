@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ExcelToDbf.Core.Models;
+using ExcelToDbf.Core.Services.Scripts.Context;
 using ExcelToDbf.Utils;
 using ExcelToDbf.Utils.Extensions;
 using Jint;
@@ -14,6 +15,9 @@ using Jint.Native.Function;
 using Jint.Native.Object;
 using Newtonsoft.Json;
 using NLog;
+using Unity;
+using Unity.Injection;
+using Unity.NLog;
 
 namespace ExcelToDbf.Core.Services.Scripts
 {
@@ -21,22 +25,35 @@ namespace ExcelToDbf.Core.Services.Scripts
     {
         public Config Config { get; }
         private readonly Engine engine = new Engine();
+        private readonly IUnityContainer container;
+        private readonly ILogger logger;
         public DocForm[] Forms { get; }
 
         public ScriptEngine(ILogger logger)
         {
+            container = new UnityContainer();
+            container.RegisterInstance(engine);
+            container.AddNewExtension<NLogExtension>();
+
+            this.logger = logger;
             var code = File.ReadAllText(Constants.SettingsFile);
 
             engine.Execute("app = {}").Execute(code);
             Config = JsonConvert.DeserializeObject<Config>(
                 engine.Evaluate("JSON.stringify(app.settings)").AsString());
 
-            GenericContext.Apply(engine);
-            GenericContext.AddLogger(engine, logger);
+            Resolve<GenericContext>().AddLogger(logger);
 
             Forms = ParseForms(engine, engine.Evaluate("app.forms")).ToArray();
             logger.Info($"Загружено {Forms.Length} форм!");
             logger.Debug("Список форм: " + Forms.Select(x => $"\"{x.Name}\"").JoinString(", "));
+        }
+
+        public TContext Resolve<TContext>() where TContext : AbstractContext
+        {
+            if (container.IsRegistered<TContext>()) return container.Resolve<TContext>();
+            container.RegisterSingleton<TContext>();
+            return container.Resolve<TContext>();
         }
 
         private static IEnumerable<DocForm> ParseForms(Engine engine, JsValue target)
@@ -53,24 +70,10 @@ namespace ExcelToDbf.Core.Services.Scripts
             });
         }
 
-        public string GetOutputFilename(FileModel file)
-        {
-            DirectoryInfo dir = new DirectoryInfo(file.FullPath);
-            PathHelper helper = new PathHelper(dir);
-            engine.SetValue("dir", (Func<int, string>)helper.GetLevel);
-            engine.SetValue("dirCount", helper.Count);
-            var outputName = engine
-                .SetValue("file", Path.GetFileNameWithoutExtension(file.FileName))
-                .Evaluate("app.getOutputFilename(file)")
-                .AsString();
-            var baseDir = Path.GetDirectoryName(file.FullPath)
-                          ?? throw new Exception("Directory not found!");
-            return Path.Combine(baseDir, outputName);
-        }
-
         public void Dispose()
         {
             engine?.Dispose();
+            container?.Dispose();
         }
     }
 }

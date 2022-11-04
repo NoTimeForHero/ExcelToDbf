@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ExcelToDbf.Core.Models;
 using ExcelToDbf.Core.Services.Scripts;
+using ExcelToDbf.Core.Services.Scripts.Context;
 using ExcelToDbf.Utils.Extensions;
 using NLog;
 using Unity;
@@ -49,6 +50,8 @@ namespace ExcelToDbf.Core.Services
             Progress.Reset();
             Progress.GlobalInitialize(filesTotal, "Ожидание загрузки Excel...");
 
+            var folderCtx = engine.Resolve<FolderContext>();
+
             foreach (var (file, curFile) in files.WithIndex())
             {
                 var filename = file.FileName;
@@ -56,7 +59,7 @@ namespace ExcelToDbf.Core.Services
                 Progress.FileInitialize(curFile+1, filename);
                 try
                 {
-                    var outputFile = engine.GetOutputFilename(file);
+                    var outputFile = folderCtx.GetOutputFilename(file);
                     await ProcessFile(file.FullPath, outputFile);
                 }
                 catch (Exception ex)
@@ -71,6 +74,9 @@ namespace ExcelToDbf.Core.Services
         {
             var excel = lazyExcel.Value;
             excel.OpenWorksheet(inputFile);
+
+            var context = engine.Resolve<ExcelContext>().ForDocument(excel.worksheet);
+            var results = context.SearchForm(engine.Forms);
 
             // engine.Excel.FindForm(excel.worksheet);
 

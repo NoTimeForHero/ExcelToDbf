@@ -141,10 +141,12 @@
     <Compile Include="Core\Services\ConvertService.cs" />
     <Compile Include="Core\Services\ExcelService.cs" />
     <Compile Include="Core\Services\FolderService.cs" />
-    <Compile Include="Core\Services\Scripts\DocForm.cs" />
-    <Compile Include="Core\Services\Scripts\ExcelContext.cs" />
-    <Compile Include="Core\Services\Scripts\GenericContext.cs" />
-    <Compile Include="Core\Services\Scripts\JSException.cs" />
+    <Compile Include="Core\Services\Scripts\Context\AbstractContext.cs" />
+    <Compile Include="Core\Models\DocForm.cs" />
+    <Compile Include="Core\Services\Scripts\Context\ExcelContext.cs" />
+    <Compile Include="Core\Services\Scripts\Context\FolderContext.cs" />
+    <Compile Include="Core\Services\Scripts\Context\GenericContext.cs" />
+    <Compile Include="Core\Services\Scripts\Data\JSException.cs" />
     <Compile Include="Core\ViewModels\ProgressVM.cs" />
     <Compile Include="Core\Views\ProgressView.xaml.cs">
       <DependentUpon>ProgressView.xaml</DependentUpon>
