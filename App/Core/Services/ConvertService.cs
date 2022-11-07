@@ -34,7 +34,8 @@ namespace ExcelToDbf.Core.Services
         public async Task Run(IEnumerable<FileModel> filesToConvert)
         {
             var files = filesToConvert.ToList();
-            logger.Debug($"Набор {files.Count} файлов для конвертации: " +
+            logger.Info($"Запущен процесс конвертации {files.Count} файлов!");
+            logger.Debug($"Файлы: " +
                          files.Select(x => $"\"{x.FileName}\"").JoinString(", ")
                          );
             var task = Task.Factory.StartNew(() => RunInternal(files), TaskCreationOptions.LongRunning).Unwrap();
@@ -50,7 +51,7 @@ namespace ExcelToDbf.Core.Services
             Progress.Reset();
             Progress.GlobalInitialize(filesTotal, "Ожидание загрузки Excel...");
 
-            var folderCtx = engine.Resolve<FolderContext>();
+            var folderCtx = engine.Resolve<ConfigContext>();
 
             foreach (var (file, curFile) in files.WithIndex())
             {
@@ -60,7 +61,7 @@ namespace ExcelToDbf.Core.Services
                 try
                 {
                     var outputFile = folderCtx.GetOutputFilename(file);
-                    await ProcessFile(file.FullPath, outputFile);
+                    await ProcessFile(file, outputFile);
                 }
                 catch (Exception ex)
                 {
@@ -70,13 +71,23 @@ namespace ExcelToDbf.Core.Services
             }
         }
 
-        private Task ProcessFile(string inputFile, string outputFile)
+        private Task ProcessFile(FileModel file, string outputFile)
         {
-            var excel = lazyExcel.Value;
-            excel.OpenWorksheet(inputFile);
+            Progress.LocalText = $"Поиск подходящих форм для файла: {file.FileName}";
 
-            var context = engine.Resolve<ExcelContext>().ForDocument(excel.worksheet);
-            var results = context.SearchForm(engine.Forms);
+            var excel = lazyExcel.Value;
+            excel.OpenWorksheet(file.FullPath);
+
+            var context = engine.Resolve<ExcelContext>().Connect(excel.GetCellValue);
+            var search = context.SearchForm(file);
+
+            if (search.Result == null)
+            {
+                logger.Warn($"Для файла \"{file.FileName}\" не найдено подходящих форм обработки!");
+                return Task.CompletedTask;
+            }
+
+            logger.Info("Результат проверки: " + search);
 
             // engine.Excel.FindForm(excel.worksheet);
 

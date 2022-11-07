@@ -4,6 +4,7 @@
         bufferSize: 2000, // Сколько записей будет обработано за один OLE запрос к Excel        
         extraWarning: 'Ошибка?',
         noFormIsError: false, // Если true, значит при пропуске хоть одного документа из-за отсутствия форм будет показана ошибка из элемента выше
+        forceAllRules: false, // Если true, то будут проверка по форме будет продолжаться, даже если какое-то правило не подошло
     },
     logging: {
         enabled: true,
@@ -56,14 +57,14 @@ app.forms = [
         rules: function () {
             // Функции (помимо базовых):
             // Cell|null cell(y: int, x: int) - возвращает null при ошибки или interface Cell { x: int, y: int, value: object }
-            // void assert(current: string, expected: string, checkRegex: boolean = false)
-            // void assertCell(y: int, x: int, expected: string, checkRegex: boolean = false)
-            assertCell(2, 2, 'Форма 2.21А');
-            assertCell(7, 2, '№');
-            assertCell(7, 3, 'ФИО');
-            assertCell(7, 4, 'Счёт');
-            assertCell(7, 5, 'Сумма');
-            assertCell(7, 6, 'Дата оплаты');
+            // void assert(current: string|Cell, expected: string, checkRegex: boolean = false)
+            // assert('Получилось', 'Ожидалось');
+            assert(cell(2, 2), 'Форма 2.21А');
+            assert(cell(7, 2), '№');
+            assert(cell(7, 3), 'ФИО');
+            assert(cell(7, 4), 'Счёт');
+            assert(cell(7, 5), 'Сумма');
+            assert(cell(7, 6), 'Дата оплаты');
         },
         dbfFields: [
             {name: 'ID', length: '8' },

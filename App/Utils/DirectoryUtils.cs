@@ -14,23 +14,23 @@ namespace ExcelToDbf.Utils
             var results = new List<File>();
             if (string.IsNullOrEmpty(folder)) return results;
 
-            foreach (string extension in extensions)
+            var files = extensions.SelectMany((extension) => Directory.GetFiles(folder, extension, SearchOption.TopDirectoryOnly))
+                .Distinct()
+                .ToList();
+
+            foreach (var path in files)
             {
-                var files = Directory.GetFiles(folder, extension, SearchOption.TopDirectoryOnly);
-                foreach (var path in files)
+                if (path == null) continue;
+                var name = Path.GetFileName(path);
+                if (name.StartsWith("~$")) continue;
+                FileInfo info = new FileInfo(path);
+                results.Add(new File
                 {
-                    if (path == null) continue;
-                    var name = Path.GetFileName(path);
-                    if (name.StartsWith("~$")) continue;
-                    FileInfo info = new FileInfo(path);
-                    results.Add(new File
-                    {
-                        FullPath = path,
-                        FileName = name,
-                        Size = info.Length,
-                        Created = info.LastWriteTime
-                    });
-                }
+                    FullPath = path,
+                    FileName = name,
+                    Size = info.Length,
+                    Created = info.LastWriteTime
+                });
             }
             return results;
         }

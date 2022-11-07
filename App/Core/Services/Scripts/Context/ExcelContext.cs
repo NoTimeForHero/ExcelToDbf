@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -13,47 +14,60 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
 {
     internal class ExcelContext : AbstractContext
     {
+        public delegate object HandlerCellValueGetter(int y, int x);
+
         private readonly ILogger logger;
-        private Worksheet worksheet;
+        private readonly ConfigContext config;
+        private ExcelService.HandlerCellGetter cellValueGetter = (y, x) => throw new ArgumentNullException(nameof(cellValueGetter));
 
-        public object GetCellValue(int y, int x)
-        {
-            // TODO: Чтение данных из кэша
-
-            if (worksheet == null) throw new JSException("Отсутствует лист!");
-
-            try
-            {
-                return worksheet.Cells[y, x].Value;
-            }
-            catch (Exception ex)
-            {
-                logger.Warn($"Ошибка при чтении ячейки x={x},y={y}: {ex.Message}");
-                return null;
-            }
-        }
-
-        public bool Assert(int y, int x, string search)
-        {
-            return GetCellValue(y,x)?.ToString() == search;
-        }
-
-        public ExcelContext(ILogger logger, Engine engine) : base(engine)
+        public ExcelContext(ILogger logger, ConfigContext config, Engine engine) : base(engine)
         {
             this.logger = logger;
-            engine.SetValue("cell", (Func<int, int, object>)GetCellValue);
+            this.config = config;
         }
 
-        public ExcelContext ForDocument(Worksheet worksheet)
+        public ExcelContext Connect(ExcelService.HandlerCellGetter getter)
         {
-            this.worksheet = worksheet;
+            cellValueGetter = getter;
             return this;
         }
 
-        public object SearchForm(DocForm[] Forms)
+        public SearchFormResult SearchForm(FileModel file)
         {
-            logger.Warn("Ищем форму...");
-            return null;
+            var result = new SearchFormResult { Target = file };
+            foreach (var form in config.Forms)
+            {
+                logger.Info($"Проверяем форму: {form.Name}");
+
+                var matches = new List<SearchMatch>();
+                result.Report[form] = matches;
+
+                Action<object, string> ContextAssert = (got, expect) =>
+                {
+                    switch (got)
+                    {
+                        case string simple:
+                            matches.Add(SearchMatch.Make(expect, simple, expect == simple));
+                            break;
+                        case Cell cell:
+                            matches.Add(SearchMatch.Make(expect, cell.Value, expect == cell.Value).With(cell.Y, cell.X));
+                            break;
+                        default:
+                            throw new InvalidOperationException($"Unknown assert value type: {got.GetType().FullName}");
+                    }
+                };
+                engine.SetValue("cell", cellValueGetter);
+                engine.SetValue("assert", ContextAssert);
+                form.Rules.Call();
+
+                var isMatches = matches.All(x => x.Matches);
+                if (isMatches)
+                {
+                    logger.Info($"Форма \"{form.Name}\" подходит для документа \"{file.FileName}\"!");
+                    if (result.Result == null) result.Result = form;
+                }
+            }
+            return result;
         }
     }
 }

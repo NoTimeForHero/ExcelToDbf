@@ -25,6 +25,17 @@ namespace ExcelToDbf.Core.Services
             this.config = config;
         }
 
+        public void SelectWhere(Func<FileModel,bool> predicate, bool isChecked)
+        {
+            _files.Edit(list =>
+            {
+                foreach (var item in list)
+                {
+                    if (predicate(item)) item.MustConvert = isChecked;
+                }
+            });
+        }
+
         public void SelectAll(bool isChecked)
         {
             _files.Edit(list =>

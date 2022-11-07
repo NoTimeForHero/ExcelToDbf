@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using ExcelToDbf.Core.Models;
 using ExcelToDbf.Utils.Extensions;
 using Microsoft.Office.Interop.Excel;
 using NLog;
@@ -16,8 +17,10 @@ namespace ExcelToDbf.Core.Services
         private readonly List<string> filesToRemove = new List<string>();
         private readonly ILogger logger;
 
-        public Workbook wb;
-        public Worksheet worksheet;
+        public Workbook wb { get; private set; }
+        public Worksheet worksheet { get; private set; }
+
+        public delegate Cell? HandlerCellGetter(int y, int x);
 
         public ExcelService(ILogger logger)
         {
@@ -46,6 +49,28 @@ namespace ExcelToDbf.Core.Services
 
             worksheet = wb.Worksheets[1];
             return true;
+        }
+
+        public Cell? GetCellValue(int y, int x)
+        {
+            // TODO: Чтение данных из кэша
+
+            if (worksheet == null) throw new InvalidOperationException("Отсутствует лист!");
+
+            try
+            {
+                return new Cell
+                {
+                    Y = y,
+                    X = x,
+                    Value = worksheet.Cells[y, x].Value
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.Warn($"Ошибка при чтении ячейки x={x},y={y}: {ex.Message}");
+                return null;
+            }
         }
 
         public void Close()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using ExcelToDbf.Core.Services;
 using ExcelToDbf.Core.Services.Scripts;
+using ExcelToDbf.Core.Services.Scripts.Context;
 using ExcelToDbf.Core.ViewModels;
 using ExcelToDbf.Core.Views;
 using ExcelToDbf.Utils.Extensions;
@@ -32,8 +34,16 @@ namespace ExcelToDbf.Core
             container.RegisterSingletonMVVM<MainView, MainViewModel>();
             container.RegisterSingletonMVVM<FileSelectorView, FileSelectorVM>();
             container.RegisterSingletonMVVM<ProgressView, ProgressVM>();
-            container.RegisterFactory<Config>((u) => u.Resolve<ScriptEngine>().Config);
+            container.RegisterFactory<Config>(x => x.Resolve<ScriptEngine>().Resolve<ConfigContext>().Data);
             container.RegisterInstance(this);
+        }
+
+        private void Debug()
+        {
+            var path = Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\ExcelToDbf\Data");
+            container.Resolve<FileSelectorVM>().Path = path;
+            container.Resolve<FolderService>().SelectAll(false);
+            container.Resolve<FolderService>().SelectWhere(x => x.FileName == "Example1.xlsx", true);
         }
 
         public void Run(string[] args)
@@ -45,6 +55,7 @@ namespace ExcelToDbf.Core
                 var logger = LogManager.GetCurrentClassLogger();
                 logger.Info("Приложение было запущено");
 
+                Debug();
                 new RuntimeGUI(container).Run();
                 container.Dispose();
             }

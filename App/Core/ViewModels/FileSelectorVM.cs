@@ -35,23 +35,8 @@ namespace ExcelToDbf.Core.ViewModels
         //[Reactive]
         //public int SelectedCount { get; set; } = -1;
 
-
         public FileSelectorVM()
         {
-        }
-
-        private void Generate(SourceList<FileModel> list, int count, bool? isChecked = null)
-        {
-            var random = new Random();
-            list.Clear();
-            list.Edit(innerList =>
-            {
-                foreach (var index in Enumerable.Range(1, count))
-                {
-                    var chk = isChecked ?? random.Next(100) > 50;
-                    list.Add(new FileModel { FileName = $"File #{index}", MustConvert = chk });
-                }
-            });
         }
 
         // TODO: Добавить IDisposable

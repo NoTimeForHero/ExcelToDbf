@@ -135,8 +135,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Core\Models\Cell.cs" />
     <Compile Include="Core\Models\ConvertProgress.cs" />
     <Compile Include="Core\Models\FileModel.cs" />
+    <Compile Include="Core\Models\SearchFormResult.cs" />
+    <Compile Include="Core\Models\SearchMatch.cs" />
     <Compile Include="Core\RuntimeGUI.cs" />
     <Compile Include="Core\Services\ConvertService.cs" />
     <Compile Include="Core\Services\ExcelService.cs" />
@@ -144,7 +147,7 @@
     <Compile Include="Core\Services\Scripts\Context\AbstractContext.cs" />
     <Compile Include="Core\Models\DocForm.cs" />
     <Compile Include="Core\Services\Scripts\Context\ExcelContext.cs" />
-    <Compile Include="Core\Services\Scripts\Context\FolderContext.cs" />
+    <Compile Include="Core\Services\Scripts\Context\ConfigContext.cs" />
     <Compile Include="Core\Services\Scripts\Context\GenericContext.cs" />
     <Compile Include="Core\Services\Scripts\Data\JSException.cs" />
     <Compile Include="Core\ViewModels\ProgressVM.cs" />
