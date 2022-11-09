@@ -14,13 +14,11 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
 {
     internal class ExcelContext : AbstractContext
     {
-        public delegate object HandlerCellValueGetter(int y, int x);
-
         private readonly ILogger logger;
-        private readonly ConfigContext config;
+        private readonly IConfigContext config;
         private ExcelService.HandlerCellGetter cellValueGetter = (y, x) => throw new ArgumentNullException(nameof(cellValueGetter));
 
-        public ExcelContext(ILogger logger, ConfigContext config, Engine engine) : base(engine)
+        public ExcelContext(ILogger logger, IConfigContext config, Engine engine) : base(engine)
         {
             this.logger = logger;
             this.config = config;
@@ -59,6 +57,8 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
                 engine.SetValue("cell", cellValueGetter);
                 engine.SetValue("assert", ContextAssert);
                 form.Rules.Call();
+
+                matches.ForEach(match => logger.Trace(match.ToString()));
 
                 var isMatches = matches.All(x => x.Matches);
                 if (isMatches)

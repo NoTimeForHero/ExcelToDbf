@@ -18,17 +18,27 @@ using JintSerializer = Jint.Native.Json.JsonSerializer;
 
 namespace ExcelToDbf.Core.Services.Scripts.Context
 {
-    internal class ConfigContext : AbstractContext
+    interface IConfigContext
+    {
+        Config Data { get; }
+        DocForm[] Forms { get; }
+        string GetOutputFilename(FileModel file);
+    }
+
+    internal class ConfigContext : AbstractContext, IConfigContext
     {
         public Config Data { get; }
+        public DocForm[] Forms { get; }
         private readonly ILogger logger;
         private readonly JintSerializer parser;
-        public readonly DocForm[] Forms;
 
         public ConfigContext(ILogger logger, Engine engine) : base(engine)
         {
             this.logger = logger;
             parser = new JintSerializer(engine);
+
+            var code = File.ReadAllText(Constants.SettingsFile);
+            engine.Execute("app = {}").Execute(code);
 
             Data = parser.Deserialize<Config>(engine.Evaluate("app.settings"));
 

@@ -18,7 +18,6 @@ using NLog;
 using Unity;
 using Unity.Injection;
 using Unity.NLog;
-using JintSerializer = Jint.Native.Json.JsonSerializer;
 
 namespace ExcelToDbf.Core.Services.Scripts
 {
@@ -27,30 +26,33 @@ namespace ExcelToDbf.Core.Services.Scripts
         private readonly Engine engine = new Engine();
         private readonly IUnityContainer container;
 
-        public ScriptEngine(ILogger logger)
+        public ScriptEngine()
         {
             container = new UnityContainer();
             container.RegisterInstance(engine);
             container.AddNewExtension<NLogExtension>();
-
-            var code = File.ReadAllText(Constants.SettingsFile);
-            engine.Execute("app = {}").Execute(code);
-
-
-            Resolve<GenericContext>().AddLogger(logger);
-            Resolve<ConfigContext>();
-        }
-
-        public void Test24()
-        {
-
+            Register<GenericContext>().Resolve<GenericContext>();
         }
 
         public TContext Resolve<TContext>() where TContext : AbstractContext
         {
-            if (container.IsRegistered<TContext>()) return container.Resolve<TContext>();
-            container.RegisterSingleton<TContext>();
+            if (!container.IsRegistered<TContext>())
+            {
+                throw new InvalidOperationException($"Context not found: ${typeof(TContext).FullName}");
+            }
             return container.Resolve<TContext>();
+        }
+
+        public ScriptEngine Register<TContext>() where TContext : AbstractContext
+        {
+            container.RegisterSingleton<TContext>();
+            return this;
+        }
+
+        public ScriptEngine Register<TInterface, TContext>() where TContext : AbstractContext, TInterface
+        {
+            container.RegisterType<TInterface,TContext>();
+            return this;
         }
 
         public void Dispose()

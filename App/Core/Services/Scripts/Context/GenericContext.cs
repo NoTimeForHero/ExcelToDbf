@@ -21,13 +21,14 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
             engine.SetValue("nospace", (Func<string, string, string>)FuncReplaceSpace);
             engine.SetValue("afterRegEx", (Func<string, Regex, object, string>)FuncAfterRegEx);
             engine.SetValue("error", (Action<string>)FuncThrowException);
+            AddLogger();
         }
 
-        public GenericContext AddLogger(ILogger logger)
+        private void AddLogger()
         {
+            var logger = LogManager.GetLogger(nameof(ScriptEngine));
             void Log(object data) => logger.Info($"{data}");
             engine.SetValue("log", (Action<string>)Log);
-            return this;
         }
 
         protected Regex regexSpace = new Regex(@"\s+", RegexOptions.Compiled);
