@@ -12,7 +12,7 @@ using Worksheet = Microsoft.Office.Interop.Excel.Worksheet;
 
 namespace ExcelToDbf.Core.Services.Scripts.Context
 {
-    internal class ExcelContext : AbstractContext
+    public class ExcelContext : AbstractContext
     {
         private readonly ILogger logger;
         private readonly IConfigContext config;

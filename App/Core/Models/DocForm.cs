@@ -13,7 +13,7 @@ using Jint.Native.Object;
 
 namespace ExcelToDbf.Core.Models
 {
-    internal class DocForm
+    public class DocForm
     {
         public string Name { get; set; }
         public ScriptFunctionInstance Rules { get; set; }

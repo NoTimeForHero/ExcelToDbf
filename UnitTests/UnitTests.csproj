@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>UnitTests</RootNamespace>
     <AssemblyName>UnitTests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -44,8 +44,14 @@
     <Reference Include="dotMemory.Unit, Version=109.0.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
       <HintPath>..\packages\JetBrains.dotMemoryUnit.2.4.20170830.172630\lib\dotMemory.Unit.dll</HintPath>
     </Reference>
+    <Reference Include="Esprima, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Esprima.3.0.0-beta-9\lib\net462\Esprima.dll</HintPath>
+    </Reference>
     <Reference Include="ExceptionAssert, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\ExceptionAssert.1.0.0\lib\net45\ExceptionAssert.dll</HintPath>
+    </Reference>
+    <Reference Include="Jint, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Jint.3.0.0-beta-2042\lib\net462\Jint.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -54,11 +60,29 @@
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\MSTest.TestFramework.1.2.0\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
     </Reference>
+    <Reference Include="NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.5.0.5\lib\net46\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="SocialExplorer.FastDBF, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\External\SocialExplorer.FastDBF.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
   </ItemGroup>
   <Choose>
@@ -72,21 +96,27 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestLibrary.cs" />
-    <Compile Include="Tests\DBFClass\FileTests.cs" />
-    <Compile Include="Tests\DBFClass\NullTests.cs" />
-    <Compile Include="Tests\JSTest.cs" />
-    <Compile Include="Tests\RulesTests.cs" />
-    <Compile Include="Tests\TDataTests.cs" />
-    <Compile Include="Tests\LoggerTests.cs" />
-    <Compile Include="Tests\WorkTest.cs" />
+    <Compile Include="Tests\HelloWorld.cs" />
+    <Compile Include="Tests\Legacy\DBFClass\FileTests.cs" />
+    <Compile Include="Tests\Legacy\DBFClass\NullTests.cs" />
+    <Compile Include="Tests\Legacy\JSTest.cs" />
+    <Compile Include="Tests\Legacy\LoggerTests.cs" />
+    <Compile Include="Tests\Legacy\RulesTests.cs" />
+    <Compile Include="Tests\Legacy\TDataTests.cs" />
+    <Compile Include="Tests\Legacy\WorkTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ExcelToDbf\ExcelToDbf.csproj">
+    <ProjectReference Include="..\App\App.csproj">
+      <Project>{f511d67a-46c5-4499-b547-789965aa6b68}</Project>
+      <Name>App</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ExcelToDbf\Legacy.csproj">
       <Project>{F664DF91-786D-421E-8A7E-882BCD455A4D}</Project>
       <Name>ExcelToDbf</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="Data\Example1.xlsx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -121,6 +151,7 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
+  <ItemGroup />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

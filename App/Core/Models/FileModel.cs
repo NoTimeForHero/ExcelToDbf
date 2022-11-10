@@ -10,7 +10,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace ExcelToDbf.Core.Models
 {
-    internal class FileModel : ReactiveObject
+    public class FileModel : ReactiveObject
     {
         public string FullPath { get; set; }
         public string FileName { get; set; }

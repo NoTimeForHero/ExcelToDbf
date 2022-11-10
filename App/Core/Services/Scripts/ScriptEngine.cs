@@ -21,7 +21,7 @@ using Unity.NLog;
 
 namespace ExcelToDbf.Core.Services.Scripts
 {
-    internal class ScriptEngine : IDisposable
+    public class ScriptEngine : IDisposable
     {
         private readonly Engine engine = new Engine();
         private readonly IUnityContainer container;
@@ -33,6 +33,8 @@ namespace ExcelToDbf.Core.Services.Scripts
             container.AddNewExtension<NLogExtension>();
             Register<GenericContext>().Resolve<GenericContext>();
         }
+
+        public JsValue Evaluate(string code) => engine.Evaluate(code);
 
         public TContext Resolve<TContext>() where TContext : AbstractContext
         {

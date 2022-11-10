@@ -18,14 +18,14 @@ using JintSerializer = Jint.Native.Json.JsonSerializer;
 
 namespace ExcelToDbf.Core.Services.Scripts.Context
 {
-    interface IConfigContext
+    public interface IConfigContext
     {
         Config Data { get; }
         DocForm[] Forms { get; }
         string GetOutputFilename(FileModel file);
     }
 
-    internal class ConfigContext : AbstractContext, IConfigContext
+    public class ConfigContext : AbstractContext, IConfigContext
     {
         public Config Data { get; }
         public DocForm[] Forms { get; }

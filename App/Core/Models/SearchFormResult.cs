@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ExcelToDbf.Core.Models
 {
-    internal class SearchFormResult
+    public class SearchFormResult
     {
         public FileModel Target { get; set; }
         public DocForm Result { get; set; }

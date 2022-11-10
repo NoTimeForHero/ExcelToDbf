@@ -7,7 +7,7 @@ using Jint;
 
 namespace ExcelToDbf.Core.Services.Scripts.Context
 {
-    internal class AbstractContext
+    public class AbstractContext
     {
         protected Engine engine;
 

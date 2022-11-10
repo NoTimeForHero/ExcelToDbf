@@ -12,7 +12,7 @@ using NLog.Fluent;
 
 namespace ExcelToDbf.Core.Services.Scripts.Context
 {
-    internal class GenericContext : AbstractContext
+    public class GenericContext : AbstractContext
     {
 
         public GenericContext(Engine engine) : base(engine)
