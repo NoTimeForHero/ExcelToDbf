@@ -17,18 +17,23 @@ namespace ExcelToDbf.Core.Services
         private readonly Application app;
         private readonly List<string> filesToRemove = new List<string>();
         private readonly Dictionary<Point, string> cacheCells = new Dictionary<Point, string>();
+        private readonly int bufferSize;
         private readonly ILogger logger;
 
         public Workbook wb { get; private set; }
         public Worksheet worksheet { get; private set; }
 
         public delegate Cell? HandlerCellGetter(int y, int x);
+        public delegate IEnumerable<object[,]> HandlerRangeIterator(int startY, int maxX);
 
-        public ExcelService(ILogger logger)
+        public int SheetRows => worksheet.UsedRange.Rows.Count;
+
+        public ExcelService(Config config, ILogger logger)
         {
             app = new Application();
             if (Constants.ExcelDebug) app.Visible = true;
             this.logger = logger;
+            bufferSize = config.System.BufferSize;
         }
 
         public bool OpenWorksheet(string path)
@@ -52,6 +57,34 @@ namespace ExcelToDbf.Core.Services
 
             worksheet = wb.Worksheets[1];
             return true;
+        }
+
+        public IEnumerable<object[,]> IterateRanges(int startY, int maxX)
+        {
+            int begin = startY - 1;
+            int end = begin + bufferSize;
+            bool EOF = false;
+
+            int maxY = SheetRows;
+            logger.Info($"Размер документа {maxY} строк!");
+
+            while (!EOF)
+            {
+                if (end > maxY) end = maxY;
+                var range_start = worksheet.Cells[begin + 1, 1];
+                var range_end = worksheet.Cells[end + 1, maxX];
+                logger.Trace($"Загрузка блока {begin}-{end}");
+                var range = worksheet.Range[range_start, range_end];
+                var value = range.Value;
+                yield return value;
+                begin += bufferSize + 1;
+                end += bufferSize;
+                if (begin > maxY)
+                {
+                    logger.Debug($"Выход по границе документа: {begin} > {maxY}");
+                    EOF = true;
+                }
+            }
         }
 
         public Cell? GetCellValue(int y, int x)

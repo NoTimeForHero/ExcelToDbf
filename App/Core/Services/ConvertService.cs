@@ -81,16 +81,34 @@ namespace ExcelToDbf.Core.Services
             excel.OpenWorksheet(file.FullPath);
 
             var search = engine.Resolve<ExcelContext>().Connect(excel.GetCellValue).SearchForm(file);
+            var form = search.Result;
 
-            if (search.Result == null)
+            if (form == null)
             {
                 logger.Warn($"Для файла \"{file.FileName}\" не найдено подходящих форм обработки!");
                 return Task.CompletedTask;
             }
 
-            using (var dbfFile = database.Make(search.Result, outputFile))
+            using (var dbfFile = database.Make(form, outputFile))
             {
                 dbfFile.WriteHeaders();
+
+                var totalRows = excel.SheetRows;
+                Progress.DocumentTotal = totalRows;
+                int currentRow = form.Settings.StartY;
+
+                foreach (var range in excel.IterateRanges(form.Settings.StartY, form.Settings.EndX))
+                {
+                    foreach (var record in range.AsRowArray())
+                    {
+                        Progress.SetProgress(currentRow, totalRows, $"Обработка массива строк");
+                        currentRow++;
+
+                        //var record = range.GetRow(row+1, 1);
+                        //var value = range[1, 3];
+                        //logger.Debug($"{currentRow}: Фио: {record[2]}");
+                    }
+                }
             }
 
             // engine.Excel.FindForm(excel.worksheet);

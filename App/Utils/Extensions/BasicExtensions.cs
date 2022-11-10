@@ -41,6 +41,21 @@ namespace ExcelToDbf.Utils.Extensions
             // ReSharper disable once AssignNullToNotNullAttribute
             engine.SetValue(name, (object)null);
 
+        // https://stackoverflow.com/a/51241629
+        public static T[] GetRow<T>(this T[,] matrix, int rowNumber) =>
+            Enumerable.Range(1, matrix.GetLength(1))
+                .Select(x => matrix[rowNumber, x])
+                .ToArray();
+
+        public static IEnumerable<T[]> AsRowArray<T>(this T[,] matrix)
+        {
+            var len = matrix.GetLength(0);
+            for (int i = 1; i <= len; i++)
+            {
+                yield return matrix.GetRow(i);
+            }
+        }
+
         public static T Deserialize<T>(this Jint.Native.Json.JsonSerializer serializer, JsValue value)
         {
             var json = serializer.Serialize(value, Undefined.Instance, Undefined.Instance).AsString();
