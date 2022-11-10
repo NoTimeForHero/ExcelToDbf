@@ -73,7 +73,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
         /// </summary>
         protected void FuncThrowException(String text)
         {
-            throw new JSException("Исключение вызванное из JavaScript:\n" + text);
+            throw new JSException("Исключение вызванное из JavaScript: " + text);
         }
     }
 }

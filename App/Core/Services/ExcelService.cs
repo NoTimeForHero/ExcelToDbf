@@ -69,7 +69,7 @@ namespace ExcelToDbf.Core.Services
             catch (Exception ex)
             {
                 logger.Warn($"Ошибка при чтении ячейки x={x},y={y}: {ex.Message}");
-                return null;
+                return new Cell { Y = y, X = x }; ;
             }
         }
 

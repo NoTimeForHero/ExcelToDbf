@@ -96,6 +96,10 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestLibrary.cs" />
+    <Compile Include="Tests\Context\Excel\TestExcel.cs" />
+    <Compile Include="Tests\Context\Excel\ToolsConfig.cs" />
+    <Compile Include="Tests\Context\Excel\ToolsWorksheet.cs" />
+    <Compile Include="Tests\Context\Generic.cs" />
     <Compile Include="Tests\HelloWorld.cs" />
     <Compile Include="Tests\Legacy\DBFClass\FileTests.cs" />
     <Compile Include="Tests\Legacy\DBFClass\NullTests.cs" />
