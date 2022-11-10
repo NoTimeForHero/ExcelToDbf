@@ -23,8 +23,8 @@ namespace ExcelToDbf.Core.Models
 
         public override string ToString()
         {
-            var position = X.HasValue && Y.HasValue ? $"Y={Y},X={X}" : string.Empty;
-            return $"SearchMatch[{position}, Matches={Matches}, Expected=\"{Expected}\", Got=\"{Got}\"]";
+            var position = X.HasValue && Y.HasValue ? $"Y={Y},X={X}, " : string.Empty;
+            return $"SearchMatch[{position}Matches={Matches}, Expected=\"{Expected}\", Got=\"{Got}\"]";
         }
 
         public SearchMatch With(int y, int x)

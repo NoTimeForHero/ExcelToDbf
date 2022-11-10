@@ -42,32 +42,48 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
 
                 Action<object, string> ContextAssert = (got, expect) =>
                 {
+                    SearchMatch match;
                     switch (got)
                     {
                         case string simple:
-                            matches.Add(SearchMatch.Make(expect, simple, expect == simple));
+                            match = SearchMatch.Make(expect, simple, expect == simple);
                             break;
                         case Cell cell:
-                            matches.Add(SearchMatch.Make(expect, cell.Value, expect == cell.Value).With(cell.Y, cell.X));
+                            match = SearchMatch.Make(expect, cell.Value, expect == cell.Value).With(cell.Y, cell.X);
                             break;
                         default:
                             throw new InvalidOperationException($"Unknown assert value type: {got.GetType().FullName}");
                     }
+                    logger.Trace(match.ToString());
+                    matches.Add(match);
+                    if (config.Data.System.FastSearch && !match.Matches) throw new StopFunctionException();
                 };
                 engine.SetValue("cell", cellValueGetter);
                 engine.SetValue("assert", ContextAssert);
-                form.Rules.Call();
 
-                matches.ForEach(match => logger.Trace(match.ToString()));
+                try
+                {
+                    form.Rules.Call();
+                }
+                catch (StopFunctionException)
+                {
+                    logger.Info($"Форма \"{form.Name}\" не подходит по условию!");
+                }
 
                 var isMatches = matches.All(x => x.Matches);
                 if (isMatches)
                 {
                     logger.Info($"Форма \"{form.Name}\" подходит для документа \"{file.FileName}\"!");
                     if (result.Result == null) result.Result = form;
+                    if (config.Data.System.FastSearch) return result;
                 }
             }
             return result;
+        }
+
+        private class StopFunctionException : Exception
+        {
+
         }
     }
 }

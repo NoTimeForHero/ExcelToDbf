@@ -8,6 +8,7 @@ using ExcelToDbf.Utils.Extensions;
 using Microsoft.Office.Interop.Excel;
 using NLog;
 using Application = Microsoft.Office.Interop.Excel.Application;
+using Point = ExcelToDbf.Core.Models.Point;
 
 namespace ExcelToDbf.Core.Services
 {
@@ -15,6 +16,7 @@ namespace ExcelToDbf.Core.Services
     {
         private readonly Application app;
         private readonly List<string> filesToRemove = new List<string>();
+        private readonly Dictionary<Point, string> cacheCells = new Dictionary<Point, string>();
         private readonly ILogger logger;
 
         public Workbook wb { get; private set; }
@@ -32,6 +34,7 @@ namespace ExcelToDbf.Core.Services
         public bool OpenWorksheet(string path)
         {
             wb?.Close(0);
+            cacheCells.Clear();
 
             if (Path.GetExtension(path) == ".csv")
             {
@@ -53,23 +56,21 @@ namespace ExcelToDbf.Core.Services
 
         public Cell? GetCellValue(int y, int x)
         {
-            // TODO: Чтение данных из кэша
-
             if (worksheet == null) throw new InvalidOperationException("Отсутствует лист!");
+
+            var point = new Point(y, x);
+            if (cacheCells.TryGetValue(point, out var cacheValue)) return new Cell(y, x, cacheValue);
 
             try
             {
-                return new Cell
-                {
-                    Y = y,
-                    X = x,
-                    Value = worksheet.Cells[y, x].Value
-                };
+                var value = worksheet.Cells[y, x].Value;
+                cacheCells[point] = value;
+                return new Cell(y, x, value);
             }
             catch (Exception ex)
             {
                 logger.Warn($"Ошибка при чтении ячейки x={x},y={y}: {ex.Message}");
-                return new Cell { Y = y, X = x }; ;
+                return new Cell(y, x);
             }
         }
 

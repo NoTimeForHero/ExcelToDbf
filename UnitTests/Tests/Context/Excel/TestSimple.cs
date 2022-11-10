@@ -8,32 +8,13 @@ using Jint.Native.Function;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NLog;
 
-namespace UnitTests.Tests.Context
+namespace UnitTests.Tests.Context.Excel
 {
     [TestClass]
-    public partial class TestExcel
+    public class TestSimple : AbstractExcel
     {
-        private static FileModel testModel = new FileModel();
-        private static ToolsWorksheet worksheet;
-        private static Jint.Engine engine;
-        private static Logger logger;
-
         [ClassInitialize]
-        public static void Init(TestContext testContext)
-        {
-            engine = new Jint.Engine();
-            logger = LogManager.GetCurrentClassLogger();
-            worksheet = new ToolsWorksheet();
-        }
-
-        private static DocForm MakeForm(string name, string rulesCode) => new DocForm 
-        {
-            Name = name,
-            Rules = engine.Evaluate($"(function() {{ \n{rulesCode} }})") 
-                as ScriptFunctionInstance,
-        };
-
-        private static ExcelContext Prepare(DocForm form) => new ExcelContext(logger, new ToolsConfig(form), engine).Connect(worksheet.getCellValue);
+        public static void Init(TestContext testContext) => AbstractExcel.DefaultInit(testContext);
 
         [TestMethod]
         public void TestSimpleHas()
