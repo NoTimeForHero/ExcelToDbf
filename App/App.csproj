@@ -79,6 +79,9 @@
     <Reference Include="ReactiveUI.Wpf, Version=18.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\ReactiveUI.WPF.18.3.1\lib\net472\ReactiveUI.Wpf.dll</HintPath>
     </Reference>
+    <Reference Include="SocialExplorer.FastDBF">
+      <HintPath>..\External\SocialExplorer.FastDBF.dll</HintPath>
+    </Reference>
     <Reference Include="Splat, Version=14.4.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Splat.14.4.1\lib\netstandard2.0\Splat.dll</HintPath>
     </Reference>
@@ -143,6 +146,7 @@
     <Compile Include="Core\Models\SearchMatch.cs" />
     <Compile Include="Core\RuntimeGUI.cs" />
     <Compile Include="Core\Services\ConvertService.cs" />
+    <Compile Include="Core\Services\DBFService.cs" />
     <Compile Include="Core\Services\ExcelService.cs" />
     <Compile Include="Core\Services\FolderService.cs" />
     <Compile Include="Core\Services\Scripts\Context\AbstractContext.cs" />

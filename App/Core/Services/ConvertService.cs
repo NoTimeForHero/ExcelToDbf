@@ -18,6 +18,7 @@ namespace ExcelToDbf.Core.Services
     {
         private readonly ILogger logger;
         private readonly ScriptEngine engine;
+        private readonly DBFService database;
         private readonly Random random = new Random(100);
         private readonly Lazy<ExcelService> lazyExcel;
 
@@ -25,6 +26,7 @@ namespace ExcelToDbf.Core.Services
         {
             this.logger = logger;
             engine = container.Resolve<ScriptEngine>();
+            database = container.Resolve<DBFService>();
             lazyExcel = new Lazy<ExcelService>(() => container.Resolve<ExcelService>());
         }
 
@@ -78,8 +80,7 @@ namespace ExcelToDbf.Core.Services
             var excel = lazyExcel.Value;
             excel.OpenWorksheet(file.FullPath);
 
-            var context = engine.Resolve<ExcelContext>().Connect(excel.GetCellValue);
-            var search = context.SearchForm(file);
+            var search = engine.Resolve<ExcelContext>().Connect(excel.GetCellValue).SearchForm(file);
 
             if (search.Result == null)
             {
@@ -87,7 +88,10 @@ namespace ExcelToDbf.Core.Services
                 return Task.CompletedTask;
             }
 
-            logger.Info("Результат проверки: " + search);
+            using (var dbfFile = database.Make(search.Result, outputFile))
+            {
+                dbfFile.WriteHeaders();
+            }
 
             // engine.Excel.FindForm(excel.worksheet);
 

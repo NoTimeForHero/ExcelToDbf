@@ -43,7 +43,8 @@ app.getOutputFilename = function(file) {
         // string dirCount - количество сегментов в пути
         file = nospace(file);
         file = translit(file);
-        file = "../" + file + ".dbf";
+        //file = "../" + file + ".dbf";
+        file = file + ".dbf";
         return file;
 }
 
@@ -67,11 +68,11 @@ app.forms = [
             assert(cell(7, 6), 'Дата оплаты');
         },
         dbfFields: [
-            {name: 'ID', length: '8' },
-            {name: 'KP', length: '8' },
-            {name: 'FIO', length: '60' },
-            {name: 'SUMMA', type: 'numeric', length: '10,2' },                
-            {name: 'DATEOPL', type: 'date' },        
+            { name: 'ID', length: '8' },
+            { name: 'KP', length: '8' },
+            { name: 'FIO', length: '60' },
+            { name: 'SUMMA', type: 'number', length: '10,2' },                
+            { name: 'DATEOPL', type: 'date' },        
         ],
         // Функции (помимо базовых):
         // line: string[] - массив текущий XLS строки индексация стратует с 1
