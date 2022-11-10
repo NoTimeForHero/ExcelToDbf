@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using ExcelToDbf.Core.Models;
 using ExcelToDbf.Core.Services.Scripts;
 using ExcelToDbf.Core.Services.Scripts.Context;
+using ExcelToDbf.Core.Services.Scripts.Data;
 using ExcelToDbf.Utils.Extensions;
 using NLog;
 using Unity;
@@ -80,7 +81,8 @@ namespace ExcelToDbf.Core.Services
             var excel = lazyExcel.Value;
             excel.OpenWorksheet(file.FullPath);
 
-            var search = engine.Resolve<ExcelContext>().Connect(excel.GetCellValue).SearchForm(file);
+            var context = engine.Resolve<ExcelContext>().Connect(excel.GetCellValue);
+            var search = context.SearchForm(file);
             var form = search.Result;
 
             if (form == null)
@@ -96,18 +98,21 @@ namespace ExcelToDbf.Core.Services
                 var totalRows = excel.SheetRows;
                 Progress.DocumentTotal = totalRows;
                 int currentRow = form.Settings.StartY;
-
-                foreach (var range in excel.IterateRanges(form.Settings.StartY, form.Settings.EndX))
+                try
                 {
-                    foreach (var record in range.AsRowArray())
+                    foreach (var range in excel.IterateRanges(form.Settings.StartY, form.Settings.EndX))
                     {
-                        Progress.SetProgress(currentRow, totalRows, $"Обработка массива строк");
-                        currentRow++;
-
-                        //var record = range.GetRow(row+1, 1);
-                        //var value = range[1, 3];
-                        //logger.Debug($"{currentRow}: Фио: {record[2]}");
+                        foreach (var record in range.AsRowArray())
+                        {
+                            currentRow++;
+                            Progress.SetProgress(currentRow, totalRows, $"Обработка массива строк");
+                            var transformed = context.Transform(form, record);
+                        }
                     }
+                }
+                catch (StopFunctionException)
+                {
+                    logger.Info($"Обработка файла была завершена JS условием на {currentRow} строке!");
                 }
             }
 

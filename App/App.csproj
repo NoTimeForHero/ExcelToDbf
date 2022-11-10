@@ -154,6 +154,7 @@
     <Compile Include="Core\Services\Scripts\Context\ExcelContext.cs" />
     <Compile Include="Core\Services\Scripts\Context\ConfigContext.cs" />
     <Compile Include="Core\Services\Scripts\Context\GenericContext.cs" />
+    <Compile Include="Core\Services\Scripts\Data\StopFunctionException.cs" />
     <Compile Include="Core\Services\Scripts\Data\JSException.cs" />
     <Compile Include="Core\ViewModels\ProgressVM.cs" />
     <Compile Include="Core\Views\ProgressView.xaml.cs">

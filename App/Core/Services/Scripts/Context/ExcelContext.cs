@@ -6,22 +6,28 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ExcelToDbf.Core.Models;
+using ExcelToDbf.Core.Services.Scripts.Data;
+using ExcelToDbf.Utils.Extensions;
 using Jint;
+using Jint.Native;
 using NLog;
 using Worksheet = Microsoft.Office.Interop.Excel.Worksheet;
+using JintSerializer = Jint.Native.Json.JsonSerializer;
 
 namespace ExcelToDbf.Core.Services.Scripts.Context
 {
-    public class ExcelContext : AbstractContext
+    public partial class ExcelContext : AbstractContext
     {
         private readonly ILogger logger;
         private readonly IConfigContext config;
         private ExcelService.HandlerCellGetter cellValueGetter = (y, x) => throw new ArgumentNullException(nameof(cellValueGetter));
+        private readonly JintSerializer parser;
 
         public ExcelContext(ILogger logger, IConfigContext config, Engine engine) : base(engine)
         {
             this.logger = logger;
             this.config = config;
+            parser = new JintSerializer(engine);
         }
 
         public ExcelContext Connect(ExcelService.HandlerCellGetter getter)
@@ -81,9 +87,16 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
             return result;
         }
 
-        private class StopFunctionException : Exception
+        private void RunStop()
         {
+            throw new StopFunctionException();
+        }
 
+        public Dictionary<string, object> Transform(DocForm form, object[] record)
+        {
+            engine.SetValue("stop", (Action)RunStop);
+            var value = engine.Invoke(form.Write, new object[]{ record });
+            return parser.Deserialize<Dictionary<string,object>>(value);
         }
     }
 }

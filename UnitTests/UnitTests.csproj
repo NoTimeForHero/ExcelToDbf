@@ -98,6 +98,7 @@
     <Compile Include="TestLibrary.cs" />
     <Compile Include="Tests\Context\Excel\TestComplex.cs" />
     <Compile Include="Tests\Context\Excel\TestSimple.cs" />
+    <Compile Include="Tests\Context\Excel\TestWrite.cs" />
     <Compile Include="Tests\Context\Excel\Utils.cs" />
     <Compile Include="Tests\Context\Generic.cs" />
     <Compile Include="Tests\HelloWorld.cs" />

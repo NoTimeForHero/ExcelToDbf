@@ -75,20 +75,21 @@ app.forms = [
             { name: 'DATEOPL', type: 'date' },        
         ],
         // Функции (помимо базовых):
-        // line: string[] - массив текущий XLS строки индексация стратует с 1
-        // context: unknown - резерв для будуших целей
+        // Cell|null cell(y: int, x: int) - возвращает Cell { x: int, y: int, value: object }
+        // line: string[] - массив текущий XLS строки индексация стратует с 0
+        // context: unknown - резерв для будущих целей
         // stop() : null - остановка цикла записи
-        write: function(line, context, stop) {
-            if (match(line[2], '^Данные от')) return null;
+        write: function(line) {
+            if (match(line[1], '^Данные от')) return null;
             // TODO: Проверка суммы на совпадения с XLS файлом
-            if (includes(line[2], 'ИТОГО')) return stop();
+            if (includes(line[1], 'ИТОГО')) return stop();
 
             return {
-                ID: line[2],
-                FIO: line[3],
-                KP: line[4],
-                SUMMA: line[5],
-                DATEOPL: line[6],
+                ID: line[1],
+                FIO: line[2],
+                KP: line[3],
+                SUMMA: line[4],
+                DATEOPL: line[5],
             }
         }
     }

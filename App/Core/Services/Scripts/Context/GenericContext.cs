@@ -17,12 +17,30 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
 
         public GenericContext(Engine engine) : base(engine)
         {
+            engine.SetValue("match", (Func<string, string, bool>)Match);
+            engine.SetValue("includes", (Func<string, string, bool>)Includes);
             engine.SetValue("translit", (Func<string, string>)FuncTranslit);
             engine.SetValue("nospace", (Func<string, string, string>)FuncReplaceSpace);
             engine.SetValue("afterRegEx", (Func<string, Regex, object, string>)FuncAfterRegEx);
             engine.SetValue("error", (Action<string>)FuncThrowException);
             AddLogger();
         }
+
+        private readonly Dictionary<string, Regex> cachedRegex = new Dictionary<string, Regex>();
+
+        private bool Match(string input, string key)
+        {
+            if (input == null) return false;
+            if (!cachedRegex.ContainsKey(key))
+            {
+                cachedRegex[key] = new Regex(key, RegexOptions.Compiled);
+            }
+            return cachedRegex[key].Match(input).Success;
+        }
+
+        // TODO: Расширить для других типов, например массивов?
+        private bool Includes(string source, string match)
+            => (source?.ToLower() ?? "").Contains(match?.ToLower() ?? "");
 
         private void AddLogger()
         {

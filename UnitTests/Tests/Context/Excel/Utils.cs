@@ -25,12 +25,20 @@ namespace UnitTests.Tests.Context.Excel
             engine = new Jint.Engine();
             logger = LogManager.GetCurrentClassLogger();
             worksheet = new ToolsWorksheet();
+            new GenericContext(engine);
         }
 
         protected static DocForm MakeForm(string name, string rulesCode) => new DocForm
         {
             Name = name,
             Rules = engine.Evaluate($"(function() {{ \n{rulesCode} }})")
+                as ScriptFunctionInstance,
+        };
+
+        protected static DocForm MakeWriteForm(string name, string rulesCode) => new DocForm
+        {
+            Name = name,
+            Write = engine.Evaluate($"(function(line) {{ \n{rulesCode} }})")
                 as ScriptFunctionInstance,
         };
 
