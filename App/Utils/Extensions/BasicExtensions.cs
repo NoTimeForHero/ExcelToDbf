@@ -43,8 +43,8 @@ namespace ExcelToDbf.Utils.Extensions
 
         // https://stackoverflow.com/a/51241629
         public static T[] GetRow<T>(this T[,] matrix, int rowNumber) =>
-            Enumerable.Range(1, matrix.GetLength(1))
-                .Select(x => matrix[rowNumber, x])
+            Enumerable.Range(0, matrix.GetLength(1))
+                .Select(x => x < 1 ? default : matrix[rowNumber, x])
                 .ToArray();
 
         public static IEnumerable<T[]> AsRowArray<T>(this T[,] matrix)

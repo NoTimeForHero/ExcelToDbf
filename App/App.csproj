@@ -161,6 +161,7 @@
       <DependentUpon>ProgressView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utils\Converters\SizeConverter.cs" />
+    <Compile Include="Utils\DateHelper.cs" />
     <Compile Include="Utils\DirectoryUtils.cs" />
     <Compile Include="Utils\Extensions\BasicExtensions.cs" />
     <Compile Include="Utils\PathHelper.cs" />

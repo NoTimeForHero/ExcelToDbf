@@ -109,6 +109,7 @@
     <Compile Include="Tests\Legacy\RulesTests.cs" />
     <Compile Include="Tests\Legacy\TDataTests.cs" />
     <Compile Include="Tests\Legacy\WorkTest.cs" />
+    <Compile Include="Tests\Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\App\App.csproj">

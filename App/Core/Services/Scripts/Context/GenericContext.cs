@@ -18,6 +18,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
         public GenericContext(Engine engine) : base(engine)
         {
             engine.SetValue("match", (Func<string, string, bool>)Match);
+            engine.SetValue("matches", (Func<string, string, string[]>)Matches);
             engine.SetValue("includes", (Func<string, string, bool>)Includes);
             engine.SetValue("translit", (Func<string, string>)FuncTranslit);
             engine.SetValue("nospace", (Func<string, string, string>)FuncReplaceSpace);
@@ -28,14 +29,26 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
 
         private readonly Dictionary<string, Regex> cachedRegex = new Dictionary<string, Regex>();
 
-        private bool Match(string input, string key)
+        private Regex FromCache(string key)
         {
-            if (input == null) return false;
             if (!cachedRegex.ContainsKey(key))
             {
                 cachedRegex[key] = new Regex(key, RegexOptions.Compiled);
             }
-            return cachedRegex[key].Match(input).Success;
+            return cachedRegex[key];
+        } 
+
+        private bool Match(string input, string key)
+        {
+            if (input == null) return false;
+            return FromCache(key).Match(input).Success;
+        }
+
+        private string[] Matches(string input, string key)
+        {
+            if (input == null) return new string[] { };
+            var res = FromCache(key).Match(input);
+            return res.Groups.Cast<Group>().Select(x => x.Value).ToArray();
         }
 
         // TODO: Расширить для других типов, например массивов?

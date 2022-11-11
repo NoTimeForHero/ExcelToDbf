@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ExcelToDbf.Core.Models;
+using ExcelToDbf.Utils;
 using Microsoft.Office.Interop.Excel;
 using NLog;
 using SocialExplorer.IO.FastDBF;
@@ -26,9 +28,10 @@ namespace ExcelToDbf.Core.Services
 
         public class Work : IDisposable
         {
-            private readonly DbfFile oDBF;
+            private readonly DbfFile db;
             private readonly ILogger logger;
             private readonly DocForm form;
+            private readonly List<DbfColumn> columns = new List<DbfColumn>();
 
             internal Work(DBFService owner, DocForm form, string outputFilename)
             {
@@ -38,8 +41,8 @@ namespace ExcelToDbf.Core.Services
 
                 var encoding = Encoding.GetEncoding(config.System.OutputEncoding);
 
-                oDBF = new DbfFile(encoding);
-                oDBF.Open(outputFilename, FileMode.Create); // FileMode.Create = файл будет перезаписан если уже существует
+                db = new DbfFile(encoding);
+                db.Open(outputFilename, FileMode.Create); // FileMode.Create = файл будет перезаписан если уже существует
                 logger.Info($"Создаём DBF по пути: {outputFilename}");
                 logger.Debug("и кодировкой: {encoding}");
             }
@@ -48,21 +51,21 @@ namespace ExcelToDbf.Core.Services
             {
                 foreach (var field in form.Fields)
                 {
-                    DbfColumn.DbfColumnType column;
+                    DbfColumn.DbfColumnType colType;
                     string length = field.Length;
                     var type = field.Type?.ToLower() ?? "string";
                     switch (type)
                     {
                         case "date":
-                            column = DbfColumn.DbfColumnType.Date;
+                            colType = DbfColumn.DbfColumnType.Date;
                             length = length ?? "8";
                             break;
                         case "number":
-                            column = DbfColumn.DbfColumnType.Number;
+                            colType = DbfColumn.DbfColumnType.Number;
                             length = length ?? "10,2";
                             break;
                         case "string":
-                            column = DbfColumn.DbfColumnType.Character;
+                            colType = DbfColumn.DbfColumnType.Character;
                             break;
                         default:
                             throw new InvalidOperationException($"Unknown DBF field type: {field.Type}");
@@ -70,19 +73,52 @@ namespace ExcelToDbf.Core.Services
                     var lenParts = length.Split(',');
                     int nLen = int.Parse(lenParts[0]);
                     int nDec = lenParts.Length > 1 ? int.Parse(lenParts[1]) : 0;
-                    oDBF.Header.AddColumn(new DbfColumn(field.Name, column, nLen, nDec));
+                    var column = new DbfColumn(field.Name, colType, nLen, nDec);
+                    db.Header.AddColumn(column);
+                    columns.Add(column);
                     logger.Debug($"Записываем поле '{type}' типа '{type}' длиной {nLen},{nDec}");
                 }
 
-                oDBF.WriteHeader();
+                db.WriteHeader();
 
                 // config.System.OutputEncoding
                 return this;
             }
 
+            public void WriteRecord(Dictionary<string, object> input)
+            {
+                if (input == null) return;
+
+                var record = new DbfRecord(db.Header);
+                // record.AllowIntegerTruncate = true;
+                record.AllowStringTurncate = true;
+
+                for (int i=0; i<columns.Count; i++)
+                {
+                    var column = columns[i];
+                    if (!input.TryGetValue(column.Name, out var rawValue)) continue;
+                    switch (column.ColumnType)
+                    {
+                        case DbfColumn.DbfColumnType.Character:
+                            record[i] = rawValue?.ToString();
+                            break;
+                        case DbfColumn.DbfColumnType.Date:
+                            record[i] = DateHelper.ToDBF(rawValue?.ToString());
+                            break;
+                        case DbfColumn.DbfColumnType.Number:
+                            record[i] = rawValue?.ToString().Replace(',', '.');
+                            break;
+                        default:
+                            throw new NotImplementedException($"Column {column.ColumnType} not supported yet!");
+                    }
+                }
+
+                db.Write(record, true);
+            }
+
             public void Dispose()
             {
-                oDBF.Close();
+                db.Close();
             }
         }
 

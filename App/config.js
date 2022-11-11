@@ -71,25 +71,32 @@ app.forms = [
             { name: 'ID', length: '8' },
             { name: 'KP', length: '8' },
             { name: 'FIO', length: '60' },
-            { name: 'SUMMA', type: 'number', length: '10,2' },                
-            { name: 'DATEOPL', type: 'date' },        
+            { name: 'SUMMA', type: 'number', length: '10,2' },
+            { name: 'DATEOPL', type: 'date' },
+            { name: 'DATESRC', type: 'date' },
         ],
         // Функции (помимо базовых):
         // Cell|null cell(y: int, x: int) - возвращает Cell { x: int, y: int, value: object }
         // line: string[] - массив текущий XLS строки индексация стратует с 0
         // context: unknown - резерв для будущих целей
         // stop() : null - остановка цикла записи
-        write: function(line) {
-            if (match(line[1], '^Данные от')) return null;
+        write: function (line) {
+
             // TODO: Проверка суммы на совпадения с XLS файлом
-            if (includes(line[1], 'ИТОГО')) return stop();
+            // TODO: Сделать синтаксис вида cached(key, () => heavy_function() )
+
+            if (match(line[2], '^Данные от')) return null;
+            if (includes(line[2], 'ИТОГО')) return stop();
+
+            const DATESRC = matches(cell(6, 2).Value, '\\d{2}\\.\\d{2}\\.\\d{4}')[0];
 
             return {
-                ID: line[1],
-                FIO: line[2],
-                KP: line[3],
-                SUMMA: line[4],
-                DATEOPL: line[5],
+                ID: line[2],
+                FIO: line[3],
+                KP: line[4],
+                SUMMA: line[5],
+                DATEOPL: line[6],
+                DATESRC
             }
         }
     }
