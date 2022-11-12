@@ -311,6 +311,8 @@
     <Content Include="config.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Resources\arrow_down.png" />
+    <Resource Include="Resources\arrow_up.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Test1\CSV_Converter.csproj">

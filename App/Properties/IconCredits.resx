@@ -120,6 +120,9 @@
   <data name="application_exit_gnome" xml:space="preserve">
     <value>Gnome Project;http://art.gnome.org/themes/icon</value>
   </data>
+  <data name="arrows" xml:space="preserve">
+    <value>Picol;https://www.iconfinder.com/iconsets/picol-vector</value>
+  </data>
   <data name="checked_unchecked" xml:space="preserve">
     <value>Keyamoon;http://keyamoon.com/</value>
   </data>

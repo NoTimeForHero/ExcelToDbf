@@ -70,6 +70,15 @@ namespace ExcelToDbf.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Picol;https://www.iconfinder.com/iconsets/picol-vector.
+        /// </summary>
+        internal static string arrows {
+            get {
+                return ResourceManager.GetString("arrows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Keyamoon;http://keyamoon.com/.
         /// </summary>
         internal static string checked_unchecked {
