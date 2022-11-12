@@ -6,11 +6,11 @@ namespace ExcelToDbf.Core.Models
 {
     public class SearchMatch
     {
-        public int? Y { get; private set; }
-        public int? X { get; private set; }
-        public string Expected { get; private set; }
-        public string Got { get; private set; }
-        public bool Matches { get; private set; }
+        public int? Y { get; set; }
+        public int? X { get; set; }
+        public string Expected { get; set; }
+        public string Got { get; set; }
+        public bool Matches { get; set; }
 
         private SearchMatch() {}
 

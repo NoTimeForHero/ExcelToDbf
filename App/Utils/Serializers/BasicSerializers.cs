@@ -22,6 +22,7 @@ namespace ExcelToDbf.Utils.Serializers
 
         public override DocForm ReadJson(JsonReader reader, Type objectType, DocForm existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
+            if (reader.TokenType == JsonToken.Null) return null;
             if (reader.TokenType != JsonToken.StartObject) throw new InvalidOperationException("DocForm must be object!");
             var data = JObject.Load(reader);
             return new DocForm

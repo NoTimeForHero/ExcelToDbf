@@ -5,15 +5,67 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ExcelToDbf.Core.Views"
              xmlns:vm="clr-namespace:ExcelToDbf.Core.ViewModels"
-             d:DataContext="{d:DesignInstance Type=vm:MainViewModel, IsDesignTimeCreatable=True}"
+             d:DataContext="{d:DesignInstance Type=vm:ConvertResultVM, IsDesignTimeCreatable=True}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="Margin" Value="5" />
+        </Style>
+    </UserControl.Resources>
     <StackPanel>
-        <Expander >
-            <Expander.Header>
-                Hello world!
-            </Expander.Header>
-            Hello world!
-        </Expander>
+        <ItemsControl ItemsSource="{Binding Results}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Expander>
+                        <Expander.Header>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Height="16" Width="16">
+                                    <Image.Style>
+                                        <Style TargetType="Image">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Converted}" Value="True">
+                                                    <Setter Property="Source" Value="../../Resources/if_agt_action_success_3807.png" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Converted}" Value="False">
+                                                    <Setter Property="Source" Value="../../Resources/if_error_16263.png" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Image.Style>
+                                </Image>
+                                <TextBlock VerticalAlignment="Center" Margin="10,0,0,0" Text="{Binding File.FileName}" />
+                            </StackPanel>
+                        </Expander.Header>
+                        <StackPanel>
+                            
+                            <TextBlock>
+                                <Run>Выбрана форма:</Run>
+                                <Run FontWeight="Bold" Text="{Binding SearchResult.Result.Name}" />
+                            </TextBlock>
+
+                            <TextBlock>
+                                <Run>Файл записан как:</Run>
+                                <Run FontWeight="Bold" Text="{Binding OutputFilename}" />
+                            </TextBlock>
+
+                            <Expander Header="Подходящие формы">
+                                <ItemsControl ItemsSource="{Binding SearchResult.Report}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Expander Header="{Binding Key.Name}" IsExpanded="True">
+                                                <DataGrid ItemsSource="{Binding Value}" IsReadOnly="True">
+                                                </DataGrid>
+                                            </Expander>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Expander>
+
+                        </StackPanel>
+                    </Expander>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </StackPanel>
 </UserControl>

@@ -12,6 +12,7 @@ using ExcelToDbf.Core.ViewModels;
 using ExcelToDbf.Core.Views;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using NLog;
 using ReactiveUI;
 using Unity;
 
@@ -22,6 +23,7 @@ namespace ExcelToDbf.Core
         private readonly IUnityContainer container;
         private readonly MainViewModel model;
         private readonly ConvertService converter;
+        private readonly ILogger logger;
         private UIState currentState;
 
         private enum UIState
@@ -60,9 +62,10 @@ namespace ExcelToDbf.Core
             }
         }
 
-        public RuntimeGUI(IUnityContainer container)
+        public RuntimeGUI(IUnityContainer container, ILogger logger)
         {
             this.container = container;
+            this.logger = logger;
             model = container.Resolve<MainViewModel>();
             converter = container.Resolve<ConvertService>();
             currentState = UIState.SelectFiles;
@@ -72,12 +75,19 @@ namespace ExcelToDbf.Core
         {
             UpdateUI(UIState.SelectFiles);
 
-            if (File.Exists(Constants.LastLaunchFile))
+            try
             {
-                var results = JsonConvert.DeserializeObject<List<ConvertService.Result>>(File.ReadAllText(Constants.LastLaunchFile));
-                var vm = container.Resolve<ConvertResultVM>();
-                Console.WriteLine("RESULTS!");
-                UpdateUI(UIState.DisplayLogs);
+                if (File.Exists(Constants.LastLaunchFile))
+                {
+                    var results = JsonConvert.DeserializeObject<List<ConvertService.Result>>(File.ReadAllText(Constants.LastLaunchFile));
+                    container.Resolve<ConvertResultVM>().Results = results;
+                    UpdateUI(UIState.DisplayLogs);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn("Не удалось загрузить LastLaunch.json!");
+                logger.Warn(ex);
             }
 
             model.ActionButton.Command = ReactiveCommand.CreateFromTask(async () =>
@@ -110,8 +120,9 @@ namespace ExcelToDbf.Core
 
             UpdateUI(UIState.Converting);
 
-            var result = await converter.Run(files);
-            File.WriteAllText(Constants.LastLaunchFile, JsonConvert.SerializeObject(result, Formatting.Indented));
+            var results = await converter.Run(files);
+            File.WriteAllText(Constants.LastLaunchFile, JsonConvert.SerializeObject(results, Formatting.Indented));
+            container.Resolve<ConvertResultVM>().Results = results;
 
             UpdateUI(UIState.DisplayLogs);
         }

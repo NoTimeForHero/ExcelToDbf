@@ -33,6 +33,7 @@ namespace ExcelToDbf.Core
             container.RegisterSingleton<ExcelService>();
             container.RegisterSingletonMVVM<MainView, MainViewModel>();
             container.RegisterSingletonMVVM<FileSelectorView, FileSelectorVM>();
+            container.RegisterSingletonMVVM<ConvertResultView, ConvertResultVM>();
             container.RegisterSingletonMVVM<ProgressView, ProgressVM>();
             container.Resolve<ScriptEngine>()
                 .Register<GenericContext>()
@@ -61,7 +62,7 @@ namespace ExcelToDbf.Core
                 logger.Info("Приложение было запущено");
 
                 Debug();
-                new RuntimeGUI(container).Run();
+                new RuntimeGUI(container, logger).Run();
                 container.Dispose();
             }
             catch (Exception ex)

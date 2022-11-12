@@ -28,7 +28,7 @@ namespace UnitTests.Tests.Context.Excel.Excel
         public void TestFullSearch() => TestSearchAlg(false, 4, 4);
 
         [TestMethod]
-        public void TestFastSearch() => TestSearchAlg(true, 2, 2);
+        public void TestFastSearch() => TestSearchAlg(true, 2, 1);
 
         private void TestSearchAlg(bool fastSearch, int formsExpected, int keysExpected)
         {
