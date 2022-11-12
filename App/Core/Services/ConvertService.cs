@@ -67,7 +67,6 @@ namespace ExcelToDbf.Core.Services
                 try
                 {
                     var outputFile = folderCtx.GetOutputFilename(file);
-                    result.OutputFilename = outputFile;
                     await ProcessFile(ref result, file, outputFile);
                 }
                 catch (Exception ex)
@@ -124,6 +123,7 @@ namespace ExcelToDbf.Core.Services
                 }
                 result.Converted = true;
             }
+            result.OutputFilename = outputFile;
             return Task.CompletedTask;
         }
 
