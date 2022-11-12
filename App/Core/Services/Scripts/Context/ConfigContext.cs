@@ -60,7 +60,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
             var baseDir = Path.GetDirectoryName(file.FullPath)
                           ?? throw new Exception("Directory not found!");
             logger.Debug($"Преобразование имени \"{file.FileName}\" в \"{outputName}\"");
-            return Path.Combine(baseDir, outputName);
+            return Path.GetFullPath(Path.Combine(baseDir, outputName));
         }
 
         private IEnumerable<DocForm> ParseForms(Engine engine, JsValue target)

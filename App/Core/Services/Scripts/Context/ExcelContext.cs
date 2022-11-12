@@ -38,7 +38,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
 
         public SearchFormResult SearchForm(FileModel file)
         {
-            var result = new SearchFormResult { Target = file };
+            var result = new SearchFormResult();
             foreach (var form in config.Forms)
             {
                 logger.Info($"Проверяем форму: {form.Name}");

@@ -34,7 +34,7 @@ namespace ExcelToDbf.Core.Services
         public ConvertProgress Progress { get; } = new ConvertProgress();
 
 
-        public async Task Run(IEnumerable<FileModel> filesToConvert)
+        public Task<List<Result>> Run(IEnumerable<FileModel> filesToConvert)
         {
             var files = filesToConvert.ToList();
             logger.Info($"Запущен процесс конвертации {files.Count} файлов!");
@@ -42,14 +42,15 @@ namespace ExcelToDbf.Core.Services
                          files.Select(x => $"\"{x.FileName}\"").JoinString(", ")
                          );
             var task = Task.Factory.StartNew(() => RunInternal(files), TaskCreationOptions.LongRunning).Unwrap();
-            await task;
+            return task;
 
         }
 
-        private async Task RunInternal(List<FileModel> input)
+        private async Task<List<Result>> RunInternal(List<FileModel> input)
         {
             var files = input.ToList();
             var filesTotal = files.Count;
+            var results = new List<Result>();
 
             Progress.Reset();
             Progress.GlobalInitialize(filesTotal, "Ожидание загрузки Excel...");
@@ -58,23 +59,28 @@ namespace ExcelToDbf.Core.Services
 
             foreach (var (file, curFile) in files.WithIndex())
             {
+                var result = new Result { File = file };
+                results.Add(result);
                 var filename = file.FileName;
                 logger.Info($"Конвертация файла: {filename}");
                 Progress.FileInitialize(curFile+1, filename);
                 try
                 {
                     var outputFile = folderCtx.GetOutputFilename(file);
-                    await ProcessFile(file, outputFile);
+                    result.OutputFilename = outputFile;
+                    await ProcessFile(ref result, file, outputFile);
                 }
                 catch (Exception ex)
                 {
                     logger.Warn($"Ошибка обработки файла: {filename}");
                     logger.Warn(ex);
+                    result.Error = $"{ex.GetType().Name}: {ex.Message}";
                 }
             }
+            return results;
         }
 
-        private Task ProcessFile(FileModel file, string outputFile)
+        private Task ProcessFile(ref Result result, FileModel file, string outputFile)
         {
             Progress.LocalText = $"Поиск подходящих форм для файла: {file.FileName}";
 
@@ -85,6 +91,7 @@ namespace ExcelToDbf.Core.Services
             var search = context.SearchForm(file);
             var form = search.Result;
 
+            result.SearchResult = search;
             if (form == null)
             {
                 logger.Warn($"Для файла \"{file.FileName}\" не найдено подходящих форм обработки!");
@@ -115,21 +122,18 @@ namespace ExcelToDbf.Core.Services
                 {
                     logger.Info($"Обработка файла была завершена JS условием на {currentRow} строке!");
                 }
+                result.Converted = true;
             }
-
-            // engine.Excel.FindForm(excel.worksheet);
-
-            // Progress.DocumentTotal = rows;
-            // int curRow = 0;
-            // while (curRow < rows)
-            // {
-            //     Progress.SetProgress(curRow, rows, $"Обработка массива строк");
-            //     curRow += random.Next(100, 400);
-            //     Thread.Sleep(20);
-            //     //await random.Delay(5, 50);
-            // }
-            // File.WriteAllText(outputFile, "Test");
             return Task.CompletedTask;
+        }
+
+        public class Result
+        {
+            public bool Converted { get; set; }
+            public SearchFormResult SearchResult { get; set; }
+            public FileModel File { get; set; }
+            public string OutputFilename { get; set; }
+            public string Error { get; set; }
         }
     }
 }

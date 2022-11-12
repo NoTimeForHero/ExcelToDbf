@@ -58,6 +58,9 @@
                     <DataTemplate DataType="{x:Type vm:ProgressVM}">
                         <v:ProgressView />
                     </DataTemplate>
+                    <DataTemplate DataType="{x:Type vm:ConvertResultVM}">
+                        <v:ConvertResultView />
+                    </DataTemplate>
                 </ContentControl.Resources>
             </ContentControl>
         </Border>
