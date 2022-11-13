@@ -18,6 +18,10 @@ namespace ExcelToDbf.Core.Models
         public string LocalText { get; set; } = "";
         public string GlobalText { get; set; } = "";
 
+        public event Action OnImportantUpdate;
+
+        public void ForceUpdate() => OnImportantUpdate?.Invoke();
+
         public override string ToString() =>
             "[ConvertProgress " +
             $"Files=[{FilesCurrent}/{FilesTotal}]," +
@@ -31,6 +35,7 @@ namespace ExcelToDbf.Core.Models
             FilesCurrent = 0;
             FilesTotal = filesTotal;
             GlobalText = message ?? GlobalText;
+            OnImportantUpdate?.Invoke();
         }
 
         public void FileInitialize(int current, string filename)
@@ -40,6 +45,7 @@ namespace ExcelToDbf.Core.Models
             DocumentTotal = 0;
             GlobalText = $"Обработка файла: {filename}";
             LocalText = $"Открытие файла: {filename}";
+            OnImportantUpdate?.Invoke();
         }
 
         public void SetProgress(int current, int max, string message)
@@ -57,6 +63,7 @@ namespace ExcelToDbf.Core.Models
             FilesCurrent = 0;
             LocalText = "";
             GlobalText = "";
+            OnImportantUpdate?.Invoke();
         }
     }
 }

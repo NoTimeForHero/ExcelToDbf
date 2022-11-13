@@ -25,13 +25,25 @@ namespace ExcelToDbf.Core.Views
         public ProgressView()
         {
             InitializeComponent();
+
             var timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromMilliseconds(50);
-            timer.Tick += UpdateAll;
+            timer.Tick += (o, ev) => OnTick();
             timer.Start();
+
+            ProgressVM vm = null;
+            Loaded += (o, ev) =>
+            {
+                vm = (DataContext as ProgressVM);
+                if (vm == null) throw new NullReferenceException("ProgressVM == null!");
+                vm.Progress.OnImportantUpdate += ExternalTick;
+            };
+            Unloaded += (o, ev) => vm.Progress.OnImportantUpdate -= ExternalTick;
         }
 
-        private void UpdateAll(object sender, EventArgs e)
+        private void ExternalTick() => Dispatcher.Invoke(OnTick);
+
+        private void OnTick()
         {
             var ctx = DataContext;
             DataContext = null;

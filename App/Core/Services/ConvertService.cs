@@ -82,6 +82,7 @@ namespace ExcelToDbf.Core.Services
         private Task ProcessFile(ref Result result, FileModel file, string outputFile)
         {
             Progress.LocalText = $"Поиск подходящих форм для файла: {file.FileName}";
+            Progress.ForceUpdate();
 
             var excel = lazyExcel.Value;
             excel.OpenWorksheet(file.FullPath);
