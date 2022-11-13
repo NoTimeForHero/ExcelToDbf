@@ -22,10 +22,12 @@ namespace ExcelToDbf.Core.Services
         private readonly DBFService database;
         private readonly Random random = new Random(100);
         private readonly Lazy<ExcelService> lazyExcel;
+        private readonly ConfigProvider pvConfig;
 
         public ConvertService(ILogger logger, IUnityContainer container)
         {
             this.logger = logger;
+            pvConfig = container.Resolve<ConfigProvider>();
             engine = container.Resolve<ScriptEngine>();
             database = container.Resolve<DBFService>();
             lazyExcel = new Lazy<ExcelService>(() => container.Resolve<ExcelService>());
@@ -68,6 +70,7 @@ namespace ExcelToDbf.Core.Services
                 {
                     var outputFile = folderCtx.GetOutputFilename(file);
                     await ProcessFile(ref result, file, outputFile);
+                    if (pvConfig.Config.System.NoFormIsError && result.Status == Result.ResultType.NoForm) result.Status = Result.ResultType.Error;
                 }
                 catch (Exception ex)
                 {

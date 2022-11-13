@@ -15,6 +15,9 @@ namespace ExcelToDbf.Core.ViewModels
         [Reactive]
         public List<ConvertService.Result> Results { get; set; }
 
+        [Reactive]
+        public string Warning { get; set; }
+
         public ConvertResultVM()
         {
             Results = new List<ConvertService.Result>();
@@ -35,6 +38,16 @@ namespace ExcelToDbf.Core.ViewModels
                         }}
                     }
                 }
+            });
+            Warning = "Не все файлы были сконвертированы?!";
+        }
+
+        public ConvertResultVM(ConfigProvider cvConfig)
+        {
+            this.WhenAnyValue(x => x.Results).Subscribe((results) =>
+            {
+                var isAllConverted = results?.All(x => x.Error == null && x.Status == ConvertService.Result.ResultType.Converted) ?? true;
+                Warning = isAllConverted ? null : cvConfig.Config.System.ExtraWarning;
             });
         }
     }
