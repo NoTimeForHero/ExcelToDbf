@@ -13,6 +13,7 @@ namespace ExcelToDbf.Utils
 
         public static string ToDBF(string input)
         {
+            if (input == null) return null;
             var match = regDate.Match(input);
             if (!match.Success) return null;
             var parts = match.Groups.Cast<Group>().Skip(1).ToArray();

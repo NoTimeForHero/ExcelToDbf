@@ -74,6 +74,7 @@ namespace ExcelToDbf.Core.Services
                     logger.Warn($"Ошибка обработки файла: {filename}");
                     logger.Warn(ex);
                     result.Error = $"{ex.GetType().Name}: {ex.Message}";
+                    result.Status = Result.ResultType.Error;
                 }
             }
             return results;
@@ -95,6 +96,7 @@ namespace ExcelToDbf.Core.Services
             if (form == null)
             {
                 logger.Warn($"Для файла \"{file.FileName}\" не найдено подходящих форм обработки!");
+                result.Status = Result.ResultType.NoForm;
                 return Task.CompletedTask;
             }
 
@@ -105,6 +107,7 @@ namespace ExcelToDbf.Core.Services
                 var totalRows = excel.SheetRows;
                 Progress.DocumentTotal = totalRows;
                 int currentRow = form.Settings.StartY;
+                context.CallHook(form, DocForm.HookType.Before);
                 try
                 {
                     foreach (var range in excel.IterateRanges(form.Settings.StartY, form.Settings.EndX))
@@ -122,7 +125,8 @@ namespace ExcelToDbf.Core.Services
                 {
                     logger.Info($"Обработка файла была завершена JS условием на {currentRow} строке!");
                 }
-                result.Converted = true;
+                context.CallHook(form, DocForm.HookType.After);
+                result.Status = Result.ResultType.Converted;
             }
             result.OutputFilename = outputFile;
             return Task.CompletedTask;
@@ -130,11 +134,19 @@ namespace ExcelToDbf.Core.Services
 
         public class Result
         {
-            public bool Converted { get; set; }
+            public ResultType Status { get; set; }
             public SearchFormResult SearchResult { get; set; }
             public FileModel File { get; set; }
             public string OutputFilename { get; set; }
             public string Error { get; set; }
+
+
+            public enum ResultType
+            {
+                Converted,
+                NoForm,
+                Error
+            }
         }
     }
 }

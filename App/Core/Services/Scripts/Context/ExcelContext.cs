@@ -10,6 +10,9 @@ using ExcelToDbf.Core.Services.Scripts.Data;
 using ExcelToDbf.Utils.Extensions;
 using Jint;
 using Jint.Native;
+using Jint.Native.Array;
+using Jint.Native.Function;
+using Jint.Native.Object;
 using NLog;
 using Worksheet = Microsoft.Office.Interop.Excel.Worksheet;
 using JintSerializer = Jint.Native.Json.JsonSerializer;
@@ -22,6 +25,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
         private readonly IConfigContext config;
         private ExcelService.HandlerCellGetter cellValueGetter = (y, x) => throw new ArgumentNullException(nameof(cellValueGetter));
         private readonly JintSerializer parser;
+        private ObjectInstance currentContext;
 
         public ExcelContext(ILogger logger, IConfigContext config, Engine engine) : base(engine)
         {
@@ -33,6 +37,8 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
         public ExcelContext Connect(ExcelService.HandlerCellGetter getter)
         {
             cellValueGetter = getter;
+            currentContext = new ObjectInstance(engine);
+            engine.SetValue("context", currentContext);
             return this;
         }
 
@@ -97,6 +103,28 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
             engine.SetValue("stop", (Action)RunStop);
             var value = engine.Invoke(form.Write, new object[]{ record });
             return parser.Deserialize<Dictionary<string,object>>(value);
+        }
+
+        public void CallHook(DocForm form, DocForm.HookType type)
+        {
+            ScriptFunctionInstance target;
+            switch (type)
+            {
+                case DocForm.HookType.Before:
+                    target = form.BeforeWrite;
+                    break;
+                case DocForm.HookType.After:
+                    target = form.AfterWrite;
+                    break;
+                default:
+                    throw new NotImplementedException(type.ToString());
+            }
+            if (target == null)
+            {
+                logger.Debug($"Отсутствует хук {type} для формы \"{form.Name}\"!");
+                return;
+            }
+            engine.Invoke(target);
         }
     }
 }

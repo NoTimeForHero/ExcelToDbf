@@ -72,6 +72,8 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
                 Settings = parser.Deserialize<DocForm.XSettings>(val["settings"]),
                 Fields = parser.Deserialize<DocForm.DbfFields[]>(val["dbfFields"]),
                 Rules = val["rules"] as ScriptFunctionInstance,
+                AfterWrite = val["afterWrite"] as ScriptFunctionInstance,
+                BeforeWrite = val["beforeWrite"] as ScriptFunctionInstance,
                 Write = val["write"] as ScriptFunctionInstance,
             });
         }

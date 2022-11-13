@@ -18,6 +18,7 @@ namespace ExcelToDbf.Core
             public int BufferSize { get; set; }
             public string ExtraWarning { get; set; }
             public bool FastSearch { get; set; }
+            public bool NoFormIsError { get; set; }
         }
 
         public class JHeader

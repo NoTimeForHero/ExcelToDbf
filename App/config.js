@@ -72,23 +72,76 @@ app.forms = [
             { name: 'KP', length: '8' },
             { name: 'FIO', length: '60' },
             { name: 'SUMMA', type: 'number', length: '10,2' },
-            { name: 'DATEOPL', type: 'date' },
-            { name: 'DATESRC', type: 'date' },
+            { name: 'DATEOPL', type: 'date' }
         ],
         // Функции (помимо базовых):
         // Cell|null cell(y: int, x: int) - возвращает Cell { x: int, y: int, value: object }
         // line: string[] - массив текущий XLS строки индексация стратует с 0
-        // context: unknown - резерв для будущих целей
+        // context: object - контекст доступный на протяжении всей обработки документа
         // stop() : null - остановка цикла записи
         write: function (line) {
-
-            // TODO: Проверка суммы на совпадения с XLS файлом
-            // TODO: Сделать синтаксис вида cached(key, () => heavy_function() )
-
             if (match(line[2], '^Данные от')) return null;
             if (includes(line[2], 'ИТОГО')) return stop();
 
-            const DATESRC = matches(cell(6, 2).Value, '\\d{2}\\.\\d{2}\\.\\d{4}')[0];
+            return {
+                ID: line[2],
+                FIO: line[3],
+                KP: line[4],
+                SUMMA: line[5],
+                DATEOPL: line[6]
+            }
+        }
+    },
+    {
+        name: 'Форма 2.21Б',
+        settings: {
+            startY: 8,
+            endX: 7,
+        },
+        rules: function () {
+            assert(cell(2, 2), 'Форма 2.21Б');
+            assert(cell(7, 2), '№');
+            assert(cell(7, 3), 'ФИО');
+            assert(cell(7, 4), 'Счёт');
+            assert(cell(7, 5), 'Сумма');
+            assert(cell(7, 6), 'Дата оплаты');
+        },
+        dbfFields: [
+            { name: 'ID', length: '8' },
+            { name: 'KP', length: '8' },
+            { name: 'FIO', length: '60' },
+            { name: 'SUMMA', type: 'number', length: '10,2' },
+            { name: 'DATEOPL', type: 'date' },
+            { name: 'NACHDATE', type: 'date' },
+        ],
+        beforeWrite: function() {
+            context.sum = 0;
+            context.NACHDATE = matches(cell(6, 2).Value, '\\d{2}\\.\\d{2}\\.\\d{4}')[0];
+        },
+        afterWrite: function () {
+            log("Сумма подсчитанная: " + context.sum);
+            log("Сумма в документе: " + context.docSum);
+        },
+        write: function (line) {
+
+            if (match(line[2], '^Данные от')) return null;
+            if (!line[2]) return null;
+            if (line[2] === 'Итого по дому:') return null;
+
+            if (includes(line[2], 'ИТОГО')) {
+                context.docSum = line[5];
+                return stop();
+            }
+
+            if (line[2] === '###') {
+                context.address = line[3];
+                return null;
+            }
+
+            var localSum = parseFloat(line[5]) || 0;
+            log(line[2] + ' ' + line[3] + ' - ' + localSum);
+            
+            context.sum += parseFloat(line[5]) || 0;
 
             return {
                 ID: line[2],
@@ -96,7 +149,7 @@ app.forms = [
                 KP: line[4],
                 SUMMA: line[5],
                 DATEOPL: line[6],
-                DATESRC
+                NACHDATE: context.NACHDATE
             }
         }
     }

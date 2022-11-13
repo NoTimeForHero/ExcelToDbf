@@ -23,6 +23,8 @@ namespace ExcelToDbf.Core.Models
         public string Name { get; set; }
         public ScriptFunctionInstance Rules { get; set; }
         public ScriptFunctionInstance Write { get; set; }
+        public ScriptFunctionInstance BeforeWrite { get; set; }
+        public ScriptFunctionInstance AfterWrite { get; set; }
         public DbfFields[] Fields { get; set; }
         public XSettings Settings { get; set; }
 
@@ -37,6 +39,12 @@ namespace ExcelToDbf.Core.Models
             public string Name { get; set; }
             public string Type { get; set; }
             public string Length { get; set; }
+        }
+
+        public enum HookType
+        {
+            Before,
+            After
         }
     }
 }

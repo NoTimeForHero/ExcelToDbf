@@ -5,15 +5,17 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:ExcelToDbf.Core.ViewModels"
              xmlns:cv="clr-namespace:ExcelToDbf.Utils.Converters"
+             xmlns:models="clr-namespace:ExcelToDbf.Core.Models"
              d:DataContext="{d:DesignInstance Type=vm:ConvertResultVM, IsDesignTimeCreatable=True}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Margin="5,0">
     <UserControl.Resources>
-        <Style TargetType="TextBlock">
+        <Style TargetType="TextBlock" x:Key="largeText">
             <Setter Property="Margin" Value="5" />
         </Style>
         <Brush x:Key="bgBorder">#006600</Brush>
         <cv:PathConverter x:Key="cvPath" />
+        <cv:VisibilityConverter x:Key="cvVisibility" />
         <Style x:Key="ExpanderExtra" TargetType="{x:Type Expander}">
             <Setter Property="Template">
                 <Setter.Value>
@@ -98,10 +100,13 @@
                                     <Image.Style>
                                         <Style TargetType="Image">
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Converted}" Value="True">
+                                                <DataTrigger Binding="{Binding Status}" Value="Converted">
                                                     <Setter Property="Source" Value="../../Resources/if_agt_action_success_3807.png" />
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding Converted}" Value="False">
+                                                <DataTrigger Binding="{Binding Status}" Value="NoForm">
+                                                    <Setter Property="Source" Value="../../Resources/if_error_16263.png" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="Error">
                                                     <Setter Property="Source" Value="../../Resources/if_error_14415.png" />
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -112,22 +117,57 @@
                             </StackPanel>
                         </Expander.Header>
                         <StackPanel>
-                            
-                            <TextBlock>
+                            <Border BorderThickness="2" BorderBrush="#721c24" Background="#f8d7da" Padding="10,3" Margin="10,5,10,5" Visibility="{Binding Error, Converter={StaticResource cvVisibility}}">
+                                <StackPanel>
+                                    <Label Foreground="#721c24" FontWeight="Bold">Ошибка конвертации!</Label>
+                                    <Label Foreground="#721c24" Content="{Binding Error}" />
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Style="{StaticResource largeText}">
                                 <Run>Выбрана форма:</Run>
                                 <Run FontWeight="Bold" Text="{Binding SearchResult.Result.Name}" />
                             </TextBlock>
 
-                            <TextBlock>
+                            <TextBlock Style="{StaticResource largeText}">
                                 <Run>Файл записан как:</Run>
                                 <Run FontWeight="Bold" Text="{Binding OutputFilename, Converter={StaticResource cvPath}}" />
                             </TextBlock>
 
-                            <Expander Header="Подходящие формы"  Style="{StaticResource MyExpander}">
+                           <TextBlock Text="{Binding SearchResult.Result.Name}" />
+
+                            <Expander Header="Подходящие формы" Style="{StaticResource MyExpander}">
                                 <ItemsControl ItemsSource="{Binding SearchResult.Report}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Expander Header="{Binding Key.Name}" IsExpanded="True" Style="{StaticResource MyExpander}">
+                                            <Expander IsExpanded="False" Style="{StaticResource MyExpander}">
+                                                <Expander.Header>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Image Height="16" Width="16" Source="../../Resources/if_agt_action_success_3807.png" Margin="0,0,10,0" >
+                                                            <Image.Style>
+                                                                <Style TargetType="{x:Type Image}">
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Value="True">
+                                                                            <DataTrigger.Binding>
+                                                                                <MultiBinding>
+                                                                                    <MultiBinding.Converter>
+                                                                                        <cv:EqualityConverter />
+                                                                                    </MultiBinding.Converter>
+                                                                                    <Binding Path="DataContext.SearchResult.Result.Name"
+                                                                                        RelativeSource="{RelativeSource AncestorType={x:Type Expander}, AncestorLevel=2}" />
+                                                                                    <Binding Path="Key.Name" />
+                                                                                </MultiBinding>
+                                                                            </DataTrigger.Binding>
+                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Image.Style>
+                                                        </Image>
+                                                        <TextBlock Text="{Binding Key.Name}" />
+                                                    </StackPanel>
+                                                </Expander.Header>
                                                 <DataGrid ItemsSource="{Binding Value}" IsReadOnly="True" CanUserSortColumns="False" AutoGenerateColumns="False">
                                                     <DataGrid.Columns>
                                                         <DataGridCheckBoxColumn Header="Условие" Binding="{Binding Matches}" Width="Auto" />
