@@ -17,7 +17,7 @@ namespace ExcelToDbf.Core.Services
         private readonly Application app;
         private readonly List<string> filesToRemove = new List<string>();
         private readonly Dictionary<Point, string> cacheCells = new Dictionary<Point, string>();
-        private readonly int bufferSize;
+        private readonly ConfigProvider pvConfig;
         private readonly ILogger logger;
 
         public Workbook wb { get; private set; }
@@ -28,12 +28,12 @@ namespace ExcelToDbf.Core.Services
 
         public int SheetRows => worksheet.UsedRange.Rows.Count;
 
-        public ExcelService(Config config, ILogger logger)
+        public ExcelService(ConfigProvider pvConfig, ILogger logger)
         {
             app = new Application();
             if (Constants.ExcelDebug) app.Visible = true;
             this.logger = logger;
-            bufferSize = config.System.BufferSize;
+            this.pvConfig = pvConfig;
         }
 
         public bool OpenWorksheet(string path)
@@ -61,6 +61,7 @@ namespace ExcelToDbf.Core.Services
 
         public IEnumerable<object[,]> IterateRanges(int startY, int maxX)
         {
+            var bufferSize = pvConfig.Config.System.BufferSize;
             int begin = startY - 1;
             int end = begin + bufferSize;
             bool EOF = false;
@@ -78,7 +79,7 @@ namespace ExcelToDbf.Core.Services
                 var value = range.Value;
                 yield return value;
                 begin += bufferSize + 1;
-                end += bufferSize;
+                end += bufferSize + 1;
                 if (begin > maxY)
                 {
                     logger.Debug($"Выход по границе документа: {begin} > {maxY}");

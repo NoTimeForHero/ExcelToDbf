@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace ExcelToDbf.Core
 {
@@ -27,5 +29,11 @@ namespace ExcelToDbf.Core
             public string Status { get; set; }
         }
 
+    }
+
+    public class ConfigProvider : ReactiveObject
+    {
+        [Reactive]
+        public Config Config { get; set; }
     }
 }

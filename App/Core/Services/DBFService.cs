@@ -15,13 +15,13 @@ namespace ExcelToDbf.Core.Services
 {
     internal class DBFService
     {
-        protected readonly Config config;
+        protected readonly ConfigProvider pvConfig;
         protected readonly ILogger logger;
 
-        public DBFService(ILogger logger, Config config)
+        public DBFService(ILogger logger, ConfigProvider pvConfig)
         {
             this.logger = logger;
-            this.config = config;
+            this.pvConfig = pvConfig;
         }
 
         public Work Make(DocForm form, string outputFilename) => new Work(this, form, outputFilename);
@@ -37,7 +37,7 @@ namespace ExcelToDbf.Core.Services
             {
                 this.form = form;
                 logger = owner.logger;
-                var config = owner.config;
+                var config = owner.pvConfig.Config;
 
                 var encoding = Encoding.GetEncoding(config.System.OutputEncoding);
 

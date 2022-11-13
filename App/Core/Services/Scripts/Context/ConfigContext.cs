@@ -20,15 +20,15 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
 {
     public interface IConfigContext
     {
-        Config Data { get; }
+        ConfigProvider Data { get; }
         DocForm[] Forms { get; }
         string GetOutputFilename(FileModel file);
     }
 
     public class ConfigContext : AbstractContext, IConfigContext
     {
-        public Config Data { get; }
-        public DocForm[] Forms { get; }
+        public ConfigProvider Data { get; } = new ConfigProvider();
+        public DocForm[] Forms { get; private set; }
         private readonly ILogger logger;
         private readonly JintSerializer parser;
 
@@ -36,11 +36,15 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
         {
             this.logger = logger;
             parser = new JintSerializer(engine);
+            ReloadConfig();
+        }
 
+        public void ReloadConfig()
+        {
             var code = File.ReadAllText(Constants.SettingsFile);
             engine.Execute("app = {}").Execute(code);
 
-            Data = parser.Deserialize<Config>(engine.Evaluate("app.settings"));
+            Data.Config = parser.Deserialize<Config>(engine.Evaluate("app.settings"));
 
             Forms = ParseForms(engine, engine.Evaluate("app.forms")).ToArray();
             logger.Info($"Загружено {Forms.Length} форм!");

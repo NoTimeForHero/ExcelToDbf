@@ -13,16 +13,16 @@ namespace ExcelToDbf.Core.Services
     internal class FolderService
     {
         private readonly ILogger logger;
-        private readonly Config config;
+        private readonly ConfigProvider pvConfig;
         private readonly SourceList<FileModel> _files;
 
         public IObservable<IChangeSet<FileModel>> Connect() => _files.Connect();
 
-        public FolderService(ILogger logger, Config config)
+        public FolderService(ILogger logger, ConfigProvider pvConfig)
         {
             _files = new SourceList<FileModel>();
             this.logger = logger;
-            this.config = config;
+            this.pvConfig = pvConfig;
         }
 
         public void SelectWhere(Func<FileModel,bool> predicate, bool isChecked)
@@ -57,7 +57,7 @@ namespace ExcelToDbf.Core.Services
         public void Update(string path)
         {
             logger.Info($"Пользователем выбрана директория: {path}");
-            var range = DirectoryUtils.GetFilesByExtension(path, config.Extensions)
+            var range = DirectoryUtils.GetFilesByExtension(path, pvConfig.Config.Extensions)
                 .Select(x => new FileModel
                 {
                     MustConvert = true,

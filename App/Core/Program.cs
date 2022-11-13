@@ -40,7 +40,7 @@ namespace ExcelToDbf.Core
                 .Register<ConfigContext>()
                 .Register<ExcelContext>()
                 .Register<IConfigContext, ConfigContext>();
-            container.RegisterFactory<Config>(x => x.Resolve<ScriptEngine>().Resolve<ConfigContext>().Data);
+            container.RegisterFactory<ConfigProvider>(x => x.Resolve<ScriptEngine>().Resolve<ConfigContext>().Data);
             container.RegisterInstance(this);
         }
 
@@ -49,7 +49,7 @@ namespace ExcelToDbf.Core
             var path = Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\ExcelToDbf\Data");
             container.Resolve<FileSelectorVM>().Path = path;
             container.Resolve<FolderService>().SelectAll(false);
-            container.Resolve<FolderService>().SelectWhere(x => x.FileName == "Example1.xlsx", true);
+            container.Resolve<FolderService>().SelectWhere(x => x.FileName == "Example2.xlsx", true);
         }
 
         public void Run(string[] args)

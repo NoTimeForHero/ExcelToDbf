@@ -31,14 +31,19 @@ namespace ExcelToDbf.Core.ViewModels
         [Reactive]
         public bool CloseConfirmation { get; set; }
 
+        public ReactiveCommand<Unit, Unit> CommandSettings { get; set; }
+
         public MainViewModel()
         {
         }
 
-        public MainViewModel(Config config)
+        public MainViewModel(ConfigProvider config)
         {
-            HeaderTitle = config.Header.Title;
-            HeaderDescription = config.Header.Status;
+            config.WhenAnyValue((x) => x.Config).Subscribe((newConfig) =>
+            {
+                HeaderTitle = newConfig.Header.Title;
+                HeaderDescription = newConfig.Header.Status;
+            });
         }
 
 

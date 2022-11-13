@@ -121,6 +121,7 @@ app.forms = [
         afterWrite: function () {
             log("Сумма подсчитанная: " + context.sum);
             log("Сумма в документе: " + context.docSum);
+            if (Math.abs(context.sum - context.docSum) > 5) error(`Подсчитанная сумма ${context.sum} отличается от ИТОГО ${context.docSum}!`);
         },
         write: function (line) {
 
@@ -138,9 +139,6 @@ app.forms = [
                 return null;
             }
 
-            var localSum = parseFloat(line[5]) || 0;
-            log(line[2] + ' ' + line[3] + ' - ' + localSum);
-            
             context.sum += parseFloat(line[5]) || 0;
 
             return {

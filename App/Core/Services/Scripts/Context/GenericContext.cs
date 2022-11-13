@@ -24,8 +24,11 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
             engine.SetValue("nospace", (Func<string, string, string>)FuncReplaceSpace);
             engine.SetValue("afterRegEx", (Func<string, Regex, object, string>)FuncAfterRegEx);
             engine.SetValue("error", (Action<string>)FuncThrowException);
+            engine.SetValue("test", (Func<object,object>)Test);
             AddLogger();
         }
+
+        private object Test(object input) => null;
 
         private readonly Dictionary<string, Regex> cachedRegex = new Dictionary<string, Regex>();
 
@@ -104,7 +107,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
         /// </summary>
         protected void FuncThrowException(String text)
         {
-            throw new JSException("Исключение вызванное из JavaScript: " + text);
+            throw new JSException(text);
         }
     }
 }

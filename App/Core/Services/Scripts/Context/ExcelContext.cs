@@ -68,7 +68,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
                     }
                     logger.Trace(match.ToString());
                     matches.Add(match);
-                    if (config.Data.System.FastSearch && !match.Matches) throw new StopFunctionException();
+                    if (config.Data.Config.System.FastSearch && !match.Matches) throw new StopFunctionException();
                 };
                 engine.SetValue("cell", cellValueGetter);
                 engine.SetValue("assert", ContextAssert);
@@ -87,7 +87,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
                 {
                     logger.Info($"Форма \"{form.Name}\" подходит для документа \"{file.FileName}\"!");
                     if (result.Result == null) result.Result = form;
-                    if (config.Data.System.FastSearch) return result;
+                    if (config.Data.Config.System.FastSearch) return result;
                 }
             }
             return result;

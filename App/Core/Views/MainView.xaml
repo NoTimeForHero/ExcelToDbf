@@ -90,6 +90,12 @@
             </Button>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Style="{StaticResource btnThemed}" x:Name="BtnRefresh" Command="{Binding CommandSettings}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="../../Resources/if_run_3251.png" Height="32" Width="32" />
+                        <TextBlock VerticalAlignment="Center" Margin="10,0,0,0">Настройки</TextBlock>
+                    </StackPanel>
+                </Button>
                 <Button Style="{StaticResource btnThemed}" x:Name="BtnAbout">
                     <StackPanel Orientation="Horizontal">
                         <Image Source="../../Resources/if_userconfig_7388.png" Height="32" Width="32" />

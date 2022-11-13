@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using ExcelToDbf.Core.Models;
 using ExcelToDbf.Core.Services;
+using ExcelToDbf.Core.Services.Scripts;
+using ExcelToDbf.Core.Services.Scripts.Context;
 using ExcelToDbf.Core.ViewModels;
 using ExcelToDbf.Core.Views;
 using Newtonsoft.Json;
@@ -31,35 +33,6 @@ namespace ExcelToDbf.Core
             SelectFiles,
             DisplayLogs,
             Converting
-        }
-
-        private void UpdateUI(UIState? newState)
-        {
-            if (newState.HasValue) currentState = newState.Value;
-            switch (currentState)
-            {
-                case UIState.Converting:
-                    model.ActionButton.Visible = false;
-                    model.CloseConfirmation = true;
-                    model.ChildVM = container.Resolve<ProgressVM>();
-                    break;
-                case UIState.SelectFiles:
-                    model.ActionButton.Visible = true;
-                    model.CloseConfirmation = false;
-                    model.ChildVM = container.Resolve<FileSelectorVM>();
-                    model.ActionButton.Title = "Конвертировать";
-                    model.ActionButton.Image = MainViewModel.RActionButton.ImageType.Settings;
-                    break;
-                case UIState.DisplayLogs:
-                    model.ActionButton.Visible = true;
-                    model.CloseConfirmation = false;
-                    model.ChildVM = container.Resolve<ConvertResultVM>();
-                    model.ActionButton.Title = "Выбор файлов";
-                    model.ActionButton.Image = MainViewModel.RActionButton.ImageType.Folder;
-                    break;
-                default:
-                    throw new NotImplementedException(currentState.ToString());
-            }
         }
 
         public RuntimeGUI(IUnityContainer container, ILogger logger)
@@ -89,6 +62,11 @@ namespace ExcelToDbf.Core
                 logger.Warn("Не удалось загрузить LastLaunch.json!");
                 logger.Warn(ex);
             }
+
+            model.CommandSettings = ReactiveCommand.Create(() =>
+            {
+                container.Resolve<ScriptEngine>().Resolve<ConfigContext>().ReloadConfig();
+            });
 
             model.ActionButton.Command = ReactiveCommand.CreateFromTask(async () =>
             {
@@ -125,6 +103,36 @@ namespace ExcelToDbf.Core
             container.Resolve<ConvertResultVM>().Results = results;
 
             UpdateUI(UIState.DisplayLogs);
+        }
+
+
+        private void UpdateUI(UIState? newState)
+        {
+            if (newState.HasValue) currentState = newState.Value;
+            switch (currentState)
+            {
+                case UIState.Converting:
+                    model.ActionButton.Visible = false;
+                    model.CloseConfirmation = true;
+                    model.ChildVM = container.Resolve<ProgressVM>();
+                    break;
+                case UIState.SelectFiles:
+                    model.ActionButton.Visible = true;
+                    model.CloseConfirmation = false;
+                    model.ChildVM = container.Resolve<FileSelectorVM>();
+                    model.ActionButton.Title = "Конвертировать";
+                    model.ActionButton.Image = MainViewModel.RActionButton.ImageType.Settings;
+                    break;
+                case UIState.DisplayLogs:
+                    model.ActionButton.Visible = true;
+                    model.CloseConfirmation = false;
+                    model.ChildVM = container.Resolve<ConvertResultVM>();
+                    model.ActionButton.Title = "Выбор файлов";
+                    model.ActionButton.Image = MainViewModel.RActionButton.ImageType.Folder;
+                    break;
+                default:
+                    throw new NotImplementedException(currentState.ToString());
+            }
         }
     }
 }
