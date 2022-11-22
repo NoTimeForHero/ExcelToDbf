@@ -31,10 +31,12 @@ namespace ExcelToDbf.Core
             container.RegisterSingleton<FolderService>();
             container.RegisterSingleton<ConvertService>();
             container.RegisterSingleton<ExcelService>();
+            container.RegisterSingleton<PreloadService>();
             container.RegisterSingletonMVVM<MainView, MainViewModel>();
             container.RegisterSingletonMVVM<FileSelectorView, FileSelectorVM>();
             container.RegisterSingletonMVVM<ConvertResultView, ConvertResultVM>();
             container.RegisterSingletonMVVM<ProgressView, ProgressVM>();
+            container.RegisterSingletonMVVM<LoadingView, LoadingVM>();
             container.Resolve<ScriptEngine>()
                 .Register<GenericContext>()
                 .Register<ConfigContext>()
@@ -52,7 +54,7 @@ namespace ExcelToDbf.Core
             container.Resolve<FolderService>().SelectWhere(x => x.FileName == "Example2.xlsx", true);
         }
 
-        public void Run(string[] args)
+        public async Task Run(string[] args)
         {
             try
             {
@@ -62,8 +64,11 @@ namespace ExcelToDbf.Core
                 logger.Info("Приложение было запущено");
 
                 Debug();
-                new RuntimeGUI(container, logger).Run();
+                await preload.RunGUI();
+                var gui = new RuntimeGUI(container, logger);
+                gui.Run();
                 container.Dispose();
+                Application.Current.Shutdown();
             }
             catch (Exception ex)
             {

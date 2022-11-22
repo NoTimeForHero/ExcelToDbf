@@ -16,7 +16,7 @@ namespace ExcelToDbf.Utils.Extensions
             where TView : FrameworkElement
             where TViewModel : ReactiveObject
         {
-            container.RegisterSingleton<TView>();
+            container.RegisterType<TView>();
             container.RegisterSingleton<TViewModel>();
             return container;
         }

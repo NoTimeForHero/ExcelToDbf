@@ -149,6 +149,7 @@
     <Compile Include="Core\Services\DBFService.cs" />
     <Compile Include="Core\Services\ExcelService.cs" />
     <Compile Include="Core\Services\FolderService.cs" />
+    <Compile Include="Core\Services\PreloadService.cs" />
     <Compile Include="Core\Services\Scripts\Context\AbstractContext.cs" />
     <Compile Include="Core\Models\DocForm.cs" />
     <Compile Include="Core\Services\Scripts\Context\ExcelContext.cs" />
@@ -157,9 +158,13 @@
     <Compile Include="Core\Services\Scripts\Data\StopFunctionException.cs" />
     <Compile Include="Core\Services\Scripts\Data\JSException.cs" />
     <Compile Include="Core\ViewModels\ConvertResultVM.cs" />
+    <Compile Include="Core\ViewModels\LoadingVM.cs" />
     <Compile Include="Core\ViewModels\ProgressVM.cs" />
     <Compile Include="Core\Views\ConvertResultView.xaml.cs">
       <DependentUpon>ConvertResultView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Core\Views\LoadingView.xaml.cs">
+      <DependentUpon>LoadingView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Core\Views\ProgressView.xaml.cs">
       <DependentUpon>ProgressView.xaml</DependentUpon>
@@ -179,6 +184,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Core\Views\FileSelectorView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Core\Views\LoadingView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
