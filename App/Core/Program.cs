@@ -32,6 +32,7 @@ namespace ExcelToDbf.Core
             container.RegisterSingleton<ConvertService>();
             container.RegisterSingleton<ExcelService>();
             container.RegisterSingleton<PreloadService>();
+            container.RegisterSingleton<IWebService, WebService>();
             container.RegisterSingletonMVVM<MainView, MainViewModel>();
             container.RegisterSingletonMVVM<FileSelectorView, FileSelectorVM>();
             container.RegisterSingletonMVVM<ConvertResultView, ConvertResultVM>();
@@ -64,7 +65,7 @@ namespace ExcelToDbf.Core
                 logger.Info("Приложение было запущено");
 
                 Debug();
-                await preload.RunGUI();
+                await container.Resolve<PreloadService>().RunGUI();
                 var gui = new RuntimeGUI(container, logger);
                 gui.Run();
                 container.Dispose();

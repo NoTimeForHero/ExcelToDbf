@@ -1,0 +1,24 @@
+{
+  "title": "Тестовый репозиторий",
+  "description": "Пример репозитория с разными формами, допустим находится на http://example.org/repository/index.json",
+  "root": "http://example.org/repository/",
+  "tags": [
+    {
+      "title": "Фирма TEST (все URL одинаковые)",
+      "url": "TEST",
+      "versions": {
+        "full": "http://example.org/repository/TEST/full.js",
+        "relative_root": "/repository/TEST/root.js",
+        "relative_current": "current.js"
+      }
+    },
+    {
+      "title": "Фирма FIRMAME",
+      "url": "firmname",
+      "versions": {
+        "latest": "build_14.js",
+        "14": "build_14.js" 
+      } 
+    }
+  ]
+}

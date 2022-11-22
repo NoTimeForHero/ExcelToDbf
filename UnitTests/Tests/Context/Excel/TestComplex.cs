@@ -51,7 +51,7 @@ namespace UnitTests.Tests.Context.Excel.Excel
             var forms = new[] { form1, form2, form3, form4 };
 
             var config = new ToolsConfig(forms);
-            config.Data.System.FastSearch = fastSearch;
+            config.RawData.System.FastSearch = fastSearch;
             // config.Data.System.FastSearch = fastSearch;
             var context = new ExcelContext(logger, config, engine).Connect(worksheet.getCellValue);
             var res = context.SearchForm(testModel);

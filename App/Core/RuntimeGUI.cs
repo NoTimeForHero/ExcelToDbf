@@ -12,6 +12,7 @@ using ExcelToDbf.Core.Services.Scripts;
 using ExcelToDbf.Core.Services.Scripts.Context;
 using ExcelToDbf.Core.ViewModels;
 using ExcelToDbf.Core.Views;
+using ExcelToDbf.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using NLog;
@@ -50,9 +51,8 @@ namespace ExcelToDbf.Core
 
             try
             {
-                if (File.Exists(Constants.LastLaunchFile))
+                if (FileStorage.Load<List<ConvertService.Result>>(Constants.LastLaunchFile, out var results))
                 {
-                    var results = JsonConvert.DeserializeObject<List<ConvertService.Result>>(File.ReadAllText(Constants.LastLaunchFile));
                     container.Resolve<ConvertResultVM>().Results = results;
                     UpdateUI(UIState.DisplayLogs);
                 }
@@ -99,7 +99,7 @@ namespace ExcelToDbf.Core
             UpdateUI(UIState.Converting);
 
             var results = await converter.Run(files);
-            File.WriteAllText(Constants.LastLaunchFile, JsonConvert.SerializeObject(results, Formatting.Indented));
+            FileStorage.Save(Constants.LastLaunchFile, results);
             container.Resolve<ConvertResultVM>().Results = results;
 
             UpdateUI(UIState.DisplayLogs);

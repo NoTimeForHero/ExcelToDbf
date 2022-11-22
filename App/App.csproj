@@ -149,6 +149,9 @@
     <Compile Include="Core\Services\DBFService.cs" />
     <Compile Include="Core\Services\ExcelService.cs" />
     <Compile Include="Core\Services\FolderService.cs" />
+    <Compile Include="Core\Services\Preload\Data.cs" />
+    <Compile Include="Utils\Loader.cs" />
+    <Compile Include="Utils\URLBuilder.cs" />
     <Compile Include="Core\Services\PreloadService.cs" />
     <Compile Include="Core\Services\Scripts\Context\AbstractContext.cs" />
     <Compile Include="Core\Models\DocForm.cs" />
@@ -157,6 +160,7 @@
     <Compile Include="Core\Services\Scripts\Context\GenericContext.cs" />
     <Compile Include="Core\Services\Scripts\Data\StopFunctionException.cs" />
     <Compile Include="Core\Services\Scripts\Data\JSException.cs" />
+    <Compile Include="Core\Services\WebService.cs" />
     <Compile Include="Core\ViewModels\ConvertResultVM.cs" />
     <Compile Include="Core\ViewModels\LoadingVM.cs" />
     <Compile Include="Core\ViewModels\ProgressVM.cs" />
@@ -263,6 +267,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="ExampleServerRepository.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
