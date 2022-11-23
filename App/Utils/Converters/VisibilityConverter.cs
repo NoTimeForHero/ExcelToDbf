@@ -13,8 +13,18 @@ namespace ExcelToDbf.Utils.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is string strValue) return strValue.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
-            return value != null ? Visibility.Visible : Visibility.Collapsed;
+            Visibility onTrue = Visibility.Visible;
+            Visibility onFalse = Visibility.Collapsed;
+
+            if (parameter is bool boolParam && boolParam)
+            {
+                onTrue = Visibility.Collapsed;
+                onFalse = Visibility.Visible;
+            }
+
+            if (value is string strValue) return strValue.Length > 0 ? onTrue : onFalse;
+            if (value is bool boolValue) return boolValue ? onTrue : onFalse;
+            return value != null ? onTrue : onFalse;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

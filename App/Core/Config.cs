@@ -41,15 +41,11 @@ namespace ExcelToDbf.Core
 
         private readonly IUnityContainer container;
 
-        public ConfigProvider(IUnityContainer container)
-        {
-            this.container = container;
-        }
+        public Action ReloadConfig { get; }
 
-        // TODO: Переписать это извращение
-        public void ReloadConfig()
+        public ConfigProvider(Action configReloader)
         {
-            container.Resolve<ScriptEngine>().Resolve<ConfigContext>().ReloadConfig();
+            ReloadConfig = configReloader;
         }
     }
 }

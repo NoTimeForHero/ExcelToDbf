@@ -4,15 +4,23 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:ExcelToDbf.Core.ViewModels"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"
         d:DataContext="{d:DesignInstance Type=vm:EditPreloadVM, IsDesignTimeCreatable=True}"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:converters="clr-namespace:ExcelToDbf.Utils.Converters"
         mc:Ignorable="d"
-        Title="Редактирование настроек" Height="450" Width="800">
+        Title="Редактирование настроек" Height="420" Width="600">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="ThemeDictionary.xaml"/>
                 <ResourceDictionary>
-                    <BooleanToVisibilityConverter x:Key="convBoolVisible" />
+                    <Style TargetType="Button">
+                        <Setter Property="Margin" Value="10,5" />
+                        <Setter Property="Padding" Value="10,5" />
+                    </Style>
+                    <converters:VisibilityConverter x:Key="convBoolVisible" />
+                    <sys:Boolean x:Key="TrueValue">True</sys:Boolean>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -20,29 +28,81 @@
     <Window.Background>
         <StaticResource ResourceKey="bgMain"/>
     </Window.Background>
-    <DockPanel Margin="10">
-        <StackPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
-            <Button Padding="30,5" Margin="0,5">Обновить</Button>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel HorizontalAlignment="Center">
+            <Label Style="{StaticResource LabelDanger}" Content="{Binding Error}" Visibility="{Binding Error, Converter={StaticResource convBoolVisible}}" />
             <CheckBox Margin="0,5" IsChecked="{Binding Config.Enabled}">Загружать конфиг из интернета</CheckBox>
 
-            <TabControl  Width="400" IsEnabled="{Binding Config.Enabled}">
+            <TabControl Width="500" IsEnabled="{Binding Config.Enabled}" SelectedIndex="{Binding Config.UseForceURL}">
                 <TabItem Header="Репозиторий" Padding="10,5">
-                    <UniformGrid Columns="2" Rows="3">
-                        <Label>Репозиторий:</Label>
-                        <TextBox Text="{Binding Config.Repository}" />
-                    </UniformGrid>
+                    <StackPanel Margin="10,5">
+                        <Grid Margin="0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition  Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Margin="0,0,10,0">Репозиторий:</Label>
+                            <TextBox Grid.Column="1" Text="{Binding Config.Repository, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </Grid>
+                        <Separator Margin="0,5"  />
+                        <ProgressBar Height="20" Margin="10,5" IsIndeterminate="True" Visibility="{Binding Path=IsLoading, Converter={StaticResource convBoolVisible}}" />
+                        <Button HorizontalAlignment="Center" Visibility="{Binding Path=RepositoryDirty, Converter={StaticResource convBoolVisible}}" Command="{Binding LoadCommand}">Загрузить</Button>
+                        <StackPanel Visibility="{Binding Path=RepositoryDirty, Converter={StaticResource convBoolVisible}, ConverterParameter={StaticResource TrueValue}}">
+                            <Label FontWeight="Black" Content="{Binding VRepository.Title}" />
+                            <TextBlock Text="{Binding VRepository.Description}" TextWrapping="Wrap" Margin="5,5" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="1*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <Label Grid.Column="0" Grid.Row="0" Margin="20,5">Метка:</Label>
+                                <ComboBox Grid.Column="1" Grid.Row="0" Margin="10,5" ItemsSource="{Binding VRepository.Tags}" SelectedValue="{Binding SelectedTag}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Label Content="{Binding Title}" Margin="0,-5" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <Label Grid.Column="0" Grid.Row="1" Margin="20,5">Версия:</Label>
+                                <!--  ItemsSource="{Binding AvailableVersions}" -->
+                                <ComboBox Grid.Column="1" Grid.Row="1" Margin="10,5" ItemsSource="{Binding AvailableVersions}" SelectedValue="{Binding SelectedVersion}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Label Content="{Binding Key}" Margin="0,-5" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </Grid>
+                            <Button Padding="30,5" Margin="0,5" HorizontalAlignment="Center" Command="{Binding ReloadCommand}">Перезагрузить конфиг</Button>
+                        </StackPanel>
+                    </StackPanel>
                 </TabItem>
                 <TabItem Header="Простой режим" Padding="10,5">
-                    <UniformGrid Columns="2">
-                        <Label>Полный URL:</Label>
-                        <TextBox Text="{Binding Config.ForceURL}" />
-                    </UniformGrid>
+                    <StackPanel  Margin="20,50" >
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <Label Margin="5,0">Полный URL:</Label>
+                            <TextBox Text="{Binding Config.ForceURL}" Grid.Column="1" />
+                        </Grid>
+                        <Button Padding="30,5" Margin="0,5" HorizontalAlignment="Center" Command="{Binding ReloadCommand}">Перезагрузить конфиг</Button>
+                    </StackPanel>
                 </TabItem>
             </TabControl>
 
         </StackPanel>
-        <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center">
-            <Button Padding="30,5">Закрыть</Button>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" DockPanel.Dock="Bottom" VerticalAlignment="Bottom" HorizontalAlignment="Center">
+            <Button Padding="30,5" x:Name="btnClose">Закрыть</Button>
         </StackPanel>
-    </DockPanel>
+    </Grid>
 </Window>

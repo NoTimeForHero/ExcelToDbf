@@ -18,4 +18,48 @@
     <Style x:Key="btnLarge" TargetType="Button" BasedOn="{StaticResource btnThemed}">
         <Setter Property="Padding" Value="30, 10" />
     </Style>
+    <Brush x:Key="AlertWarningBackground">#fff3cd</Brush>
+    <Brush x:Key="AlertWarningForeground">#856404</Brush>
+    <Brush x:Key="AlertDangerBackground">#f8d7da</Brush>
+    <Brush x:Key="AlertDangerForeground">#721c24</Brush>
+    <Style x:Key="LabelWarning" TargetType="Label">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Label">
+                    <Border BorderThickness="1"
+                            CornerRadius="8"
+                            BorderBrush="{StaticResource AlertWarningForeground}"
+                            Background="{StaticResource AlertWarningBackground}"
+                            Padding="12,4"
+                            Margin="5,5,5,5">
+                        <DockPanel>
+                            <Image Height="16" Width="16" Source="../../Resources/if_error_16263.png" Margin="0,0,10,0" />
+                            <Label Foreground="{StaticResource AlertWarningForeground}"
+                                   Content="{TemplateBinding Content}" />
+                        </DockPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="LabelDanger" TargetType="Label">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Label">
+                    <Border BorderThickness="1"
+                            CornerRadius="8"
+                            BorderBrush="{StaticResource AlertDangerForeground}"
+                            Background="{StaticResource AlertDangerBackground}"
+                            Padding="12,4"
+                            Margin="5,5,5,5">
+                        <DockPanel>
+                            <Image Height="16" Width="16" Source="../../Resources/if_error_14415.png" Margin="0,0,10,0" />
+                            <Label Foreground="{StaticResource AlertDangerForeground}"
+                                   Content="{TemplateBinding Content}" />
+                        </DockPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

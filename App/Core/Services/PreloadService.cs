@@ -35,11 +35,6 @@ namespace ExcelToDbf.Core.Services
             provider = container.Resolve<ConfigProvider>();
             web = container.Resolve<IWebService>();
             FileStorage.Load(Constants.PreloadFile, out settings, new PConfig());
-            SaveChanges();
-        }
-
-        public void SaveChanges()
-        {
             FileStorage.Save(Constants.PreloadFile, settings);
         }
 
@@ -52,11 +47,11 @@ namespace ExcelToDbf.Core.Services
             var view = container.Resolve<LoadingView>();
             view.Closed += (o, ev) => tsCancel.Cancel();
             view.Show();
-            await Load(tsCancel.Token);
+            await Run(tsCancel.Token);
             view.Close();
         }
 
-        private async Task Load(CancellationToken token)
+        public async Task Run(CancellationToken? token = null)
         {
             try
             {
@@ -65,6 +60,7 @@ namespace ExcelToDbf.Core.Services
                 var file = await web.GetFile(url, token);
                 File.WriteAllText(Constants.SettingsFile, file);
                 provider.ReloadConfig();
+                FileStorage.Save(Constants.PreloadFile, settings);
                 // await Task.Delay(1000, token);
             }
             catch (TaskCanceledException)
@@ -78,10 +74,12 @@ namespace ExcelToDbf.Core.Services
             }
         }
 
-        private async Task<string> GetUrl(CancellationToken token)
+        public Task<Repository> GetRepository(string url, CancellationToken? token = null) => web.Get<Repository>(url,token);
+
+        private async Task<string> GetUrl(CancellationToken? token = null)
         {
             if (settings.UseForceURL && !string.IsNullOrEmpty(settings.ForceURL)) return settings.ForceURL;
-            var repo = await web.Get<Repository>(settings.Repository, token);
+            var repo = await GetRepository(settings.Repository, token);
 
             var tag = repo.Tags.FirstOrDefault(x => x.Title == settings.Tag);
             if (tag == null) throw new InvalidOperationException($"Не найден тэг \"{settings.Tag}\" в репозитории!");

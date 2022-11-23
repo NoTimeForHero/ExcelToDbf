@@ -51,7 +51,7 @@ namespace UnitTests.Tests.Context.Excel
         public DocForm[] Forms { get; }
         public string GetOutputFilename(FileModel file) => throw new NotImplementedException();
 
-        public ConfigProvider Data { get; } = new ConfigProvider();
+        public ConfigProvider Data { get; } = new ConfigProvider(null);
 
         public Config RawData => Data.Config;
 

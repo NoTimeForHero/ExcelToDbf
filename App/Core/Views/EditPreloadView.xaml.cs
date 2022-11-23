@@ -24,6 +24,7 @@ namespace ExcelToDbf.Core.Views
         {
             DataContext = context;
             InitializeComponent();
+            btnClose.Click += (o, ev) => Close();
         }
     }
 }
