@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ExcelToDbf.Core.Services.Scripts;
+using ExcelToDbf.Core.Services.Scripts.Context;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using Unity;
 
 namespace ExcelToDbf.Core
 {
@@ -35,5 +38,18 @@ namespace ExcelToDbf.Core
     {
         [Reactive]
         public Config Config { get; set; }
+
+        private readonly IUnityContainer container;
+
+        public ConfigProvider(IUnityContainer container)
+        {
+            this.container = container;
+        }
+
+        // TODO: Переписать это извращение
+        public void ReloadConfig()
+        {
+            container.Resolve<ScriptEngine>().Resolve<ConfigContext>().ReloadConfig();
+        }
     }
 }

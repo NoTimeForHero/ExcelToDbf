@@ -65,7 +65,8 @@ namespace ExcelToDbf.Core
 
             model.CommandSettings = ReactiveCommand.Create(() =>
             {
-                container.Resolve<ScriptEngine>().Resolve<ConfigContext>().ReloadConfig();
+                container.Resolve<EditPreloadView>().ShowDialog();
+                // container.Resolve<ScriptEngine>().Resolve<ConfigContext>().ReloadConfig();
             });
 
             model.ActionButton.Command = ReactiveCommand.CreateFromTask(async () =>

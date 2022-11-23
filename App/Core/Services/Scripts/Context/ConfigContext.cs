@@ -27,7 +27,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
 
     public class ConfigContext : AbstractContext, IConfigContext
     {
-        public ConfigProvider Data { get; } = new ConfigProvider();
+        public ConfigProvider Data { get; } = new ConfigProvider(null);
         public DocForm[] Forms { get; private set; }
         private readonly ILogger logger;
         private readonly JintSerializer parser;

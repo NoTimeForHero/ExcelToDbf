@@ -13,11 +13,11 @@ namespace ExcelToDbf.Utils
     {
         // public static ILogger logger = LogManager.GetCurrentClassLogger();
 
-        public static bool Load<T>(string path, out T target)
+        public static bool Load<T>(string path, out T target, T defVal = default)
         {
             if (!File.Exists(path))
             {
-                target = default;
+                target = defVal;
                 return false;
             }
             var json = File.ReadAllText(path);

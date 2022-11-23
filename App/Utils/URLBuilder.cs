@@ -40,7 +40,7 @@ namespace ExcelToDbf.Utils
             path = path ?? "/";
             var fullPath = root.TrimEnd('/') + '/' + path.TrimStart('/');
             if (segments.Count < 1) return fullPath;
-            fullPath += "/" + string.Join("/", segments.Select(x => x.TrimEnd('/')));
+            fullPath = fullPath.TrimEnd('/') + "/" + string.Join("/", segments.Select(x => x.TrimEnd('/')));
             return fullPath;
         }
 

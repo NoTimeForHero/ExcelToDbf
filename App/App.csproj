@@ -150,6 +150,10 @@
     <Compile Include="Core\Services\ExcelService.cs" />
     <Compile Include="Core\Services\FolderService.cs" />
     <Compile Include="Core\Services\Preload\Data.cs" />
+    <Compile Include="Core\ViewModels\EditPreloadVM.cs" />
+    <Compile Include="Core\Views\EditPreloadView.xaml.cs">
+      <DependentUpon>EditPreloadView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Utils\Loader.cs" />
     <Compile Include="Utils\URLBuilder.cs" />
     <Compile Include="Core\Services\PreloadService.cs" />
@@ -184,6 +188,10 @@
     <Compile Include="Utils\Serializers\BasicSerializers.cs" />
     <Compile Include="Utils\UniversalFolderSelector.cs" />
     <Page Include="Core\Views\ConvertResultView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Core\Views\EditPreloadView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

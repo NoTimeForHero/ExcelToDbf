@@ -3,16 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace ExcelToDbf.Core.Services.Preload
 {
-    public class Config
+    [JsonObject(MemberSerialization.OptOut)]
+    public class Config : ReactiveObject
     {
+        [Reactive]
         public bool Enabled { get; set; }
-        public string Repository { get; set; }
-        public string Tag { get; set; }
-        public string Version { get; set; }
+
+        [Reactive]
+        public bool UseForceURL { get; set; }
+
+        [Reactive]
         public string ForceURL { get; set; }
+
+        [Reactive]
+        public string Repository { get; set; }
+        [Reactive]
+        public string Tag { get; set; }
+        [Reactive]
+        public string Version { get; set; }
     }
 
     public class Repository

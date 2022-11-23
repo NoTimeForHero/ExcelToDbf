@@ -38,6 +38,7 @@ namespace ExcelToDbf.Core
             container.RegisterSingletonMVVM<ConvertResultView, ConvertResultVM>();
             container.RegisterSingletonMVVM<ProgressView, ProgressVM>();
             container.RegisterSingletonMVVM<LoadingView, LoadingVM>();
+            container.RegisterSingletonMVVM<EditPreloadView, EditPreloadVM>();
             container.Resolve<ScriptEngine>()
                 .Register<GenericContext>()
                 .Register<ConfigContext>()
