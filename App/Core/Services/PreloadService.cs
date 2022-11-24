@@ -51,8 +51,9 @@ namespace ExcelToDbf.Core.Services
             view.Close();
         }
 
-        public async Task Run(CancellationToken? token = null)
+        public async Task<Exception> Run(CancellationToken? token = null)
         {
+            if (!settings.Enabled) return null;
             try
             {
                 var url = await GetUrl(token);
@@ -62,15 +63,18 @@ namespace ExcelToDbf.Core.Services
                 provider.ReloadConfig();
                 FileStorage.Save(Constants.PreloadFile, settings);
                 // await Task.Delay(1000, token);
+                return null;
             }
             catch (TaskCanceledException)
             {
                 logger.Warn("Загрузка конфига была отменена пользователем!");
+                return null;
             }
             catch (Exception ex)
             {
                 logger.Warn("Не удалось загрузить конфигурацию!");
                 logger.Warn(ex);
+                return ex;
             }
         }
 

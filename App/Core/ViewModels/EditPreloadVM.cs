@@ -108,18 +108,27 @@ namespace ExcelToDbf.Core.ViewModels
             }
         }
 
+        private async Task Reload()
+        {
+            Error = "";
+            IsLoading = true;
+            var ex = await srvPreload.Run();
+            Error = ex?.Message;
+            IsLoading = false;
+        }
+
         private async Task Initialize()
         {
             Config = srvPreload.Settings;
             LoadRepositoryCommand = ReactiveCommand.CreateFromTask(FetchRepository);
-            ReloadCommand = ReactiveCommand.CreateFromTask(() => srvPreload.Run());
+            ReloadCommand = ReactiveCommand.CreateFromTask(Reload);
 
             var canLoadVersion = this.WhenAnyValue(
                 x => x.SelectedTag,
                 x => x.SelectedVersion,
                 (tag, version) => tag != null && version != null
             );
-            ReloadWithVersionCommand = ReactiveCommand.CreateFromTask(() => srvPreload.Run(), canExecute: canLoadVersion);
+            ReloadWithVersionCommand = ReactiveCommand.CreateFromTask(Reload, canExecute: canLoadVersion);
 
             this.WhenAnyValue(x => x.Config.Repository)
                 .Skip(1)
