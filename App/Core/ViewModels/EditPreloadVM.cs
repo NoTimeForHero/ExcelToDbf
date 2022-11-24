@@ -37,13 +37,14 @@ namespace ExcelToDbf.Core.ViewModels
         public Dictionary<string,string> AvailableVersions { get; set; }
 
         [Reactive]
-        public KeyValuePair<string,string> SelectedVersion { get; set; }
+        public KeyValuePair<string,string>? SelectedVersion { get; set; }
 
         [Reactive]
         public string Error { get; set; } = "";
 
+        public ReactiveCommand<Unit, Unit> ReloadWithVersionCommand { get; set; }
         public ReactiveCommand<Unit, Unit> ReloadCommand { get; set; }
-        public ReactiveCommand<Unit, Unit> LoadCommand { get; set; }
+        public ReactiveCommand<Unit, Unit> LoadRepositoryCommand { get; set; }
 
         public EditPreloadVM()
         {
@@ -85,14 +86,6 @@ namespace ExcelToDbf.Core.ViewModels
             };
             SelectedTag = VRepository.Tags[0];
             SelectedVersion = new KeyValuePair<string, string>("beta", "version_231122.js");
-            // LoadCommand = ReactiveCommand.CreateFromTask(async() =>
-            // {
-            //     Error = "";
-            //     IsLoading = true;
-            //     await Task.Delay(1500);
-            //     IsLoading = false;
-            //     Error = new Exception("Тестовая ошибка!").Message;
-            // });
         }
 
         private async Task FetchRepository()
@@ -118,12 +111,24 @@ namespace ExcelToDbf.Core.ViewModels
         private async Task Initialize()
         {
             Config = srvPreload.Settings;
-            LoadCommand = ReactiveCommand.CreateFromTask(FetchRepository);
+            LoadRepositoryCommand = ReactiveCommand.CreateFromTask(FetchRepository);
             ReloadCommand = ReactiveCommand.CreateFromTask(() => srvPreload.Run());
+
+            var canLoadVersion = this.WhenAnyValue(
+                x => x.SelectedTag,
+                x => x.SelectedVersion,
+                (tag, version) => tag != null && version != null
+            );
+            ReloadWithVersionCommand = ReactiveCommand.CreateFromTask(() => srvPreload.Run(), canExecute: canLoadVersion);
 
             this.WhenAnyValue(x => x.Config.Repository)
                 .Skip(1)
-                .Subscribe(x => RepositoryDirty = true);
+                .Subscribe(x =>
+                {
+                    SelectedTag = null;
+                    SelectedVersion = null;
+                    RepositoryDirty = true;
+                });
 
             this.WhenAnyValue(x => x.SelectedTag)
                 .Skip(1)
@@ -135,12 +140,14 @@ namespace ExcelToDbf.Core.ViewModels
 
             this.WhenAnyValue(x => x.SelectedVersion)
                 .Skip(1)
-                .Subscribe(pair => Config.Version = pair.Key);
+                .Subscribe(pair => Config.Version = pair?.Key);
 
+            RepositoryDirty = true;
             await FetchRepository();
-            SelectedTag = VRepository.Tags.FirstOrDefault(x => x.Title == Config.Tag);
-            SelectedVersion = AvailableVersions.ContainsKey(Config.Version)
-                ? new KeyValuePair<string,string>(Config.Version, AvailableVersions[Config.Version]) : new KeyValuePair<string, string>(null,null);
+            SelectedTag = VRepository?.Tags.FirstOrDefault(x => x.Title == Config.Tag);
+            SelectedVersion = AvailableVersions?.ContainsKey(Config.Version) ?? false
+                ? new KeyValuePair<string,string>(Config.Version, AvailableVersions[Config.Version])
+                : (KeyValuePair<string, string>?)null;
         }
 
         public EditPreloadVM(PreloadService srvPreload)

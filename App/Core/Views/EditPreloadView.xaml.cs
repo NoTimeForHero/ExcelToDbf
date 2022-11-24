@@ -25,6 +25,15 @@ namespace ExcelToDbf.Core.Views
             DataContext = context;
             InitializeComponent();
             btnClose.Click += (o, ev) => Close();
+
+            Closed += EditPreloadView_Closed;
+        }
+
+        private void EditPreloadView_Closed(object sender, EventArgs e)
+        {
+            var model = (EditPreloadVM)DataContext;
+            if (model == null) return;
+            model.ReloadCommand.Execute(new System.Reactive.Unit());
         }
     }
 }

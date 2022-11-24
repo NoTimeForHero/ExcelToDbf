@@ -33,11 +33,11 @@
             <RowDefinition Height="1*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <StackPanel HorizontalAlignment="Center">
+        <StackPanel VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <Label Style="{StaticResource LabelDanger}" Content="{Binding Error}" Visibility="{Binding Error, Converter={StaticResource convBoolVisible}}" />
             <CheckBox Margin="0,5" IsChecked="{Binding Config.Enabled}">Загружать конфиг из интернета</CheckBox>
 
-            <TabControl Width="500" IsEnabled="{Binding Config.Enabled}" SelectedIndex="{Binding Config.UseForceURL}">
+            <TabControl IsEnabled="{Binding Config.Enabled}" SelectedIndex="{Binding Config.UseForceURL}" >
                 <TabItem Header="Репозиторий" Padding="10,5">
                     <StackPanel Margin="10,5">
                         <Grid Margin="0,5">
@@ -50,7 +50,12 @@
                         </Grid>
                         <Separator Margin="0,5"  />
                         <ProgressBar Height="20" Margin="10,5" IsIndeterminate="True" Visibility="{Binding Path=IsLoading, Converter={StaticResource convBoolVisible}}" />
-                        <Button HorizontalAlignment="Center" Visibility="{Binding Path=RepositoryDirty, Converter={StaticResource convBoolVisible}}" Command="{Binding LoadCommand}">Загрузить</Button>
+                        <Button HorizontalAlignment="Center" 
+                                Padding="15,5"
+                                Visibility="{Binding Path=RepositoryDirty, Converter={StaticResource convBoolVisible}}" 
+                                Command="{Binding LoadRepositoryCommand}">
+                            Загрузить
+                        </Button>
                         <StackPanel Visibility="{Binding Path=RepositoryDirty, Converter={StaticResource convBoolVisible}, ConverterParameter={StaticResource TrueValue}}">
                             <Label FontWeight="Black" Content="{Binding VRepository.Title}" />
                             <TextBlock Text="{Binding VRepository.Description}" TextWrapping="Wrap" Margin="5,5" />
@@ -81,7 +86,7 @@
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
                             </Grid>
-                            <Button Padding="30,5" Margin="0,5" HorizontalAlignment="Center" Command="{Binding ReloadCommand}">Перезагрузить конфиг</Button>
+                            <Button Padding="30,5" Margin="0,5" HorizontalAlignment="Center" Command="{Binding ReloadWithVersionCommand}">Применить конфиг</Button>
                         </StackPanel>
                     </StackPanel>
                 </TabItem>
@@ -95,7 +100,7 @@
                             <Label Margin="5,0">Полный URL:</Label>
                             <TextBox Text="{Binding Config.ForceURL}" Grid.Column="1" />
                         </Grid>
-                        <Button Padding="30,5" Margin="0,5" HorizontalAlignment="Center" Command="{Binding ReloadCommand}">Перезагрузить конфиг</Button>
+                        <Button Padding="30,5" Margin="0,5" HorizontalAlignment="Center" Command="{Binding ReloadCommand}">Применить конфиг</Button>
                     </StackPanel>
                 </TabItem>
             </TabControl>
