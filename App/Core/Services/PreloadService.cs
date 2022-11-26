@@ -53,7 +53,11 @@ namespace ExcelToDbf.Core.Services
 
         public async Task<Exception> Run(CancellationToken? token = null)
         {
-            if (!settings.Enabled) return null;
+            if (!settings.Enabled)
+            {
+                FileStorage.Save(Constants.PreloadFile, settings);
+                return null;
+            }
             try
             {
                 var url = await GetUrl(token);

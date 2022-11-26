@@ -120,7 +120,7 @@ namespace ExcelToDbf.Core.Services
                             currentRow++;
                             Progress.SetProgress(currentRow, totalRows, $"Обработка массива строк");
                             var transformed = context.Transform(form, record);
-                            dbfFile.WriteRecord(transformed);
+                            dbfFile.WriteRecord(transformed, currentRow);
                         }
                     }
                 }

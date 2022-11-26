@@ -85,7 +85,7 @@ namespace ExcelToDbf.Core.Services
                 return this;
             }
 
-            public void WriteRecord(Dictionary<string, object> input)
+            public void WriteRecord(Dictionary<string, object> input, int rowIndex)
             {
                 if (input == null) return;
 
@@ -103,10 +103,12 @@ namespace ExcelToDbf.Core.Services
                             record[i] = rawValue?.ToString();
                             break;
                         case DbfColumn.DbfColumnType.Date:
-                            record[i] = DateHelper.ToDBF(rawValue?.ToString());
+                            record[i] = DbfHelper.ToDate(rawValue?.ToString());
                             break;
                         case DbfColumn.DbfColumnType.Number:
-                            record[i] = rawValue?.ToString().Replace(',', '.');
+                            var number = rawValue?.ToString().Replace(',', '.');
+                            if (!DbfHelper.IsNumber(number)) throw new InvalidOperationException($"На строке {rowIndex} колонка {column.Name} ({number}) не является числом!");
+                            record[i] = number;
                             break;
                         default:
                             throw new NotImplementedException($"Column {column.ColumnType} not supported yet!");

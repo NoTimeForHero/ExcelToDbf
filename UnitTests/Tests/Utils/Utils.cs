@@ -19,7 +19,7 @@ namespace UnitTests.Tests.Utils
         [DataRow("8888888888888888", null)]
         public void TestData(string input, string mustBe)
         {
-            var result = DateHelper.ToDBF(input);
+            var result = DbfHelper.ToDate(input);
             Assert.AreEqual(mustBe, result);
         }
 

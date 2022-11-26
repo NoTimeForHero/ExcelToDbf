@@ -7,11 +7,14 @@ using System.Threading.Tasks;
 
 namespace ExcelToDbf.Utils
 {
-    public class DateHelper
+    public class DbfHelper
     {
-        private static Regex regDate = new Regex(@"(\d{2,4})\.(\d{2})\.(\d{2,4})", RegexOptions.Compiled);
+        private static readonly Regex regDate = new Regex(@"(\d{2,4})\.(\d{2})\.(\d{2,4})", RegexOptions.Compiled);
+        private static readonly Regex regNumber = new Regex(@"^-?\d+(?:[\.,]\d+)?$", RegexOptions.Compiled);
 
-        public static string ToDBF(string input)
+        public static bool IsNumber(string input) => regNumber.IsMatch(input);
+
+        public static string ToDate(string input)
         {
             if (input == null) return null;
             var match = regDate.Match(input);
