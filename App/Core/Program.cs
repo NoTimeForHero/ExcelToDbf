@@ -50,7 +50,7 @@ namespace ExcelToDbf.Core
 
         private void Debug()
         {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\ExcelToDbf\Data");
+            var path = Path.Combine(Directory.GetCurrentDirectory(), @"TestData");
             container.Resolve<FileSelectorVM>().Path = path;
             container.Resolve<FolderService>().SelectAll(false);
             container.Resolve<FolderService>().SelectWhere(x => x.FileName == "Example4.xlsx", true);

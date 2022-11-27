@@ -110,10 +110,6 @@
       <Project>{f511d67a-46c5-4499-b547-789965aa6b68}</Project>
       <Name>App</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ExcelToDbf\Legacy.csproj">
-      <Project>{F664DF91-786D-421E-8A7E-882BCD455A4D}</Project>
-      <Name>ExcelToDbf</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
