@@ -55,8 +55,8 @@ namespace UnitTests.Tests.Context.Excel.Excel
             // config.Data.System.FastSearch = fastSearch;
             var context = new ExcelContext(logger, config, engine).Connect(worksheet.getCellValue);
             var res = context.SearchForm(testModel);
-            Assert.AreEqual(keysExpected, res.Report.Keys.Count);
-            Assert.AreEqual(formsExpected, res.Report[form1].Count);
+            Assert.AreEqual(formsExpected, res.Report.Keys.Count);
+            Assert.AreEqual(keysExpected, res.Report[form1].Count);
         }
 
 

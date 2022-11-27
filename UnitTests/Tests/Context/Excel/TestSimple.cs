@@ -27,6 +27,17 @@ namespace UnitTests.Tests.Context.Excel
             Assert.AreEqual(1, res.Report[form].Count(x => x.Matches));
         }
 
+        [DataTestMethod]
+        [DataRow("9999zz", @"/\d{4}[a-z]{2}/", true)]
+        [DataRow("zzzzz", @"/\d{4}[a-z]{2}/", false)]
+        [DataRow("04.04.2024", @"/\d{2}\.\d{2}\.\d{4}/", true)]
+        public void TestRegex(string text, string regex, bool matches)
+        {
+            var form = MakeForm("Test", $"assert('{text}', {regex});");
+            var res = Prepare(form).SearchForm(testModel);
+            Assert.AreSame(res.Result, matches ? form : null, "Форма должна присутствовать!");
+        }
+
         [TestMethod]
         public void TestSimpleNone()
         {

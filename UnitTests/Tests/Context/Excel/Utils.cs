@@ -57,6 +57,7 @@ namespace UnitTests.Tests.Context.Excel
 
         public ToolsConfig(DocForm[] Forms)
         {
+            Data.Config = new Config();
             this.Forms = Forms;
         }
     }

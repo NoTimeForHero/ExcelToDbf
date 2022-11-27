@@ -102,7 +102,6 @@
     <Compile Include="Tests\Context\Excel\TestWrite.cs" />
     <Compile Include="Tests\Context\Excel\Utils.cs" />
     <Compile Include="Tests\Context\Generic.cs" />
-    <Compile Include="Tests\HelloWorld.cs" />
     <Compile Include="Tests\Utils\URLBuilderTests.cs" />
     <Compile Include="Tests\Utils\Utils.cs" />
   </ItemGroup>
