@@ -24,7 +24,7 @@ namespace ExcelToDbf.Core.Services
         public Worksheet worksheet { get; private set; }
 
         public delegate Cell? HandlerCellGetter(int y, int x);
-        public delegate IEnumerable<object[,]> HandlerRangeIterator(int startY, int maxX);
+        public delegate Cell? HandlerRangeFinder(int startY, int endY, int startX, int endX, object expect);
 
         public int SheetRows => worksheet.UsedRange.Rows.Count;
 
@@ -86,6 +86,35 @@ namespace ExcelToDbf.Core.Services
                     EOF = true;
                 }
             }
+        }
+
+        public Cell? FindRange(int startY, int endY, int startX, int endX, object rawExpect)
+        {
+            if (worksheet == null) throw new InvalidOperationException("Отсутствует лист!");
+
+            if (!(rawExpect is string expect)) throw new ArgumentException("Аргумент FindRange должен быть строкой!");
+
+            var range_start = worksheet.Cells[startY, startX];
+            var range_end = worksheet.Cells[endY, endX];
+            object[,] range = worksheet.Range[range_start, range_end].Value;
+
+            var lenY = endY - startY;
+            var lenX = endX - startX;
+
+            for (int y = 1; y <= lenY + 1; y++)
+            {
+                for (int x = 1; x <= lenX + 1; x++)
+                {
+                    var got = range[y, x]?.ToString();
+                    if (expect == got)
+                    {
+                        var cell = new Cell(startY + y - 1, startX + x - 1, got);
+                        return cell;
+                    }
+                }
+            }
+
+            return null;
         }
 
         public Cell? GetCellValue(int y, int x)

@@ -58,7 +58,9 @@ app.forms = [
         rules: function () {
             // Функции (помимо базовых):
             // Cell|null cell(y: int, x: int) - возвращает null при ошибки или interface Cell { x: int, y: int, value: object }
-            // void assert(current: string|Cell, expected: string, checkRegex: boolean = false)
+            // bool assert(current: string|Cell, expected: string, checkRegex: boolean = false)
+            // Cell|null findRange(startY: int, startX: int, endY: int, endX: int) - поиск в указанном диапазоне для плавающего хедера
+
             // assert('Получилось', 'Ожидалось');
             assert(cell(2, 2), 'Форма 2.21А');
             assert(cell(7, 2), '№');
@@ -151,5 +153,58 @@ app.forms = [
                 NACHDATE: context.NACHDATE
             }
         }
-    }
+    },
+    {
+        name: 'Форма 2.21В (плавающий заголовок)',
+        settings: {
+            startY: -1,
+            endX: 7,
+        },
+        rules: function () {
+            // Принудительно пропускаем чтобы не искать по ренджу заголовок если файл и так не подходит
+            if (!assert(cell(2, 2), 'Форма 2.21В')) return;
+
+            const header = findRange(4, 100, 2, 2, '№');
+            if (!header) {
+                assert('№', 'Заголовок не найден!');
+                return;
+            }
+            const y = header.y;
+            context.startY = y + 1;
+
+            assert(cell(y, 2), '№');
+            assert(cell(y, 3), 'ФИО');
+            assert(cell(y, 4), 'Счёт');
+            assert(cell(y, 5), 'Сумма');
+            assert(cell(y, 6), 'Дата оплаты');
+        },
+        dbfFields: [
+            { name: 'ID', length: '8' },
+            { name: 'KP', length: '8' },
+            { name: 'FIO', length: '60' },
+            { name: 'SUMMA', type: 'number', length: '10,2' },
+            { name: 'DATEOPL', type: 'date' }
+        ],
+        write: function (line) {
+
+            if (match(line[2], '^Данные от')) return null;
+            if (!line[2]) return null;
+            if (line[2] === 'Итого по дому:') return null;
+
+            if (includes(line[2], 'ИТОГО')) return stop();
+
+            if (line[2] === '###') {
+                context.address = line[3];
+                return null;
+            }
+
+            return {
+                ID: line[2],
+                FIO: line[3],
+                KP: line[4],
+                SUMMA: line[5],
+                DATEOPL: line[6]
+            }
+        }
+    },
 ]

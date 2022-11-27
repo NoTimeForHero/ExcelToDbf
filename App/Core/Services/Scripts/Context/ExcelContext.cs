@@ -25,6 +25,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
         private readonly ILogger logger;
         private readonly IConfigContext config;
         private ExcelService.HandlerCellGetter cellValueGetter = (y, x) => throw new ArgumentNullException(nameof(cellValueGetter));
+        private ExcelService.HandlerRangeFinder rangeFinderGetter = (y1, y2, x1, x2, exp) => throw new ArgumentNullException(nameof(rangeFinderGetter));
         private readonly JintSerializer parser;
         private ObjectInstance currentContext;
 
@@ -35,12 +36,25 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
             parser = new JintSerializer(engine);
         }
 
-        public ExcelContext Connect(ExcelService.HandlerCellGetter getter)
+        public ExcelContext Connect(ExcelService.HandlerCellGetter getter, ExcelService.HandlerRangeFinder getter2)
         {
             cellValueGetter = getter;
+            rangeFinderGetter = getter2;
             currentContext = new ObjectInstance(engine);
             engine.SetValue("context", currentContext);
             return this;
+        }
+
+        public bool TryGetContextValue<T>(string keyName, out T result)
+        {
+            var value = currentContext.Get(keyName);
+            if (value is JsUndefined)
+            {
+                result = default;
+                return false;
+            }
+            result = parser.Deserialize<T>(value);
+            return true;
         }
 
         public SearchFormResult SearchForm(FileModel file)
@@ -54,8 +68,9 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
                 result.Report[form] = matches;
 
                 engine.SetValue("cell", cellValueGetter);
-                Action<object, object> ContextAssert = (got, expect) => Assert(matches, got, expect);
+                Func<object, object, bool> ContextAssert = (got, expect) => Assert(matches, got, expect);
                 engine.SetValue("assert", ContextAssert);
+                engine.SetValue("findRange", rangeFinderGetter);
 
                 try
                 {
@@ -77,7 +92,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
             return result;
         }
 
-        private void Assert(List<SearchMatch> matches, object got, object rawExpect)
+        private bool Assert(List<SearchMatch> matches, object got, object rawExpect)
         {
             string expect = rawExpect?.ToString();
             Predicate<string> comparer;
@@ -107,6 +122,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
             logger.Trace(match.ToString());
             matches.Add(match);
             if (config.Data.Config.System.FastSearch && !match.Matches) throw new StopFunctionException();
+            return match.Matches;
         }
 
         private void RunStop()

@@ -106,7 +106,7 @@ namespace ExcelToDbf.Core.Services
                             record[i] = DbfHelper.ToDate(rawValue?.ToString());
                             break;
                         case DbfColumn.DbfColumnType.Number:
-                            var number = rawValue?.ToString().Replace(',', '.');
+                            var number = rawValue?.ToString().Replace(',', '.') ?? "";
                             if (!DbfHelper.IsNumber(number)) throw new InvalidOperationException($"На строке {rowIndex} колонка {column.Name} ({number}) не является числом!");
                             record[i] = number;
                             break;

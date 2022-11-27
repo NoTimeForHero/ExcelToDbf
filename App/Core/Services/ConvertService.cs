@@ -91,7 +91,7 @@ namespace ExcelToDbf.Core.Services
             var excel = lazyExcel.Value;
             excel.OpenWorksheet(file.FullPath);
 
-            var context = engine.Resolve<ExcelContext>().Connect(excel.GetCellValue);
+            var context = engine.Resolve<ExcelContext>().Connect(excel.GetCellValue, excel.FindRange);
             var search = context.SearchForm(file);
             var form = search.Result;
 
@@ -109,11 +109,19 @@ namespace ExcelToDbf.Core.Services
 
                 var totalRows = excel.SheetRows;
                 Progress.DocumentTotal = totalRows;
-                int currentRow = form.Settings.StartY;
+                int startY = form.Settings.StartY;
+                if (context.TryGetContextValue<int>("startY", out var newStartY))
+                {
+                    logger.Debug($"Значение startY взято из JS контекста: {newStartY}");
+                    startY = newStartY;
+                }
+
+                if (startY < 1) throw new ArgumentException($"Недопустимое значение StartY: {startY}", nameof(startY));
+                int currentRow = startY;
                 context.CallHook(form, DocForm.HookType.Before);
                 try
                 {
-                    foreach (var range in excel.IterateRanges(form.Settings.StartY, form.Settings.EndX))
+                    foreach (var range in excel.IterateRanges(startY, form.Settings.EndX))
                     {
                         foreach (var record in range.AsRowArray())
                         {
