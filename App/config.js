@@ -93,7 +93,7 @@ app.forms = [
         }
     },
     {
-        name: 'Форма 2.21Б',
+        name: 'Форма 2.21Б (с регулярками)',
         settings: {
             startY: 8,
             endX: 7,
@@ -105,6 +105,7 @@ app.forms = [
             assert(cell(7, 4), 'Счёт');
             assert(cell(7, 5), 'Сумма');
             assert(cell(7, 6), 'Дата оплаты');
+            assert(cell(6, 2), /на \d{2}\.\d{2}\.\d{4}/);
         },
         dbfFields: [
             { name: 'ID', length: '8' },

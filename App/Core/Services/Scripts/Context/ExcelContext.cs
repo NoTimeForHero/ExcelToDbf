@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ExcelToDbf.Core.Models;
 using ExcelToDbf.Core.Services.Scripts.Data;
@@ -52,25 +53,8 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
                 var matches = new List<SearchMatch>();
                 result.Report[form] = matches;
 
-                Action<object, string> ContextAssert = (got, expect) =>
-                {
-                    SearchMatch match;
-                    switch (got)
-                    {
-                        case string simple:
-                            match = SearchMatch.Make(expect, simple, expect == simple);
-                            break;
-                        case Cell cell:
-                            match = SearchMatch.Make(expect, cell.Value, expect == cell.Value).With(cell.Y, cell.X);
-                            break;
-                        default:
-                            throw new InvalidOperationException($"Unknown assert value type: {got.GetType().FullName}");
-                    }
-                    logger.Trace(match.ToString());
-                    matches.Add(match);
-                    if (config.Data.Config.System.FastSearch && !match.Matches) throw new StopFunctionException();
-                };
                 engine.SetValue("cell", cellValueGetter);
+                Action<object, object> ContextAssert = (got, expect) => Assert(matches, got, expect);
                 engine.SetValue("assert", ContextAssert);
 
                 try
@@ -91,6 +75,38 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
                 }
             }
             return result;
+        }
+
+        private void Assert(List<SearchMatch> matches, object got, object rawExpect)
+        {
+            string expect = rawExpect?.ToString();
+            Predicate<string> comparer;
+            switch (rawExpect)
+            {
+                case string expString:
+                    comparer = x => expString == x;
+                    break;
+                case Regex expRegex:
+                    comparer = x => expRegex.IsMatch(x);
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unknown assert 'Expect' type: {rawExpect?.GetType().FullName}");
+            }
+            SearchMatch match;
+            switch (got)
+            {
+                case string simple:
+                    match = SearchMatch.Make(expect, simple, comparer(simple));
+                    break;
+                case Cell cell:
+                    match = SearchMatch.Make(expect, cell.Value, comparer(cell.Value)).With(cell.Y, cell.X);
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unknown assert 'Got' type: {got.GetType().FullName}");
+            }
+            logger.Trace(match.ToString());
+            matches.Add(match);
+            if (config.Data.Config.System.FastSearch && !match.Matches) throw new StopFunctionException();
         }
 
         private void RunStop()
