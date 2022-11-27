@@ -7,6 +7,7 @@ using ExcelToDbf.Core.Models;
 using ExcelToDbf.Core.Services;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using System.Reactive.Linq;
 
 namespace ExcelToDbf.Core.ViewModels
 {
@@ -44,10 +45,18 @@ namespace ExcelToDbf.Core.ViewModels
 
         public ConvertResultVM(ConfigProvider cvConfig)
         {
-            this.WhenAnyValue(x => x.Results).Subscribe((results) =>
+            var obsWarning = cvConfig.WhenAnyValue(x => x.Config)
+                .Select(x => x.System.ExtraWarning);
+
+            this.WhenAnyValue(x => x.Results)
+                .CombineLatest(
+                    obsWarning,
+                (results, warn) => (results, warn)
+            ).Subscribe(src =>
             {
+                var (results, warn) = src;
                 var isAllConverted = results?.All(x => x.Error == null && x.Status == ConvertService.Result.ResultType.Converted) ?? true;
-                Warning = isAllConverted ? null : cvConfig.Config.System.ExtraWarning;
+                Warning = isAllConverted ? null : warn;
             });
         }
     }

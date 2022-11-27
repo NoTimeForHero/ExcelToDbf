@@ -2,7 +2,7 @@
     system: {
         outputEncoding: 866, // Номер выходная кодировка в DBF (число или название), по умолчанию 866 (1251 для Windows-1251, 65001 для UTF-8)
         bufferSize: 200, // Сколько записей будет обработано за один OLE запрос к Excel        
-        extraWarning: 'Внимание! Не все файлы были сконвертированы!232',
+        extraWarning: 'Внимание! Не все файлы были сконвертированы!',
         noFormIsError: false, // Если true то вместо иконки Warning будет иконка Error
         fastSearch: false, // Если true, то проверка по списку правил будет прекращена после первого несоответствия, а по списку форм после первой найденной формы
     },
@@ -181,7 +181,7 @@ app.forms = [
         dbfFields: [
             { name: 'ID', length: '8' },
             { name: 'KP', length: '8' },
-            { name: 'FIO', length: '60' },
+            { name: 'PERSON', length: '140' },
             { name: 'SUMMA', type: 'number', length: '10,2' },
             { name: 'DATEOPL', type: 'date' }
         ],
@@ -198,9 +198,11 @@ app.forms = [
                 return null;
             }
 
+            const PERSON = line[3] + ", живущая по адресу: " + context.address;
+
             return {
                 ID: line[2],
-                FIO: line[3],
+                PERSON,
                 KP: line[4],
                 SUMMA: line[5],
                 DATEOPL: line[6]
