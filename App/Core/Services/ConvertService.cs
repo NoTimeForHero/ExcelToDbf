@@ -136,6 +136,7 @@ namespace ExcelToDbf.Core.Services
                 {
                     logger.Info($"Обработка файла была завершена JS условием на {currentRow} строке!");
                 }
+                result.RecordsWritten = dbfFile.RecordsWritten;
                 context.CallHook(form, DocForm.HookType.After);
                 result.Status = Result.ResultType.Converted;
             }
@@ -148,6 +149,7 @@ namespace ExcelToDbf.Core.Services
             public ResultType Status { get; set; }
             public SearchFormResult SearchResult { get; set; }
             public FileModel File { get; set; }
+            public long RecordsWritten { get; set; }
             public string OutputFilename { get; set; }
             public string Error { get; set; }
 

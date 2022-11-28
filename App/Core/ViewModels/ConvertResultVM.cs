@@ -27,6 +27,7 @@ namespace ExcelToDbf.Core.ViewModels
             {
                 File = new FileModel { FileName = "Example Worksheet.xlsx" },
                 OutputFilename = "Result.dbf",
+                RecordsWritten = 5342,
                 SearchResult = new SearchFormResult
                 {
                     Result = form,

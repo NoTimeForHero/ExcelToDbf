@@ -32,6 +32,7 @@ namespace ExcelToDbf.Core.Services
             private readonly ILogger logger;
             private readonly DocForm form;
             private readonly List<DbfColumn> columns = new List<DbfColumn>();
+            public int RecordsWritten { get; private set; }
 
             internal Work(DBFService owner, DocForm form, string outputFilename)
             {
@@ -116,6 +117,7 @@ namespace ExcelToDbf.Core.Services
                 }
 
                 db.Write(record, true);
+                RecordsWritten++;
             }
 
             public void Dispose()

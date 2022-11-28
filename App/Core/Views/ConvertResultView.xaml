@@ -10,25 +10,26 @@
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800" Margin="5,0">
     <UserControl.Resources>
-        <Style TargetType="TextBlock" x:Key="largeText">
-            <Setter Property="Margin" Value="5" />
-        </Style>
-        <Brush x:Key="bgBorder">#006600</Brush>
-        <Brush x:Key="AlertWarningBackground">#fff3cd</Brush>
-        <Brush x:Key="AlertWarningForeground">#856404</Brush>
-        <Brush x:Key="AlertDangerBackground">#f8d7da</Brush>
-        <Brush x:Key="AlertDangerForeground">#721c24</Brush>
-        <cv:PathConverter x:Key="cvPath" />
-        <cv:VisibilityConverter x:Key="cvVisibility" />
-        <Style x:Key="ExpanderExtra" TargetType="{x:Type Expander}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Expander}">
-                        <Border BorderBrush="{TemplateBinding BorderBrush}"
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="ThemeDictionary.xaml" />
+                <ResourceDictionary>
+                    <cv:VisibilityConverter x:Key="convBoolVisible" />
+                    <Style TargetType="TextBlock" x:Key="largeText">
+                        <Setter Property="Margin" Value="5" />
+                    </Style>
+                    <Brush x:Key="bgBorder">#006600</Brush>
+                    <cv:PathConverter x:Key="cvPath" />
+                    <cv:VisibilityConverter x:Key="cvVisibility" />
+                    <Style x:Key="ExpanderExtra" TargetType="{x:Type Expander}">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type Expander}">
+                                    <Border BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 Background="{TemplateBinding Background}" SnapsToDevicePixels="False" Margin="0,5">
-                            <DockPanel>
-                                <ToggleButton x:Name="HeaderSite"
+                                        <DockPanel>
+                                            <ToggleButton x:Name="HeaderSite"
                                               DockPanel.Dock="Top"
                                               ContentTemplate="{TemplateBinding HeaderTemplate}"
                                               ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
@@ -46,78 +47,69 @@
                                               BorderThickness="0,0,0,0"
                                               Padding="{TemplateBinding Padding}"
                                               VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
-                                    <Grid Margin="15,5">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="1*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <ContentControl Content="{TemplateBinding Header}" />
-                                        <Image Grid.Column="1" Height="16" Width="16">
-                                            <Image.Style>
-                                                <Style TargetType="Image">
-                                                    <Style.Triggers>
-                                                        <DataTrigger
+                                                <Grid Margin="15,5">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="1*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <ContentControl Content="{TemplateBinding Header}" />
+                                                    <Image Grid.Column="1" Height="16" Width="16">
+                                                        <Image.Style>
+                                                            <Style TargetType="Image">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger
                                                             Binding="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
                                                             Value="True">
-                                                            <Setter Property="Source"
+                                                                        <Setter Property="Source"
                                                                     Value="../../Resources/arrow_up.png" />
-                                                        </DataTrigger>
-                                                        <DataTrigger
+                                                                    </DataTrigger>
+                                                                    <DataTrigger
                                                             Binding="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
                                                             Value="False">
-                                                            <Setter Property="Source"
+                                                                        <Setter Property="Source"
                                                                     Value="../../Resources/arrow_down.png" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Image.Style>
-                                        </Image>
-                                    </Grid>
-                                </ToggleButton>
-                                <Border Padding="10, 5" x:Name="ExpandSite" Visibility="Collapsed"
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Image.Style>
+                                                    </Image>
+                                                </Grid>
+                                            </ToggleButton>
+                                            <Border Padding="10, 5" x:Name="ExpandSite" Visibility="Collapsed"
                                         BorderBrush="{StaticResource bgBorder}" BorderThickness="0,1,0,0">
-                                    <ContentPresenter
+                                                <ContentPresenter
                                         DockPanel.Dock="Bottom"
                                         Focusable="false"
                                         HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                         Margin="{TemplateBinding Padding}"
                                         VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-                                </Border>
-                            </DockPanel>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsExpanded" Value="true">
-                                <Setter Property="Visibility" TargetName="ExpandSite" Value="Visible" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="false">
-                                <Setter Property="Foreground"
+                                            </Border>
+                                        </DockPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsExpanded" Value="true">
+                                            <Setter Property="Visibility" TargetName="ExpandSite" Value="Visible" />
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="false">
+                                            <Setter Property="Foreground"
                                         Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style x:Key="MyExpander" TargetType="{x:Type Expander}" BasedOn="{StaticResource ExpanderExtra}">
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{StaticResource bgBorder}" />
-        </Style>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <Style x:Key="MyExpander" TargetType="{x:Type Expander}" BasedOn="{StaticResource ExpanderExtra}">
+                        <Setter Property="BorderThickness" Value="1" />
+                        <Setter Property="BorderBrush" Value="{StaticResource bgBorder}" />
+                    </Style>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </UserControl.Resources>
     <ScrollViewer>
         <StackPanel>
-            <Border BorderThickness="1"
-                    CornerRadius="8"
-                    BorderBrush="{StaticResource AlertWarningForeground}"
-                    Background="{StaticResource AlertWarningBackground}"
-                    Padding="15,8"
-                    Margin="5,5,5,10"
-                    Visibility="{Binding Warning, Converter={StaticResource cvVisibility}}">
-                <DockPanel>
-                    <Image Height="16" Width="16" Source="../../Resources/if_error_16263.png" Margin="0,0,10,0" />
-                    <Label Foreground="{StaticResource AlertWarningForeground}" FontSize="16"
-                           Content="{Binding Warning}" />
-                </DockPanel>
-            </Border>
+            <Label Style="{StaticResource LabelWarning}" FontSize="15" Content="{Binding Warning}" Visibility="{Binding Warning, Converter={StaticResource convBoolVisible}}" />
             <ItemsControl ItemsSource="{Binding Results}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
@@ -170,9 +162,13 @@
 
                                 <TextBlock Style="{StaticResource largeText}"
                                            Visibility="{Binding OutputFilename, Converter={StaticResource cvVisibility}}">
-                                    <Run>Файл записан как:</Run>
+                                    <Run>Был создан DBF файл </Run>
                                     <Run FontWeight="Bold"
                                          Text="{Binding OutputFilename, Converter={StaticResource cvPath}}" />
+                                    <Run>содержащий</Run>
+                                    <Run FontWeight="Bold"
+                                         Text="{Binding RecordsWritten}" />
+                                    <Run>записей!</Run>
                                 </TextBlock>
 
                                 <Expander Header="Подходящие формы" Style="{StaticResource MyExpander}">

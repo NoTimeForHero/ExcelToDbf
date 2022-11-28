@@ -122,6 +122,7 @@ app.forms = [
             context.NACHDATE = matches(cell(6, 2).Value, '\\d{2}\\.\\d{2}\\.\\d{4}')[0];
         },
         afterWrite: function () {
+            // TODO: Упростить процесс суммирования?
             log("Сумма подсчитанная: " + context.sum);
             log("Сумма в документе: " + context.docSum);
             if (Math.abs(context.sum - context.docSum) > 5) error(`Подсчитанная сумма ${context.sum} отличается от ИТОГО ${context.docSum}!`);
