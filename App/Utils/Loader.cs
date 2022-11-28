@@ -11,9 +11,24 @@ namespace ExcelToDbf.Utils
 {
     internal class FileStorage
     {
-        // public static ILogger logger = LogManager.GetCurrentClassLogger();
+         public static ILogger logger = LogManager.GetCurrentClassLogger();
 
         public static bool Load<T>(string path, out T target, T defVal = default)
+        {
+            try
+            {
+                return LoadUnsafe(path, out target, defVal);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn($"Не удалось загрузить \"{typeof(T).FullName}\" из файла \"${path}\" ");
+                logger.Warn(ex.Message);
+                target = default;
+                return false;
+            }
+        }
+
+        public static bool LoadUnsafe<T>(string path, out T target, T defVal = default)
         {
             if (!File.Exists(path))
             {

@@ -49,24 +49,16 @@ namespace ExcelToDbf.Core
         {
             UpdateUI(UIState.SelectFiles);
 
-            try
+            if (FileStorage.Load<LastLaunch>(Constants.LastLaunchFile, out var lastLaunch))
             {
-                if (FileStorage.Load<List<ConvertService.Result>>(Constants.LastLaunchFile, out var results))
-                {
-                    container.Resolve<ConvertResultVM>().Results = results;
-                    UpdateUI(UIState.DisplayLogs);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.Warn("Не удалось загрузить LastLaunch.json!");
-                logger.Warn(ex);
+                container.Resolve<ConvertResultVM>().Results = lastLaunch.Results;
+                container.Resolve<FileSelectorVM>().Path = lastLaunch.Path;
+                UpdateUI(UIState.DisplayLogs);
             }
 
             model.CommandSettings = ReactiveCommand.Create(() =>
             {
                 container.Resolve<EditPreloadView>().ShowDialog();
-                // container.Resolve<ScriptEngine>().Resolve<ConfigContext>().ReloadConfig();
             });
 
             model.ActionButton.Command = ReactiveCommand.CreateFromTask(async () =>
@@ -100,8 +92,14 @@ namespace ExcelToDbf.Core
             UpdateUI(UIState.Converting);
 
             var results = await converter.Run(files);
-            FileStorage.Save(Constants.LastLaunchFile, results);
             container.Resolve<ConvertResultVM>().Results = results;
+
+            var lastLaunch = new LastLaunch
+            {
+                Path = container.Resolve<FileSelectorVM>().Path,
+                Results = results
+            };
+            FileStorage.Save(Constants.LastLaunchFile, lastLaunch);
 
             UpdateUI(UIState.DisplayLogs);
         }

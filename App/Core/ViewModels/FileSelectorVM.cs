@@ -44,7 +44,7 @@ namespace ExcelToDbf.Core.ViewModels
         {
             SelectPathCommand = ReactiveCommand.Create(() =>
             {
-                Path = UniversalFolderSelector.ShowDialog() ?? Path;
+                Path = UniversalFolderSelector.ShowDialog(App.Location) ?? Path;
             });
 
             CheckedCommand = ReactiveCommand.Create<string>((arg) =>

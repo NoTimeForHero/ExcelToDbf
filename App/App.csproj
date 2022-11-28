@@ -169,6 +169,7 @@
     <Compile Include="Core\Models\Cell.cs" />
     <Compile Include="Core\Models\ConvertProgress.cs" />
     <Compile Include="Core\Models\FileModel.cs" />
+    <Compile Include="Core\Models\LastLaunch.cs" />
     <Compile Include="Core\Models\Point.cs" />
     <Compile Include="Core\Models\SearchFormResult.cs" />
     <Compile Include="Core\Models\SearchMatch.cs" />

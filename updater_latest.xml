@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <item>
-  <version>3.0.0.5</version>
-  <url>https://github.com/NoTimeForHero/ExcelToDbf/releases/download/v3.0.0/Release.zip</url>
-  <changelog>https://github.com/NoTimeForHero/ExcelToDbf/releases/tag/v3.0.0</changelog>
+  <version>3.0.1.0</version>
+  <url>https://github.com/NoTimeForHero/ExcelToDbf/releases/download/v3.0/Release.zip</url>
+  <changelog>https://github.com/NoTimeForHero/ExcelToDbf/releases/tag/v3.0</changelog>
   <mandatory>true</mandatory>
 </item>
