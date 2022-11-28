@@ -42,8 +42,21 @@ namespace ExcelToDbf.Core.Services
         public void RunAutoUpdater()
         {
             if (string.IsNullOrEmpty(settings.AutoUpdaterURL)) return;
+            var updLogger = LogManager.GetLogger("AutoUpdater");
             AutoUpdater.RunUpdateAsAdmin = false;
-            AutoUpdater.ReportErrors = true;
+            AutoUpdater.CheckForUpdateEvent += (ev) =>
+            {
+                if (ev.Error != null)
+                {
+                    updLogger.Warn("Ошибка проверки обновления!");
+                    updLogger.Warn(ev.Error);
+                    return;
+                }
+                updLogger.Info("Версия приложения: " + (ev.IsUpdateAvailable ? "Устарела!" : "Актуальная"));
+                updLogger.Debug($"Установленная версия: {ev.InstalledVersion}");
+                updLogger.Debug($"Версия сервера: {ev.CurrentVersion}");
+                if (ev.IsUpdateAvailable) AutoUpdater.ShowUpdateForm(ev);
+            };
             AutoUpdater.RemindLaterTimeSpan = RemindLaterFormat.Days;
             AutoUpdater.RemindLaterAt = 2;
             AutoUpdater.Start(settings.AutoUpdaterURL);
