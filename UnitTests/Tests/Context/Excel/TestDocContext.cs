@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ExcelToDbf.Core.Models;
-using ExcelToDbf.Core.Services.Scripts.Data;
+﻿using ExcelToDbf.Core.Models;
 using Jint.Native.Function;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -46,7 +40,7 @@ namespace UnitTests.Tests.Context.Excel
                 log('Total sum: ' + context.sum);
                 if (context.sum != context.mustBe) error('Wrong sum!');
             ");
-            var excel = Prepare(form).Connect(null);
+            var excel = Prepare(form).Connect(null, null);
             excel.CallHook(form, DocForm.HookType.Before);
             excel.Transform(form, new object[] { "12" });
             excel.Transform(form, new object[] { "18" });

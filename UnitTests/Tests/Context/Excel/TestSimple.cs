@@ -1,12 +1,5 @@
 ﻿using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ExcelToDbf.Core.Models;
-using ExcelToDbf.Core.Services.Scripts;
-using ExcelToDbf.Core.Services.Scripts.Context;
-using Jint.Native.Function;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NLog;
 
 namespace UnitTests.Tests.Context.Excel
 {

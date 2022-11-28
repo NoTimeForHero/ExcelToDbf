@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ExcelToDbf.Core.Services.Scripts.Context;
+﻿using ExcelToDbf.Core.Services.Scripts.Context;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests.Tests.Context.Excel.Excel
@@ -53,7 +48,7 @@ namespace UnitTests.Tests.Context.Excel.Excel
             var config = new ToolsConfig(forms);
             config.RawData.System.FastSearch = fastSearch;
             // config.Data.System.FastSearch = fastSearch;
-            var context = new ExcelContext(logger, config, engine).Connect(worksheet.getCellValue);
+            var context = new ExcelContext(logger, config, engine).Connect(worksheet.getCellValue, null);
             var res = context.SearchForm(testModel);
             Assert.AreEqual(formsExpected, res.Report.Keys.Count);
             Assert.AreEqual(keysExpected, res.Report[form1].Count);

@@ -106,12 +106,6 @@
     <Compile Include="Tests\Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\App\App.csproj">
-      <Project>{f511d67a-46c5-4499-b547-789965aa6b68}</Project>
-      <Name>App</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="app.config" />
     <None Include="Data\Example1.xlsx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -147,7 +141,12 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\App\App.csproj">
+      <Project>{f511d67a-46c5-4499-b547-789965aa6b68}</Project>
+      <Name>App</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

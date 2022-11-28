@@ -42,7 +42,7 @@ namespace UnitTests.Tests.Context.Excel
                 as ScriptFunctionInstance,
         };
 
-        protected static ExcelContext Prepare(DocForm[] forms) => new ExcelContext(logger, new ToolsConfig(forms), engine).Connect(worksheet.getCellValue);
+        protected static ExcelContext Prepare(DocForm[] forms) => new ExcelContext(logger, new ToolsConfig(forms), engine).Connect(worksheet.getCellValue, null);
         protected static ExcelContext Prepare(DocForm form) => Prepare(new[] { form });
     }
 

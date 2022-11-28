@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ExcelToDbf.Core.Services.Scripts;
 using ExcelToDbf.Core.Services.Scripts.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
