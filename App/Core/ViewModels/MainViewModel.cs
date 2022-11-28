@@ -39,6 +39,7 @@ namespace ExcelToDbf.Core.ViewModels
 
         public MainViewModel(ConfigProvider config)
         {
+            Title = Constants.ApplicationTitle + " (" + App.Version + ")";
             config.WhenAnyValue((x) => x.Config).Subscribe((newConfig) =>
             {
                 HeaderTitle = newConfig.Header.Title;

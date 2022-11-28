@@ -43,6 +43,9 @@ namespace ExcelToDbf.Core.Services
         {
             if (string.IsNullOrEmpty(settings.AutoUpdaterURL)) return;
             AutoUpdater.RunUpdateAsAdmin = false;
+            AutoUpdater.ReportErrors = true;
+            AutoUpdater.RemindLaterTimeSpan = RemindLaterFormat.Days;
+            AutoUpdater.RemindLaterAt = 2;
             AutoUpdater.Start(settings.AutoUpdaterURL);
         }
 

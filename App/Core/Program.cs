@@ -65,12 +65,14 @@ namespace ExcelToDbf.Core
                 var logger = LogManager.GetCurrentClassLogger();
                 logger.Info("Приложение было запущено");
 
-                Debug();
+                // Debug();
                 var preload = container.Resolve<PreloadService>();
                 await preload.RunGUI();
                 preload.RunAutoUpdater();
+
                 var gui = new RuntimeGUI(container, logger);
                 gui.Run();
+
                 container.Dispose();
                 Application.Current?.Shutdown();
             }

@@ -152,11 +152,14 @@ namespace ExcelToDbf.Core.ViewModels
                 .Subscribe(pair => Config.Version = pair?.Key);
 
             RepositoryDirty = true;
-            await FetchRepository();
-            SelectedTag = VRepository?.Tags.FirstOrDefault(x => x.Title == Config.Tag);
-            SelectedVersion = AvailableVersions?.ContainsKey(Config.Version) ?? false
-                ? new KeyValuePair<string,string>(Config.Version, AvailableVersions[Config.Version])
-                : (KeyValuePair<string, string>?)null;
+            if (!string.IsNullOrEmpty(Config?.Repository))
+            {
+                await FetchRepository();
+                SelectedTag = VRepository?.Tags.FirstOrDefault(x => x.Title == Config.Tag);
+                SelectedVersion = AvailableVersions?.ContainsKey(Config.Version) ?? false
+                    ? new KeyValuePair<string, string>(Config.Version, AvailableVersions[Config.Version])
+                    : (KeyValuePair<string, string>?)null;
+            }
         }
 
         public EditPreloadVM(PreloadService srvPreload)
