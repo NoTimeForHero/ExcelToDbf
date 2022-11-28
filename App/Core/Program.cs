@@ -66,11 +66,13 @@ namespace ExcelToDbf.Core
                 logger.Info("Приложение было запущено");
 
                 Debug();
-                await container.Resolve<PreloadService>().RunGUI();
+                var preload = container.Resolve<PreloadService>();
+                await preload.RunGUI();
+                preload.RunAutoUpdater();
                 var gui = new RuntimeGUI(container, logger);
                 gui.Run();
                 container.Dispose();
-                Application.Current.Shutdown();
+                Application.Current?.Shutdown();
             }
             catch (Exception ex)
             {

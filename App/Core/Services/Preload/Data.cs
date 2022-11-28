@@ -27,6 +27,8 @@ namespace ExcelToDbf.Core.Services.Preload
         public string Tag { get; set; }
         [Reactive]
         public string Version { get; set; }
+
+        public string AutoUpdaterURL { get; set; }
     }
 
     public class Repository

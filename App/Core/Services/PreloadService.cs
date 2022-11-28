@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoUpdaterDotNET;
 using ExcelToDbf.Core.Services.Preload;
 using ExcelToDbf.Core.Services.Scripts;
 using ExcelToDbf.Core.Services.Scripts.Context;
@@ -36,6 +37,13 @@ namespace ExcelToDbf.Core.Services
             web = container.Resolve<IWebService>();
             FileStorage.Load(Constants.PreloadFile, out settings, new PConfig());
             FileStorage.Save(Constants.PreloadFile, settings);
+        }
+
+        public void RunAutoUpdater()
+        {
+            if (string.IsNullOrEmpty(settings.AutoUpdaterURL)) return;
+            AutoUpdater.RunUpdateAsAdmin = false;
+            AutoUpdater.Start(settings.AutoUpdaterURL);
         }
 
         public async Task RunGUI()
