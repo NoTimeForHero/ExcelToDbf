@@ -20,7 +20,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
             engine.SetValue("match", (Func<string, string, bool>)Match);
             engine.SetValue("matches", (Func<string, string, string[]>)Matches);
             engine.SetValue("includes", (Func<string, string, bool>)Includes);
-            engine.SetValue("translit", (Func<string, string>)FuncTranslit);
+            engine.SetValue("translit", (Func<string, bool?, string>)FuncTranslit);
             engine.SetValue("nospace", (Func<string, string, string>)FuncReplaceSpace);
             engine.SetValue("afterRegEx", (Func<string, Regex, object, string>)FuncAfterRegEx);
             engine.SetValue("error", (Action<string>)FuncThrowException);
@@ -70,18 +70,26 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
         /// <summary>
         /// Переводит строку в транслит
         /// </summary>
-        protected string FuncTranslit(string input)
+        protected string FuncTranslit(string input, bool? maxSafe)
         {
-            return SafeString(Transliteration.CyrillicToLatin(input, Language.Russian));
+            var safe = maxSafe ?? true;
+            input = Transliteration.CyrillicToLatin(input, Language.Russian);
+            return SafeString(input, safe);
         }
 
         /// <summary>
         /// Удаляет из строки все недопустимые для файловой системы символы
         /// </summary>
-        protected string SafeString(string result)
+        protected string SafeString(string result, bool safe)
         {
             Array.ForEach(Path.GetInvalidFileNameChars(),
                   c => result = result.Replace(c.ToString(), String.Empty));
+            if (safe)
+            {
+                result = result.Replace("`", string.Empty);
+                result = result.Replace("'", string.Empty);
+                result = result.Replace("\"", string.Empty);
+            }
             return result;
         }
 
