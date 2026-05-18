@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -56,19 +57,27 @@ namespace ExcelToDbf.Core.Services
 
         public void Update(string path)
         {
-            logger.Info($"Пользователем выбрана директория: {path}");
-            var range = DirectoryUtils.GetFilesByExtension(path, pvConfig.Config.Extensions)
-                .Select(x => new FileModel
-                {
-                    MustConvert = true,
-                    FileName = x.FileName,
-                    FullPath = x.FullPath,
-                    Created = x.Created,
-                    Size = x.Size,
-                }).ToList();
-            logger.Info($"Файлов было найдено: {range.Count}");
-            _files.Clear();
-            _files.AddRange(range);
+            try
+            {
+                logger.Info($"Пользователем выбрана директория: {path}");
+                var range = DirectoryUtils.GetFilesByExtension(path, pvConfig.Config.Extensions)
+                    .Select(x => new FileModel
+                    {
+                        MustConvert = true,
+                        FileName = x.FileName,
+                        FullPath = x.FullPath,
+                        Created = x.Created,
+                        Size = x.Size,
+                    }).ToList();
+                logger.Info($"Файлов было найдено: {range.Count}");
+                _files.Clear();
+                _files.AddRange(range);
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                logger.Warn("Directory not found!");
+                logger.Warn(ex);
+            }
         }
     }
 }
