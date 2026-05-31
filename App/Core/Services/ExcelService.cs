@@ -117,7 +117,7 @@ namespace ExcelToDbf.Core.Services
             return null;
         }
 
-        public Cell? GetCellValue(int y, int x)
+        public Cell?  GetCellValue(int y, int x)
         {
             if (worksheet == null) throw new InvalidOperationException("Отсутствует лист!");
 
@@ -127,8 +127,9 @@ namespace ExcelToDbf.Core.Services
             try
             {
                 var value = worksheet.Cells[y, x].Value;
-                cacheCells[point] = value;
-                return new Cell(y, x, value);
+                var strValue = value.ToString();
+                cacheCells[point] = strValue;
+                return new Cell(y, x, strValue);
             }
             catch (Exception ex)
             {
