@@ -408,7 +408,7 @@
 
   <Import Project="..\packages\Microsoft.Web.WebView2.1.0.1587.40\build\Microsoft.Web.WebView2.targets" Condition="Exists('..\packages\Microsoft.Web.WebView2.1.0.1587.40\build\Microsoft.Web.WebView2.targets')" />
   <Import Project="..\Packaging\Distribution.targets" />
-  <Target Name="PackageConsoleClient" AfterTargets="Build">
+  <Target Name="PackageConsoleClient" AfterTargets="Build" DependsOnTargets="CopyAgentResources">
     <PropertyGroup>
       <CliOutput>$(MSBuildProjectDirectory)\..\Cli\bin\$(Configuration)\</CliOutput>
     </PropertyGroup>
@@ -420,6 +420,7 @@
       <NativeRuntime Include="$(TargetDir)runtimes\**\*" />
     </ItemGroup>
     <MakeDir Directories="$(TargetDir)DLL" />
+    <Move SourceFiles="$(TargetDir)ExcelToDbf.Engine.pdb" DestinationFolder="$(TargetDir)DLL" Condition="'$(Configuration)' == 'Release' and Exists('$(TargetDir)ExcelToDbf.Engine.pdb')" />
     <Move SourceFiles="@(RuntimeLibraries)" DestinationFolder="$(TargetDir)DLL" />
     <Move SourceFiles="@(LocalCsvRuntime)" DestinationFolder="$(TargetDir)DLL" />
     <Copy SourceFiles="@(CliRuntimeLibraries);@(CsvRuntime)" DestinationFolder="$(TargetDir)DLL" SkipUnchangedFiles="true" />
@@ -434,5 +435,8 @@
         Exclude="$(TargetDir)$(TargetName).xml;$(TargetDir)$(TargetName).pdb;$(TargetDir)ExcelToDbf.Cli.xml;$(TargetDir)ExcelToDbf.Cli.pdb;$(TargetDir)ExcelToDbf.Engine.xml;$(TargetDir)ExcelToDbf.Engine.pdb" />
     </ItemGroup>
     <Delete Files="@(ExtraBuildMetadata)" />
+  </Target>
+  <Target Name="CreateReleaseArchive" AfterTargets="PackageConsoleClient" Condition="'$(Configuration)' == 'Release'">
+    <Exec Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\Packaging\Create-ReleaseArchive.ps1&quot; -OutputDirectory &quot;$(TargetDir).&quot;" />
   </Target>
 </Project>

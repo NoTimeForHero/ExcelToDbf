@@ -18,16 +18,37 @@ $root = Join-Path $repo ('artifacts\package-smoke-' + [guid]::NewGuid().ToString
 $package = Join-Path $root ('portable package ' + [string][char]0x0424)
 $caller = Join-Path $root 'different working directory'
 New-Item -ItemType Directory -Path $package,$caller -Force | Out-Null
-foreach ($name in @('ExcelToDbf.exe','ExcelToDbf.exe.config','config.example.js','AGENTS.md','DLL','docs','TestData')) {
-    Copy-Item -LiteralPath (Join-Path $source $name) -Destination $package -Recurse
-}
-if ($Configuration -eq 'Debug') {
-    foreach ($name in @('ExcelToDbf.Cli.exe','ExcelToDbf.Cli.exe.config')) { Copy-Item -LiteralPath (Join-Path $source $name) -Destination $package }
-} else {
-    foreach ($name in @('ExcelToDbf.Cli.exe','ExcelToDbf.Cli.exe.config','ExcelToDbf.Cli.pdb')) {
-        if (Test-Path -LiteralPath (Join-Path $source $name)) { throw "Unexpected CLI file in package root: $name" }
-        if (-not (Test-Path -LiteralPath (Join-Path $package "DLL\$name"))) { throw "Missing CLI file in DLL: $name" }
+if ($Configuration -eq 'Release') {
+    Expand-Archive -LiteralPath (Join-Path $source 'App.zip') -DestinationPath $package
+    $expectedRoot = @('AGENTS.md','DLL','docs','ExcelToDbf.exe','ExcelToDbf.exe.config','ExcelToDbf.pdb') | Sort-Object
+    $actualRoot = @(Get-ChildItem -LiteralPath $package -Force | Select-Object -ExpandProperty Name | Sort-Object)
+    if (Compare-Object $expectedRoot $actualRoot) { throw 'Unexpected release archive contents' }
+    foreach ($name in @('ExcelToDbf.Cli.exe','ExcelToDbf.Cli.exe.config','ExcelToDbf.Cli.pdb','ExcelToDbf.Engine.pdb')) {
+        if (Test-Path -LiteralPath (Join-Path $source $name)) { throw "Unexpected file in package root: $name" }
+        if (-not (Test-Path -LiteralPath (Join-Path $package "DLL\$name"))) { throw "Missing file in DLL: $name" }
     }
+    foreach ($name in $expectedRoot) {
+        $sourcePath = Join-Path $source $name
+        $packagePath = Join-Path $package $name
+        if (Test-Path -LiteralPath $sourcePath -PathType Container) {
+            $files = @(Get-ChildItem -LiteralPath $sourcePath -Recurse -File -Force)
+            $extractedFiles = @(Get-ChildItem -LiteralPath $packagePath -Recurse -File -Force)
+            if ($files.Count -ne $extractedFiles.Count) { throw "Archive file count differs for $name" }
+            foreach ($file in $files) {
+                $relative = $file.FullName.Substring($sourcePath.Length).TrimStart('\')
+                $extracted = Join-Path $packagePath $relative
+                if (-not (Test-Path -LiteralPath $extracted) -or (Get-FileHash -LiteralPath $file.FullName).Hash -ne (Get-FileHash -LiteralPath $extracted).Hash) { throw "Archive differs: $name\$relative" }
+            }
+        } elseif ((Get-FileHash -LiteralPath $sourcePath).Hash -ne (Get-FileHash -LiteralPath $packagePath).Hash) { throw "Archive differs: $name" }
+    }
+} else {
+    foreach ($name in @('ExcelToDbf.exe','ExcelToDbf.exe.config','ExcelToDbf.Cli.exe','ExcelToDbf.Cli.exe.config','AGENTS.md','DLL','docs')) {
+        Copy-Item -LiteralPath (Join-Path $source $name) -Destination $package -Recurse
+    }
+}
+# Test fixtures are distributed separately from the update archive.
+foreach ($name in @('config.example.js','TestData')) {
+    Copy-Item -LiteralPath (Join-Path $source $name) -Destination $package -Recurse
 }
 Copy-Item -LiteralPath (Join-Path $package 'config.example.js') -Destination (Join-Path $package 'config.js')
 [IO.File]::WriteAllText((Join-Path $caller 'config.js'), 'while(true) {}')
