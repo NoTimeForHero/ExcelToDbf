@@ -115,6 +115,22 @@ try {
         finally {
             if ($userExcel) { $userExcel.Quit(); [void][Runtime.InteropServices.Marshal]::ReleaseComObject($userExcel) }
         }
+        $manifestPath = (Resolve-Path -LiteralPath (Join-Path $TestData 'cases.json')).Path
+        $report = Invoke-Cli @('test', '--manifest', $manifestPath, '--config', $Config)
+        Assert-True ($report.data.total -eq 6 -and $report.data.passed -eq 6) 'Default regression set failed'
+        $manifest = [IO.File]::ReadAllText($manifestPath) | ConvertFrom-Json
+        $firstCase = $manifest.cases[0]
+        $firstCase.input = $example
+        $firstCase.expected.records++
+        $firstCase.expected.numericTotals.SUMMA++
+        $changedManifest = Join-Path $scratch 'cases.json'
+        [IO.File]::WriteAllText($changedManifest, (@{schemaVersion=1; cases=@($firstCase)} | ConvertTo-Json -Depth 12))
+        $report = Invoke-Cli @('test', '--manifest', $changedManifest, '--config', $Config) 1
+        Assert-True ($report.errors[0].code -eq 'REGRESSION_FAILED') 'Changed expected result was ignored'
+        Assert-True ($report.data.cases[0].differences.Count -eq 2) 'Regression differences were not reported'
+        [IO.File]::WriteAllText($changedManifest, '{"schemaVersion":1,"cases":[]}')
+        $report = Invoke-Cli @('test', '--manifest', $changedManifest, '--config', $Config) 1
+        Assert-True ($report.errors[0].code -eq 'INVALID_MANIFEST') 'Empty manifest was accepted'
     }
     Write-Output ("CLI smoke: {0} checks passed" -f $script:checks)
 }

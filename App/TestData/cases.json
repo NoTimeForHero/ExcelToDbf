@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "Fixed header / form A",
+      "input": "Example1.xlsx",
+      "expected": {
+        "status": "ok",
+        "form": "Форма 2.21А",
+        "records": 498,
+        "startY": 8,
+        "stopReason": "stop",
+        "warningCount": 0,
+        "numericTotals": { "SUMMA": 54856.94 },
+        "samples": [
+          { "record": 1, "values": { "ID": "1", "KP": "99453520", "FIO": "Воробьёва Агафья Геласьевна", "SUMMA": 117.81, "DATEOPL": "2005-09-01" } },
+          { "record": 5, "values": { "ID": "5", "KP": "69779274", "SUMMA": 106.00 } }
+        ]
+      }
+    },
+    {
+      "name": "Regex header / hooks / form B",
+      "input": "Example2.xlsx",
+      "expected": {
+        "status": "ok",
+        "form": "Форма 2.21Б (с регулярками)",
+        "records": 500,
+        "startY": 8,
+        "stopReason": "stop",
+        "warningCount": 0,
+        "numericTotals": { "SUMMA": 55084.96 },
+        "samples": [ { "record": 1, "values": { "ID": "1", "NACHDATE": "2006-05-04", "SUMMA": 117.81 } } ]
+      }
+    },
+    {
+      "name": "Invalid number reports original row",
+      "input": "Example3-error.xlsx",
+      "expected": { "status": "failed", "error": { "code": "INVALID_NUMBER", "stage": "dbf-write", "sourceRow": 9, "field": "SUMMA" } }
+    },
+    {
+      "name": "Floating header / form C",
+      "input": "Example4.xlsx",
+      "expected": {
+        "status": "ok",
+        "form": "Форма 2.21В (плавающий заголовок)",
+        "records": 500,
+        "stopReason": "stop",
+        "warningCount": 0,
+        "numericTotals": { "SUMMA": 55084.96 },
+        "samples": [ { "record": 1, "values": { "ID": "1", "PERSON": "Воробьёва Агафья Геласьевна, живущая по адресу: г. Пушкина, ул. Маршала Жукова, д.32" } } ]
+      }
+    },
+    {
+      "name": "Unsupported XLS must not match",
+      "input": "Example5.xls",
+      "expected": { "status": "failed", "error": { "code": "NO_FORM", "stage": "rules" } }
+    },
+    {
+      "name": "Legacy JS error sample has no current form",
+      "input": "Example6-js-error.xls",
+      "expected": { "status": "failed", "error": { "code": "NO_FORM", "stage": "rules" } }
+    }
+  ]
+}
