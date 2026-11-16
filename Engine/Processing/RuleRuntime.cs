@@ -9,6 +9,7 @@ using ExcelToDbf.Core.Models;
 using ExcelToDbf.Core.Services.Scripts.Context;
 using Jint;
 using NLog;
+using Newtonsoft.Json;
 
 namespace ExcelToDbf.Processing
 {
@@ -18,6 +19,7 @@ namespace ExcelToDbf.Processing
         public ConfigContext Config { get; }
         public ExcelContext Context { get; }
         public string ConfigHash { get; }
+        public string[] UnsupportedProperties { get; }
 
         public RuleRuntime(string path)
         {
@@ -28,6 +30,28 @@ namespace ExcelToDbf.Processing
                 new GenericContext(Engine);
                 Config = new ConfigContext(logger, Engine, path);
                 Validate();
+                UnsupportedProperties = JsonConvert.DeserializeObject<string[]>(Engine.Evaluate(@"
+JSON.stringify((function() {
+    var result = [];
+    function check(value, keys, prefix) {
+        Object.keys(value || {}).forEach(function(key) {
+            if (keys.indexOf(key) < 0) result.push(prefix + '.' + key);
+        });
+    }
+    check(app, ['settings', 'forms', 'getOutputFilename'], 'app');
+    check(app.settings, ['system', 'header', 'extensions', 'logging'], 'app.settings');
+    check(app.settings.system, ['outputEncoding', 'bufferSize', 'fastSearch', 'noFormIsError', 'extraWarning'], 'app.settings.system');
+    check(app.settings.header, ['title', 'status'], 'app.settings.header');
+    app.forms.forEach(function(form, index) {
+        var prefix = 'app.forms[' + index + ']';
+        check(form, ['name', 'settings', 'rules', 'dbfFields', 'beforeWrite', 'write', 'afterWrite'], prefix);
+        check(form.settings, ['startY', 'endX'], prefix + '.settings');
+        form.dbfFields.forEach(function(field, column) {
+            check(field, ['name', 'type', 'length'], prefix + '.dbfFields[' + column + ']');
+        });
+    });
+    return result;
+})())").AsString());
                 Context = new ExcelContext(logger, Config, Engine);
                 using (var sha = SHA256.Create())
                     ConfigHash = BitConverter.ToString(sha.ComputeHash(File.ReadAllBytes(Config.ConfigPath))).Replace("-", "").ToLowerInvariant();

@@ -5,6 +5,8 @@ param(
     [switch]$FoundationOnly
 )
 $ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+$OutputEncoding = [Console]::OutputEncoding
 $Cli = (Resolve-Path -LiteralPath $Cli).Path
 $Config = (Resolve-Path -LiteralPath $Config).Path
 $scratch = Join-Path ([IO.Path]::GetTempPath()) ('ExcelToDbf-smoke-' + [guid]::NewGuid().ToString('N'))
@@ -18,8 +20,14 @@ function Assert-True($condition, [string]$message) {
 
 function Invoke-Cli([string[]]$CliArgs, [int]$ExpectedExit = 0) {
     $stderrPath = Join-Path $scratch 'stderr.log'
-    $output = & $Cli @CliArgs --json 2> $stderrPath
-    $actualExit = $LASTEXITCODE
+    $previousPreference = $ErrorActionPreference
+    try {
+        # Windows PowerShell 5.1 treats native stderr as ErrorRecord even when redirected.
+        $ErrorActionPreference = 'Continue'
+        $output = & $Cli @CliArgs --json 2> $stderrPath
+        $actualExit = $LASTEXITCODE
+    }
+    finally { $ErrorActionPreference = $previousPreference }
     $report = ($output -join "`n") | ConvertFrom-Json
     Assert-True ($actualExit -eq $ExpectedExit) ("Exit {0}, expected {1}: {2}" -f $actualExit, $ExpectedExit, ($output -join "`n"))
     Assert-True ($report.schemaVersion -eq 1) 'Missing report schema version'
@@ -32,6 +40,11 @@ try {
     $report = Invoke-Cli @('check-config', '--config', $Config)
     Assert-True ($report.data.forms.Count -eq 3) 'Expected three example forms'
     Assert-True ($report.data.configHash.Length -eq 64) 'Missing config SHA256'
+    $source = [IO.File]::ReadAllText($Config)
+    $unsupported = Join-Path $scratch 'unsupported.js'
+    [IO.File]::WriteAllText($unsupported, $source + "`n" + 'app.forms[0].settings.startYY = 123;')
+    $report = Invoke-Cli @('check-config', '--config', $unsupported)
+    Assert-True ($report.warnings[0].code -eq 'UNSUPPORTED_PROPERTY') 'Unknown config property was ignored'
     $report = Invoke-Cli @('inspect') 2
     Assert-True ($report.errors[0].code -eq 'INVALID_ARGUMENTS') 'Missing input error'
     $report = Invoke-Cli @('doctor', '--output', 'unused') 2
@@ -45,12 +58,23 @@ try {
     Assert-True ($report.errors[0].code -eq 'TIMEOUT') 'Infinite script was not terminated'
     $report = Invoke-Cli @('doctor')
     Assert-True ($report.data.excelVersion -ne $null) 'Excel COM is unavailable'
+    $invalidTemp = Join-Path $scratch 'not-a-directory'
+    [IO.File]::WriteAllText($invalidTemp, 'file instead of TEMP directory')
+    $previousTemp = $env:TEMP
+    $previousTmp = $env:TMP
+    try {
+        $env:TEMP = $invalidTemp
+        $env:TMP = $invalidTemp
+        $report = Invoke-Cli @('doctor') 3
+        Assert-True ($report.errors[0].code -eq 'EXECUTION_FAILED') 'TEMP failure was not returned as JSON'
+    }
+    finally { $env:TEMP = $previousTemp; $env:TMP = $previousTmp }
     if (-not $FoundationOnly) {
         $example = (Resolve-Path -LiteralPath (Join-Path $TestData 'Example1.xlsx')).Path
         $report = Invoke-Cli @('inspect', $example, '--range', 'B2:F8')
         Assert-True ($report.data.cells.Count -eq 35) 'Incorrect inspected range'
         Assert-True ($report.data.lastRow -eq 509) 'UsedRange origin was lost'
-        $report = Invoke-Cli @('inspect', $example, '--range', 'A1:XFD1048576') 1
+        $report = Invoke-Cli @('inspect', $example, '--range', 'A1:XFD1048576') 2
         Assert-True ($report.errors[0].code -eq 'INVALID_RANGE') 'Unbounded inspect accepted'
         $fast = Join-Path $scratch 'fast.js'
         $source = [IO.File]::ReadAllText($Config)
@@ -59,16 +83,21 @@ try {
         Assert-True ($report.data.search.forms.Count -eq 1) 'Working fast search changed'
         Assert-True ($report.data.diagnosticSearch.forms.Count -eq 3) 'Diagnostic search did not inspect all forms'
         Assert-True ($report.data.search.selectedForm -eq $report.data.diagnosticSearch.selectedForm) 'Diagnostic search changed selected form'
+        [IO.File]::WriteAllText($fast, $source.Replace('fastSearch: false', 'fastSearch: true') + "`n" + 'var diagnosticSeen = false; app.forms[0].rules = function() { assert("x", "y"); diagnosticSeen = true; }; app.forms[1].rules = function() { assert(String(diagnosticSeen), "true"); }; app.forms[2].rules = function() { assert("x", "y"); };')
+        $report = Invoke-Cli @('match', $example, '--config', $fast, '--all-forms') 1
+        Assert-True ($report.data.search.matchedForms.Count -eq 0) 'Working no-match result was changed'
+        Assert-True ($report.data.diagnosticSearch.matchedForms.Count -eq 1) 'Separate diagnostic result was lost'
         $floating = (Resolve-Path -LiteralPath (Join-Path $TestData 'Example4.xlsx')).Path
         $report = Invoke-Cli @('match', $floating, '--config', $Config)
         Assert-True ($report.data.search.matchedForms.Count -eq 1) 'Floating header was not recognized'
         [IO.File]::WriteAllText($invalid, $source + "`n" + 'app.forms.forEach(function(f) { f.rules = function() { assert("a", "b"); }; });')
         $report = Invoke-Cli @('match', $example, '--config', $invalid) 1
         Assert-True ($report.errors[0].code -eq 'NO_FORM') 'Expected no-form diagnostic'
-        $report = Invoke-Cli @('validate', $example, '--config', $Config)
+        $report = Invoke-Cli @('validate', $example, '--config', $Config, '--keep-artifacts', $scratch)
         Assert-True ($report.data.dbf.records -eq 498) 'Incorrect DBF record count'
         Assert-True ($report.data.dbf.numericTotals.SUMMA -eq 54856.94) 'Incorrect DBF numeric total'
         Assert-True ($report.data.dbf.sample[0].DATEOPL -eq '2005-09-01') 'Incorrect date read-back'
+        Assert-True ($report.data.artifact.status -eq 'validated' -and (Test-Path -LiteralPath $report.data.artifact.path)) 'Validated artifact was not retained'
         $outputDbf = Join-Path $scratch 'result.dbf'
         $report = Invoke-Cli @('convert', $example, '--config', $Config, '--output', $outputDbf)
         Assert-True (Test-Path -LiteralPath $outputDbf) 'Output was not published'
@@ -76,15 +105,20 @@ try {
         $report = Invoke-Cli @('convert', $example, '--config', $Config, '--output', $outputDbf) 1
         Assert-True ($report.errors[0].code -eq 'OUTPUT_EXISTS') 'Overwrite was not refused'
         Assert-True ((Get-FileHash -LiteralPath $outputDbf).Hash -eq $hash) 'Existing output was changed'
+        [IO.File]::WriteAllText($outputDbf, 'previous output')
+        $report = Invoke-Cli @('convert', $example, '--config', $Config, '--output', $outputDbf, '--overwrite')
+        Assert-True (([IO.File]::ReadAllBytes($outputDbf))[0] -eq 3) 'Successful replacement was not published'
+        $hash = (Get-FileHash -LiteralPath $outputDbf).Hash
         $badData = (Resolve-Path -LiteralPath (Join-Path $TestData 'Example3-error.xlsx')).Path
         $report = Invoke-Cli @('validate', $badData, '--config', $Config) 1
         Assert-True ($report.errors[0].code -eq 'INVALID_NUMBER') 'Expected invalid number'
         Assert-True ($report.errors[0].sourceRow -eq 9) 'Incorrect source row in error'
         Assert-True ($report.errors[0].field -eq 'SUMMA') 'Incorrect source field in error'
         [IO.File]::WriteAllText($invalid, $source + "`n" + 'app.forms[0].afterWrite = function() { error("after-write-failure"); };')
-        $report = Invoke-Cli @('convert', $example, '--config', $invalid, '--output', $outputDbf, '--overwrite') 1
+        $report = Invoke-Cli @('convert', $example, '--config', $invalid, '--output', $outputDbf, '--overwrite', '--keep-artifacts', $scratch) 1
         Assert-True ($report.errors[0].stage -eq 'afterWrite') 'Expected afterWrite failure'
         Assert-True ((Get-FileHash -LiteralPath $outputDbf).Hash -eq $hash) 'Failed conversion damaged previous output'
+        Assert-True ($report.data.artifact.status -eq 'partial-failed' -and (Test-Path -LiteralPath $report.data.artifact.path)) 'Failed artifact was not identified'
         [IO.File]::WriteAllText($invalid, $source + "`n" + 'app.forms[0].write = function(line) { throw new Error("script-error"); };')
         $report = Invoke-Cli @('validate', $example, '--config', $invalid) 1
         Assert-True ($report.errors[0].stage -eq 'write') 'Expected JS write failure'
@@ -96,9 +130,10 @@ try {
         Assert-True ($report.data.dataWarningCount -eq 498) 'Warnings were not counted over the full file'
         $report = Invoke-Cli @('validate', $example, '--config', $invalid, '--strict') 1
         Assert-True ($report.errors[0].code -eq 'STRING_TRUNCATED') 'Strict mode accepted data loss'
-        [IO.File]::WriteAllText($invalid, $source + "`n" + 'app.forms[0].afterWrite = function() { while (true) {} };')
+        [IO.File]::WriteAllText($invalid, $source + "`n" + 'app.forms[0].afterWrite = function() { log("ENTER_AFTER_WRITE"); while (true) {} };')
         $report = Invoke-Cli @('validate', $example, '--config', $invalid, '--timeout', '3') 3
         Assert-True ($report.errors[0].code -eq 'TIMEOUT') 'Infinite afterWrite was not terminated'
+        Assert-True (([IO.File]::ReadAllText((Join-Path $scratch 'stderr.log'))).Contains('ENTER_AFTER_WRITE')) 'Timeout occurred before afterWrite'
         $csv = Join-Path $scratch 'sample.csv'
         [IO.File]::WriteAllText($csv, "A;B`r`none;two")
         $report = Invoke-Cli @('inspect', $csv, '--range', 'A1:B2')

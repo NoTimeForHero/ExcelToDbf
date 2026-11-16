@@ -49,14 +49,25 @@ namespace ExcelToDbf.Cli
             if (options.Command == "check-config")
             {
                 using (var runtime = new RuleRuntime(options.Config))
-                    return new Report
+                {
+                    var report = new Report
                     {
                         Command = options.Command,
                         Data = new { config = runtime.Config.ConfigPath, configHash = runtime.ConfigHash,
                             forms = runtime.Config.Forms.Select(x => new { x.Name, x.Settings, dbfFields = x.Fields }).ToArray() }
                     };
+                    AddConfigWarnings(report, runtime);
+                    return report;
+                }
             }
             throw new ArgumentException("Команда ещё не реализована: " + options.Command);
+        }
+
+        public static void AddConfigWarnings(Report report, RuleRuntime runtime)
+        {
+            foreach (var property in runtime.UnsupportedProperties)
+                report.Warnings.Add(new Diagnostic { Code = "UNSUPPORTED_PROPERTY", Stage = "config", Field = property,
+                    Message = "Свойство не входит в контракт конфигурации: " + property });
         }
     }
 }

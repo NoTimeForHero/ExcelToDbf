@@ -3,23 +3,31 @@
 Данная программа предназначена для экспорта данных из Excel форматов в DBF файлы для легаси приложений.  
 Она использует Microsoft Office OLE для поддержки всех возможных Excel форматов (включая XML).
 
-Для обработки документов необходимо расширить XML конфиг приложения, создав форму с алгоритмом конвертации.
+Для обработки документов нужно дополнить локальный `config.js`, создав форму с алгоритмом конвертации. У каждой фирмы может быть собственный конфиг.
 При запуске процесса, программа пытается найти подходящую форму из списка для каждого документа в указанной директории.  
-В директории Data лежат 2 документа со сгенерированными данными и 1 для демонстрации сбойного документа, алгоритм обработки которых уже имеется в XML конфиге программы.
+В `App/TestData` лежат примеры и `cases.json` с регрессионными ожиданиями. Они копируются в готовую поставку.
 
-> С документацией (в процессе наполнения) можно [ознакомиться здесь](DOCUMENTATION.md).
+Рядом с GUI поставляется `ExcelToDbf.Cli.exe` для работы из PowerShell и LLM без исходников и рефлексии. Начните с [AGENTS.md](distribution/AGENTS.md), [справочника CLI](distribution/docs/cli.md), [JS API](distribution/docs/rules-api.md) и [описания DBF](distribution/docs/dbf-format.md).
+
+```powershell
+.\ExcelToDbf.Cli.exe doctor --json
+.\ExcelToDbf.Cli.exe check-config --config .\config.js --json
+.\ExcelToDbf.Cli.exe test --manifest .\TestData\cases.json --config .\config.example.js --json
+```
+
+Для добавления новой формы используйте копию конфига и полный `validate`. Примерный конфиг обновляется как `config.example.js`; существующий рабочий `config.js` при сборке сохраняется. Миграция старых XML-конфигов выполняется отдельно.
+
+Разработчикам: [сборка и проверки](docs/development.md), [план](docs/plans/2026-11-16-llm-friendly-cli.md), [результаты этапов](docs/plans/implementation-notes.md). Прежняя [XML-документация](DOCUMENTATION.md) оставлена как историческая.
 
 
 ## Возможные проблемы и их решение
 
-В данном проекте используются Microsoft Office OLE версии 16. Если у вас установленая ранняя версия, то просто подключите более раннюю версию OLE через настройки проекта.  
-Также данный проект собирался в Visual Studio 2017: Community, с использованием возможностей C# 6, поэтому настоятельно рекомендуется использовать именно её.
+Нужны Windows и установленный Microsoft Excel. Проекты GUI, ядра и CLI используют .NET Framework 4.7.2, вспомогательный CSV-конвертер — .NET Framework 3.5. Сборка и проверки выполнялись в Visual Studio 2022 Community с Excel 16.0; пути к Office interop задаются ссылками проектов.
 
 
 ## Используемые библиотеки
 * [SocialExplorer/FastDBF](https://github.com/SocialExplorer/FastDBF) - работа с DBF файлами
-* [Jint](https://github.com/sebastienros/jint) - JS интерпретатор для преобразования выходного имени DBF файла
-* [LibZ](https://github.com/MiloszKrajewski/LibZ) - альтернатива LibZ для объединения DLL в один EXE
+* [Jint](https://github.com/sebastienros/jint) - JS интерпретатор правил распознавания, преобразования и выходного имени файла
 * [NickBuhro.Translit](https://github.com/nick-buhro/Translit) - транслитерации согласно ГОСТу
 * [Windows API Code Pack](https://github.com/aybe/Windows-API-Code-Pack-1.1) - диалога выбора директории из нового Windows API
 * [Exception Assert](https://www.nuget.org/packages/ExceptionAssert/1.0.0) - библиотека, упрощающая юнит-тестирование

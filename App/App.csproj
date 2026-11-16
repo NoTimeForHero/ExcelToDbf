@@ -363,7 +363,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="config.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Resource Include="Resources\arrow_down.png" />
     <Resource Include="Resources\arrow_up.png" />
@@ -372,6 +372,11 @@
     <ProjectReference Include="..\Engine\ExcelToDbf.Engine.csproj">
       <Project>{E605A820-E6A8-4CF7-95DA-E150BD4A4B16}</Project>
       <Name>ExcelToDbf.Engine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Cli\ExcelToDbf.Cli.csproj">
+      <Project>{96875C32-BC2A-4DB9-A00E-A0C1C0DC27D5}</Project>
+      <Name>ExcelToDbf.Cli</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\Test1\CSV_Converter.csproj">
       <Project>{63a01389-cfe5-41aa-ae5e-de817ca43ff8}</Project>
@@ -400,21 +405,31 @@
     <Error Condition="!Exists('..\packages\ReactiveUI.Fody.18.3.1\build\ReactiveUI.Fody.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ReactiveUI.Fody.18.3.1\build\ReactiveUI.Fody.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.Web.WebView2.1.0.1587.40\build\Microsoft.Web.WebView2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Web.WebView2.1.0.1587.40\build\Microsoft.Web.WebView2.targets'))" />
   </Target>
-  <PropertyGroup>
-    <PostBuildEvent>rem if "Release" NEQ "$(ConfigurationName)" (exit /b 0)
-mkdir "$(TargetDir)\DLL"
 
-move "$(TargetDir)*.dll" "$(TargetDir)\DLL"
-move "$(TargetDir)runtimes" "$(TargetDir)\DLL"
-move "CSV_Converter.*" "$(TargetDir)\DLL"
-verify &gt; nul
-ren $(TargetName).xml config.xml.backup
-ren $(TargetName).pdb config.pdb.backup
-del /q *.pdb
-del /q *.xml
-ren config.xml.backup $(TargetName).xml
-ren config.pdb.backup $(TargetName).pdb
-verify &gt; nul</PostBuildEvent>
-  </PropertyGroup>
   <Import Project="..\packages\Microsoft.Web.WebView2.1.0.1587.40\build\Microsoft.Web.WebView2.targets" Condition="Exists('..\packages\Microsoft.Web.WebView2.1.0.1587.40\build\Microsoft.Web.WebView2.targets')" />
+  <Import Project="..\Packaging\Distribution.targets" />
+  <Target Name="PackageConsoleClient" AfterTargets="Build">
+    <PropertyGroup>
+      <CliOutput>$(MSBuildProjectDirectory)\..\Cli\bin\$(Configuration)\</CliOutput>
+    </PropertyGroup>
+    <ItemGroup>
+      <RuntimeLibraries Include="$(TargetDir)*.dll" />
+      <CliRuntimeLibraries Include="$(CliOutput)*.dll" />
+      <CsvRuntime Include="$(CliOutput)CSV_Converter.*" />
+      <LocalCsvRuntime Include="$(TargetDir)CSV_Converter.*" />
+      <NativeRuntime Include="$(TargetDir)runtimes\**\*" />
+    </ItemGroup>
+    <MakeDir Directories="$(TargetDir)DLL" />
+    <Move SourceFiles="@(RuntimeLibraries)" DestinationFolder="$(TargetDir)DLL" />
+    <Move SourceFiles="@(LocalCsvRuntime)" DestinationFolder="$(TargetDir)DLL" />
+    <Copy SourceFiles="@(CliRuntimeLibraries);@(CsvRuntime)" DestinationFolder="$(TargetDir)DLL" SkipUnchangedFiles="true" />
+    <Move SourceFiles="@(NativeRuntime)" DestinationFiles="@(NativeRuntime->'$(TargetDir)DLL\runtimes\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <RemoveDir Directories="$(TargetDir)runtimes" Condition="Exists('$(TargetDir)runtimes')" />
+    <Copy SourceFiles="$(CliOutput)ExcelToDbf.Cli.exe;$(CliOutput)ExcelToDbf.Cli.exe.config" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <ExtraBuildMetadata Include="$(TargetDir)*.xml;$(TargetDir)*.pdb"
+        Exclude="$(TargetDir)$(TargetName).xml;$(TargetDir)$(TargetName).pdb;$(TargetDir)ExcelToDbf.Cli.xml;$(TargetDir)ExcelToDbf.Cli.pdb;$(TargetDir)ExcelToDbf.Engine.xml;$(TargetDir)ExcelToDbf.Engine.pdb" />
+    </ItemGroup>
+    <Delete Files="@(ExtraBuildMetadata)" />
+  </Target>
 </Project>

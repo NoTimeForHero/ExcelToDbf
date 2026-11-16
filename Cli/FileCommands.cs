@@ -103,6 +103,11 @@ namespace ExcelToDbf.Cli
                 report.ExitCode = 1;
                 report.Errors.Add(new Diagnostic { Code = "NO_FORM", Stage = "rules", Message = "Подходящая форма не найдена" });
             }
+            ApplyStrict(report, strict);
+        }
+
+        public static void ApplyStrict(Report report, bool strict)
+        {
             if (strict && report.Warnings.Count > 0)
             {
                 report.Status = "failed";
@@ -119,6 +124,8 @@ namespace ExcelToDbf.Cli
                 runtime.Context.Connect(excel.GetCellValue, excel.FindRange);
                 var search = runtime.Context.SearchForm(Model(options));
                 var report = new Report { Command = options.Command };
+                Commands.AddConfigWarnings(report, runtime);
+                AddSearchDiagnostics(report, search, false);
                 object diagnosticSearch = null;
                 if (options.Has("--all-forms"))
                 {
@@ -128,10 +135,13 @@ namespace ExcelToDbf.Cli
                         diagnostic.Context.Connect(excel.GetCellValue, excel.FindRange);
                         var all = diagnostic.Context.SearchForm(Model(options));
                         diagnosticSearch = SearchData(all, diagnostic);
-                        AddSearchDiagnostics(report, all, options.Has("--strict"));
+                        var diagnosticReport = new Report();
+                        AddSearchDiagnostics(diagnosticReport, all, false);
+                        foreach (var warning in diagnosticReport.Warnings)
+                            if (!report.Warnings.Any(x => x.Code == warning.Code && x.Form == warning.Form)) report.Warnings.Add(warning);
                     }
                 }
-                else AddSearchDiagnostics(report, search, options.Has("--strict"));
+                ApplyStrict(report, options.Has("--strict"));
                 report.Data = new { input = options.Input, config = runtime.Config.ConfigPath, configHash = runtime.ConfigHash,
                     selectedSheet = excel.SheetName, search = SearchData(search, runtime), diagnosticSearch };
                 return report;

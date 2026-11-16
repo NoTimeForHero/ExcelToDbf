@@ -23,6 +23,7 @@ namespace ExcelToDbf.Cli
                 using (var excel = FileCommands.Open(options, session, runtime.Config.Data))
                 {
                     data["configHash"] = runtime.ConfigHash;
+                    Commands.AddConfigWarnings(report, runtime);
                     data["selectedSheet"] = excel.SheetName;
                     runtime.Context.Connect(excel.GetCellValue, excel.FindRange);
                     var search = runtime.Context.SearchForm(FileCommands.Model(options));

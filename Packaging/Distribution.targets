@@ -1,0 +1,15 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <DistributionRoot>$(MSBuildThisFileDirectory)..\</DistributionRoot>
+  </PropertyGroup>
+  <Target Name="CopyAgentResources" AfterTargets="Build">
+    <ItemGroup>
+      <AgentResources Include="$(DistributionRoot)distribution\**\*" />
+      <AgentTestData Include="$(DistributionRoot)App\TestData\*.xlsx;$(DistributionRoot)App\TestData\*.xls;$(DistributionRoot)App\TestData\cases.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AgentResources)" DestinationFiles="@(AgentResources->'$(TargetDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(AgentTestData)" DestinationFolder="$(TargetDir)TestData" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(DistributionRoot)App\config.js" DestinationFiles="$(TargetDir)config.example.js" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(DistributionRoot)App\config.js" DestinationFiles="$(TargetDir)config.js" Condition="!Exists('$(TargetDir)config.js')" />
+  </Target>
+</Project>

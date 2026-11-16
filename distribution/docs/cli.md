@@ -1,0 +1,132 @@
+# CLI конвертера
+
+Среда: Windows, установленный Microsoft Excel и .NET Framework 4.7.2. CSV дополнительно использует поставляемый `CSV_Converter.exe` на .NET Framework 3.5. `doctor` проверяет реальное создание и закрытие Excel; успешный `check-config` Excel не требует.
+
+## Быстрый запуск из PowerShell
+
+```powershell
+.\ExcelToDbf.Cli.exe doctor --json
+New-Item -ItemType Directory -Path .\work -Force
+Copy-Item -LiteralPath .\config.js -Destination .\work\candidate.js
+.\ExcelToDbf.Cli.exe inspect .\incoming\new.xlsx --range A1:M30 --json
+# Отредактировать work\candidate.js по rules-api.md.
+.\ExcelToDbf.Cli.exe check-config --config .\work\candidate.js --json
+.\ExcelToDbf.Cli.exe match .\incoming\new.xlsx --config .\work\candidate.js --json
+.\ExcelToDbf.Cli.exe validate .\incoming\new.xlsx --config .\work\candidate.js --json
+.\ExcelToDbf.Cli.exe test --manifest .\TestData\cases.json --config .\work\candidate.js --json
+.\ExcelToDbf.Cli.exe convert .\incoming\new.xlsx --config .\work\candidate.js --output .\work\result.dbf --json
+```
+
+Manifest примера подходит только к примерному конфигу. Для фирмы используй её набор данных. После каждой команды проверяй `$LASTEXITCODE`; следующий шаг выполняй после разбора предыдущего результата.
+
+Для запуска эталонных сценариев поставки:
+
+```powershell
+.\ExcelToDbf.Cli.exe test --manifest .\TestData\cases.json --config .\config.example.js --json
+```
+
+## Общие аргументы и пути
+
+CLI пишет JSON в UTF-8. Для разбора JSON в Windows PowerShell 5.1 сначала настрой кодировку; PowerShell 7 обычно уже использует UTF-8:
+
+```powershell
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+$OutputEncoding = [Console]::OutputEncoding
+```
+
+Windows PowerShell 5.1 представляет native stderr как ErrorRecord. Если в скрипте задано `$ErrorActionPreference = 'Stop'`, сообщения логов могут прервать вызов даже при коде 0. На время вызова EXE используй `Continue`, сохраняй stderr отдельно и проверяй `$LASTEXITCODE`; затем восстанови прежнюю настройку. Это особенность оболочки, сообщения логов не являются ошибкой конвертации.
+
+- `--help` работает у любой команды без выполнения операции.
+- `--json` оставляет в stdout ровно один JSON-документ. Логи, сообщения `log()` и название выполняемого теста идут в stderr. Потоки не объединять перед разбором JSON.
+- `--timeout N` задаёт предел операции в секундах, от 1 до 86400; по умолчанию 120. Для `test` это предел всего набора. По тайм-ауту рабочий процесс и зарегистрированные принадлежащие операции процессы останавливаются.
+- `--config path` выбирает локальный JS-конфиг; поддерживается во всех рабочих командах, кроме `inspect`. Без аргумента используется `config.js` рядом с EXE.
+- Явные относительные пути считаются от рабочей директории вызывающего процесса. Путь конфига по умолчанию не зависит от неё. В JSON возвращаются абсолютные пути.
+- CLI работает локально, не запускает GUI, предзагрузку конфигурации и автообновление. Запуск не заменяет рабочий конфиг.
+- Сборка сохраняет существующий локальный `config.js` и отдельно обновляет `config.example.js`. При ручном обновлении поставки также сохраняй конфиги фирм и предыдущие версии.
+
+## Команды
+
+| Команда | Аргументы | Результат |
+| --- | --- | --- |
+| `doctor` | необязательный `--config` | Доступность Excel и временной директории, версия Excel, разрядность CLI, пути |
+| `check-config` | `--config` | Синтаксис и структура JS, параметры чтения, схемы DBF, список форм, SHA256 |
+| `inspect file` | `--range A1:M30` | Листы, выбранный первый лист, UsedRange, координаты и значения ячеек |
+| `match file` | `--config`, `--all-forms`, `--strict` | Выбор формы и объяснение assertions |
+| `validate file` | `--config`, `--strict`, `--keep-artifacts dir` | Полная пробная конвертация и чтение DBF обратно |
+| `convert file` | как validate, также `--output path`, `--overwrite` | Проверенная конвертация с публикацией DBF |
+| `test` | `--manifest path`, `--config`, `--strict` | Сравнение каждого документа с заданными ожиданиями |
+
+У `inspect` по умолчанию диапазон A1:M30; максимум 10000 ячеек за запрос. Поддержаны A1-адреса прямоугольника и одной ячейки. `rawValue` содержит значение Excel `Range.Value`, `ruleValue` — строку, которую вернёт `cell().Value`. `state` различает пустую ячейку, значение и ошибку Excel; ошибка чтения диапазона возвращается в `errors`. Отображаемый текст и формулы отдельно не экспортируются. Выбор другого листа первой версией не поддерживается.
+
+`match` воспроизводит рабочий поиск с настройкой `fastSearch`. В `search.forms` только проверенные формы; `notExecutedForms` перечисляет остальные. У каждой проверенной формы есть выполненные assertions и признак `shortCircuited`. Досрочный `return` внутри JS не позволяет узнать, сколько assertions могло быть выполнено дальше. `--all-forms` добавляет `diagnosticSearch` из отдельного JS runtime с отключённым fastSearch, сохраняя рабочий `search`.
+
+`validate` проходит весь документ и выполняет оба хука. DBF пишется во временную директорию, а не в рассчитанный `plannedOutput`. После закрытия файл проверяется отдельным читателем: заголовок, схема, все записи, числа, даты и кодировка. В отчёте есть количество строк, записей, пропусков, причина остановки, сумма каждого числового поля и первые пять записей. Ограничение образца не ограничивает проверку.
+
+`--strict` превращает предупреждения о неоднозначном распознавании и потерях данных в ошибку. В обычном режиме в JSON сохраняется до 200 предупреждений; `dataWarningCount` сообщает полное число предупреждений записи. `--keep-artifacts dir` сохраняет отдельный DBF с `artifact.status=validated` или `partial-failed`. Сбойный артефакт не является готовым файлом для CRM. После принудительного тайм-аута сохранение артефакта не гарантируется.
+
+`convert` без `--output` использует `app.getOutputFilename`. Выходная директория должна существовать. Совпадение выхода с исходником или конфигом запрещено. Для существующего файла нужен `--overwrite`; замена выполняется после успешной записи и `afterWrite` через временный файл в той же директории. При сбое прежний DBF сохраняется. Политика перезаписи GUI остаётся прежней.
+
+## JSON и коды завершения
+
+Каждый отчёт содержит `schemaVersion: 1`, `rulesApiVersion: 1`, `command`, `status`, `data`, `warnings`, `errors`. Отсутствующие необязательные поля не выводятся. Имена DBF-полей в словарях сохраняют регистр, например `numericTotals.SUMMA`.
+
+| Код процесса | Значение |
+| --- | --- |
+| 0 | Успешное выполнение / все ожидания manifest соблюдены |
+| 1 | Конфиг, правила или данные не прошли проверку, форма не найдена, регрессия обнаружила отличие |
+| 2 | Ошибка аргументов CLI |
+| 3 | Проблема среды, файлов, COM, тайм-аут или отмена |
+
+Основные диагностические коды: `INVALID_ARGUMENTS`, `INVALID_CONFIG`, `UNSUPPORTED_PROPERTY`, `INVALID_RANGE`, `RULES_FAILED`, `NO_FORM`, `NO_ASSERTIONS`, `MULTIPLE_FORMS`, `INVALID_START_ROW`, `INVALID_NUMBER`, `NUMBER_OVERFLOW`, `DBF_FIELD_ERROR`, `INVALID_DATE`, `STRING_TRUNCATED`, `ENCODING_LOSS`, `NUMBER_PRECISION_LOSS`, `CONVERSION_FAILED`, `INVALID_DBF`, `OUTPUT_EXISTS`, `OUTPUT_NAME_FAILED`, `INVALID_OUTPUT`, `STRICT_VALIDATION`, `INVALID_MANIFEST`, `REGRESSION_FAILED`, `TIMEOUT`, `CANCELLED`, `EXECUTION_FAILED`, `ARTIFACT_SAVE_FAILED`, `CLEANUP_FAILED`.
+
+Ошибка по возможности содержит `stage`, `form`, `sourceRow`, `field`, `actual`. `sourceRow` — номер строки исходного Excel. Координаты JS, когда доступны, находятся в `scriptFile`, `scriptLine`, `scriptColumn`, `scriptStack`; строки и колонки в отчёте считаются с 1. Не у каждого исключения хост-функции есть JS-позиция.
+
+Пример ошибки:
+
+```json
+{
+  "code": "INVALID_NUMBER",
+  "stage": "dbf-write",
+  "form": "Форма 2.21А",
+  "sourceRow": 9,
+  "field": "SUMMA",
+  "actual": "ERROR",
+  "message": "На строке 9 колонка SUMMA (ERROR) не является числом"
+}
+```
+
+## Manifest регрессионных проверок
+
+Manifest — JSON с `schemaVersion: 1` и непустым массивом `cases`. Имена сценариев уникальны, `input` считается относительно manifest. Все сценарии выполняются с выбранным конфигом фирмы. Неизвестные свойства отклоняются, чтобы опечатка не отключила проверку.
+
+```json
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "Новый формат",
+      "input": "new.xlsx",
+      "expected": {
+        "status": "ok",
+        "form": "Новая форма",
+        "records": 10,
+        "startY": 8,
+        "stopReason": "stop",
+        "warningCount": 0,
+        "tolerance": 0,
+        "numericTotals": { "SUMMA": 1234.56 },
+        "samples": [ { "record": 1, "values": { "ID": "1", "SUMMA": 100.00 } } ]
+      }
+    },
+    {
+      "name": "Неподходящий файл",
+      "input": "other.xlsx",
+      "expected": { "status": "failed", "error": { "code": "NO_FORM", "stage": "rules" } }
+    }
+  ]
+}
+```
+
+Для `ok` обязательны `form` и `records`; остальные ожидания необязательны. Для `failed` обязателен `error.code`; можно уточнить `stage`, `sourceRow`, `field`. `samples.record` — номер записи DBF от 1 до 5. Числа сравниваются с `tolerance`, по умолчанию точно. В `data.cases[].differences` перечислены несовпавшие ожидания. Общий успех означает, что ожидаемые ошибки тоже подтверждены.
+
+Проверки поставки фиксируют поведение примеров проекта и не подтверждают приём DBF конкретной коммерческой CRM. Для такого подтверждения нужен проверенный бизнес-эталон или импорт в CRM.

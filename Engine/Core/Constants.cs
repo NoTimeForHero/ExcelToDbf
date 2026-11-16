@@ -10,8 +10,8 @@ namespace ExcelToDbf.Core
     {
         public static readonly string ApplicationTitle = "Конвертирование Excel документов в DBF";
         public static readonly string SettingsFile = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.js");
-        public static readonly string PreloadFile = "Preload.json";
+        public static readonly string PreloadFile = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Preload.json");
         public static readonly bool ExcelDebug = false;
-        public static readonly string LastLaunchFile = "LastLaunch.json";
+        public static readonly string LastLaunchFile = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LastLaunch.json");
     }
 }

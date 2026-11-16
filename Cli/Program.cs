@@ -81,36 +81,68 @@ namespace ExcelToDbf.Cli
 
         private static Report Supervise(string[] args, Options options)
         {
-            var session = Path.Combine(Path.GetTempPath(), "ExcelToDbf-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(session);
+            string session = null;
+            Report result;
             try
             {
-                using (var child = new Process())
+                session = Path.Combine(Path.GetTempPath(), "ExcelToDbf-" + Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(session);
+                result = RunChild(args, options, session);
+            }
+            catch (Exception error) { result = Report.Failure(options.Command, error); }
+            try
+            {
+                if (session != null && Directory.Exists(session))
                 {
-                    child.StartInfo = new ProcessStartInfo
+                    Ownership.StopOwnedProcesses(session);
+                    var publishMarker = Path.Combine(session, "publish-path.txt");
+                    if (File.Exists(publishMarker))
                     {
-                        FileName = typeof(Program).Assembly.Location,
-                        Arguments = "--internal-worker",
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        RedirectStandardInput = true,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        StandardOutputEncoding = Encoding.UTF8,
-                        StandardErrorEncoding = Encoding.UTF8
-                    };
-                    child.Start();
-                    var cancelled = false;
-                    ConsoleCancelEventHandler onCancel = (sender, ev) =>
-                    {
-                        ev.Cancel = true;
-                        cancelled = true;
-                        try { if (!child.HasExited) child.Kill(); }
-                        catch (InvalidOperationException) { }
-                    };
-                    Console.CancelKeyPress += onCancel;
-                    try
-                    {
+                        var staging = File.ReadAllText(publishMarker);
+                        if (Path.GetFileName(staging).EndsWith("." + Path.GetFileName(session) + ".tmp", StringComparison.Ordinal) && File.Exists(staging))
+                            File.Delete(staging);
+                    }
+                    foreach (var file in Directory.GetFiles(session)) File.Delete(file);
+                    Directory.Delete(session);
+                }
+            }
+            catch (Exception error)
+            {
+                result.Status = "failed";
+                result.ExitCode = 3;
+                result.Errors.Add(new Diagnostic { Code = "CLEANUP_FAILED", Stage = "cleanup", Message = error.Message });
+            }
+            return result;
+        }
+
+        private static Report RunChild(string[] args, Options options, string session)
+        {
+            using (var child = new Process())
+            {
+                child.StartInfo = new ProcessStartInfo
+                {
+                    FileName = typeof(Program).Assembly.Location,
+                    Arguments = "--internal-worker",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    StandardOutputEncoding = Encoding.UTF8,
+                    StandardErrorEncoding = Encoding.UTF8
+                };
+                child.Start();
+                var cancelled = false;
+                ConsoleCancelEventHandler onCancel = (sender, ev) =>
+                {
+                    ev.Cancel = true;
+                    cancelled = true;
+                    try { if (!child.HasExited) child.Kill(); }
+                    catch (InvalidOperationException) { }
+                };
+                Console.CancelKeyPress += onCancel;
+                try
+                {
                     var stdout = child.StandardOutput.ReadToEndAsync();
                     var stderr = Task.Run(async () =>
                     {
@@ -122,46 +154,29 @@ namespace ExcelToDbf.Cli
                     if (!child.WaitForExit(options.TimeoutSeconds * 1000))
                     {
                         child.Kill();
-                        child.WaitForExit();
-                        Ownership.StopOwnedProcesses(session);
-                        return new Report
-                        {
-                            Command = options.Command, Status = "failed", ExitCode = 3,
-                            Errors = { new Diagnostic { Code = "TIMEOUT", Stage = "runtime", Message = "Превышен --timeout; рабочий процесс остановлен" } }
-                        };
+                        child.WaitForExit(5000);
+                        return Stopped(options, "TIMEOUT", "Превышен --timeout; рабочий процесс остановлен");
                     }
-                    if (cancelled) return new Report
-                    {
-                        Command = options.Command, Status = "failed", ExitCode = 3,
-                        Errors = { new Diagnostic { Code = "CANCELLED", Stage = "runtime", Message = "Операция отменена" } }
-                    };
+                    if (cancelled) return Stopped(options, "CANCELLED", "Операция отменена");
                     stderr.GetAwaiter().GetResult();
                     var result = JsonConvert.DeserializeObject<Report>(stdout.GetAwaiter().GetResult());
                     if (result == null) throw new IOException("Рабочий процесс не вернул JSON");
                     result.ExitCode = child.ExitCode;
                     return result;
-                    }
-                    finally
-                    {
-                        Console.CancelKeyPress -= onCancel;
-                        if (!child.HasExited) { child.Kill(); child.WaitForExit(5000); }
-                    }
                 }
-            }
-            catch (Exception error) { Ownership.StopOwnedProcesses(session); return Report.Failure(options.Command, error); }
-            finally
-            {
-                Ownership.StopOwnedProcesses(session);
-                var publishMarker = Path.Combine(session, "publish-path.txt");
-                if (File.Exists(publishMarker))
+                finally
                 {
-                    var staging = File.ReadAllText(publishMarker);
-                    if (Path.GetFileName(staging).EndsWith("." + Path.GetFileName(session) + ".tmp", StringComparison.Ordinal) && File.Exists(staging))
-                        File.Delete(staging);
+                    Console.CancelKeyPress -= onCancel;
+                    if (!child.HasExited) { child.Kill(); child.WaitForExit(5000); }
                 }
-                foreach (var file in Directory.GetFiles(session)) File.Delete(file);
-                Directory.Delete(session);
             }
         }
+
+        private static Report Stopped(Options options, string code, string message) => new Report
+        {
+            Command = options.Command, Status = "failed", ExitCode = 3,
+            Data = new { input = options.Input, config = options.Command == "inspect" || options.Command == "doctor" ? null : options.Config },
+            Errors = { new Diagnostic { Code = code, Stage = "runtime", Message = message } }
+        };
     }
 }

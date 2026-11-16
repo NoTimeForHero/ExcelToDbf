@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using ExcelToDbf.Processing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.IO;
+using System.Runtime.InteropServices;
 
 namespace ExcelToDbf.Cli
 {
@@ -43,13 +45,16 @@ namespace ExcelToDbf.Cli
         public static Report Failure(string command, Exception error, int exitCode = 3)
         {
             var processing = error as ProcessingException;
-            var report = new Report { Command = command, Status = "failed", ExitCode = processing != null ? 1 : exitCode };
+            var report = new Report { Command = command, Status = "failed",
+                ExitCode = processing != null ? (processing.Stage == "arguments" ? 2 : 1) : exitCode };
             Jint.Runtime.JavaScriptException script = null;
             Esprima.ParserException syntax = null;
             for (var current = error; current != null; current = current.InnerException)
             {
                 if (current is Jint.Runtime.JavaScriptException js) script = js;
                 if (current is Esprima.ParserException parser) syntax = parser;
+                if (current is IOException || current is UnauthorizedAccessException || current is COMException)
+                    report.ExitCode = 3;
             }
             report.Errors.Add(new Diagnostic
             {
