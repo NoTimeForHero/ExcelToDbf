@@ -78,16 +78,24 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
         private IEnumerable<DocForm> ParseForms(Engine engine, JsValue target)
         {
             if (!(target is ArrayInstance arr)) throw new JSException("Invalid form array type!");
+            if (arr.Any(value => !(value is ObjectInstance))) throw new JSException("Каждый элемент app.forms должен быть объектом");
             return arr.OfType<ObjectInstance>().Select(val => new DocForm
             {
                 Name = val["name"].AsString(),
                 Settings = parser.Deserialize<DocForm.XSettings>(val["settings"]),
                 Fields = parser.Deserialize<DocForm.DbfFields[]>(val["dbfFields"]),
                 Rules = val["rules"] as ScriptFunctionInstance,
-                AfterWrite = val["afterWrite"] as ScriptFunctionInstance,
-                BeforeWrite = val["beforeWrite"] as ScriptFunctionInstance,
+                AfterWrite = OptionalFunction(val, "afterWrite"),
+                BeforeWrite = OptionalFunction(val, "beforeWrite"),
                 Write = val["write"] as ScriptFunctionInstance,
             });
+        }
+
+        private static ScriptFunctionInstance OptionalFunction(ObjectInstance value, string key)
+        {
+            var member = value[key];
+            if (member.IsUndefined() || member.IsNull()) return null;
+            return member as ScriptFunctionInstance ?? throw new JSException(key + " должен быть функцией");
         }
     }
 }

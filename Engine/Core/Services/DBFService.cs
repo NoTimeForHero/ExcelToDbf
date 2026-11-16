@@ -10,6 +10,8 @@ using ExcelToDbf.Utils;
 using Microsoft.Office.Interop.Excel;
 using NLog;
 using SocialExplorer.IO.FastDBF;
+using ExcelToDbf.Processing;
+using System.Globalization;
 
 namespace ExcelToDbf.Core.Services
 {
@@ -17,6 +19,8 @@ namespace ExcelToDbf.Core.Services
     {
         protected readonly ConfigProvider pvConfig;
         protected readonly ILogger logger;
+        public Action<DataWarning> OnWarning { get; set; }
+        public bool Strict { get; set; }
 
         public DBFService(ILogger logger, ConfigProvider pvConfig)
         {
@@ -32,15 +36,18 @@ namespace ExcelToDbf.Core.Services
             private readonly ILogger logger;
             private readonly DocForm form;
             private readonly List<DbfColumn> columns = new List<DbfColumn>();
+            private readonly DBFService owner;
+            private readonly Encoding encoding;
             public int RecordsWritten { get; private set; }
 
             internal Work(DBFService owner, DocForm form, string outputFilename)
             {
                 this.form = form;
+                this.owner = owner;
                 logger = owner.logger;
                 var config = owner.pvConfig.Config;
 
-                var encoding = Encoding.GetEncoding(config.System.OutputEncoding);
+                encoding = Encoding.GetEncoding(config.System.OutputEncoding);
 
                 db = new DbfFile(encoding);
                 db.Open(outputFilename, FileMode.Create); // FileMode.Create = файл будет перезаписан если уже существует
@@ -98,26 +105,73 @@ namespace ExcelToDbf.Core.Services
                 {
                     var column = columns[i];
                     if (!input.TryGetValue(column.Name, out var rawValue)) continue;
+                    try
+                    {
                     switch (column.ColumnType)
                     {
                         case DbfColumn.DbfColumnType.Character:
-                            record[i] = rawValue?.ToString();
+                            var text = rawValue?.ToString();
+                            if (text != null)
+                            {
+                                var strictEncoding = (Encoding)encoding.Clone();
+                                strictEncoding.EncoderFallback = EncoderFallback.ExceptionFallback;
+                                try { strictEncoding.GetBytes(text); }
+                                catch (EncoderFallbackException)
+                                { Warn("ENCODING_LOSS", "Символы не представимы в выходной кодировке", rowIndex, column.Name, text); }
+                                if (encoding.GetByteCount(text) > column.Length)
+                                    Warn("STRING_TRUNCATED", "Строка превышает длину DBF-поля и будет обрезана", rowIndex, column.Name, text);
+                            }
+                            record[i] = text;
                             break;
                         case DbfColumn.DbfColumnType.Date:
-                            record[i] = DbfHelper.ToDate(rawValue?.ToString());
+                            var dateText = rawValue?.ToString();
+                            var date = DbfHelper.ToDate(dateText);
+                            if (!string.IsNullOrEmpty(dateText) && (date == null ||
+                                !DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _)))
+                            {
+                                Warn("INVALID_DATE", "Дата не распознана и будет записана пустой", rowIndex, column.Name, dateText);
+                                date = null;
+                            }
+                            record[i] = date;
                             break;
                         case DbfColumn.DbfColumnType.Number:
                             var number = rawValue?.ToString().Replace(',', '.') ?? "";
-                            if (!DbfHelper.IsNumber(number)) throw new InvalidOperationException($"На строке {rowIndex} колонка {column.Name} ({number}) не является числом!");
+                            if (!DbfHelper.IsNumber(number))
+                                throw new ProcessingException("INVALID_NUMBER", "dbf-write", $"На строке {rowIndex} колонка {column.Name} ({number}) не является числом")
+                                { Field = column.Name, SourceRow = rowIndex, Actual = number };
+                            var spec = (form.Fields[i].Length ?? "10,2").Split(',');
+                            var decimals = spec.Length > 1 ? int.Parse(spec[1]) : 0;
+                            if (decimal.TryParse(number, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var numeric))
+                            {
+                                if (numeric.ToString("F" + decimals, CultureInfo.InvariantCulture).Length > column.Length)
+                                    throw new ProcessingException("NUMBER_OVERFLOW", "dbf-write", "Число не помещается в поле DBF")
+                                    { Field = column.Name, SourceRow = rowIndex, Actual = number };
+                                if (decimal.Round(numeric, decimals) != numeric)
+                                    Warn("NUMBER_PRECISION_LOSS", "Точность числа превышает точность поля DBF", rowIndex, column.Name, number);
+                            }
                             record[i] = number;
                             break;
                         default:
                             throw new NotImplementedException($"Column {column.ColumnType} not supported yet!");
                     }
+                    }
+                    catch (ProcessingException) { throw; }
+                    catch (Exception error)
+                    {
+                        throw new ProcessingException("DBF_FIELD_ERROR", "dbf-write", error.Message, error)
+                        { Field = column.Name, SourceRow = rowIndex, Actual = rawValue };
+                    }
                 }
 
                 db.Write(record, true);
                 RecordsWritten++;
+            }
+
+            private void Warn(string code, string message, int row, string field, object actual)
+            {
+                owner.OnWarning?.Invoke(new DataWarning { Code = code, Message = message, SourceRow = row, Field = field, Actual = actual });
+                if (owner.Strict) throw new ProcessingException(code, "dbf-write", message)
+                { SourceRow = row, Field = field, Actual = actual };
             }
 
             public void Dispose()

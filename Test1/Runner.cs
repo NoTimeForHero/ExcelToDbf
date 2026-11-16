@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Windows.Forms;
+using System.Runtime.InteropServices;
 using Excel = Microsoft.Office.Interop.Excel;
 
 // Работает только на NET Framework 3.5
@@ -16,12 +16,13 @@ namespace CSV_Converter
     {
         private static string Exe => Assembly.GetExecutingAssembly().Location;
 
-        public static void Main(string[] args)
+        [STAThread]
+        public static int Main(string[] args)
         {
             if (args == null || args.Length < 2)
             {
                 Console.WriteLine("Usage: %input_path%\\input.csv %output_path\\output.csv [delimiter=;]");
-                return;
+                return 2;
             }
 
             string inputPath = args[0];
@@ -30,58 +31,96 @@ namespace CSV_Converter
             if (args.Length >= 3) delimiter = args[2];
             try
             {
-                SaveAs(inputPath, outputPath, delimiter);
+                SaveAs(inputPath, outputPath, delimiter, args.Length >= 4 ? args[3] : null);
+                return 0;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка конвертации в CSV!\nФайл {inputPath} не был сконвертирован:\n{ex}",
-                    "Ошибка конвертации", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Console.Error.WriteLine(ex);
+                return 1;
             }
         }
 
         public static ConvResult Open(string inputFilename, string delimiter)
+            => Open(inputFilename, delimiter, null);
+
+        public static ConvResult Open(string inputFilename, string delimiter, string ownershipDirectory)
         {
-            var tempDir = Path.Combine(Path.GetTempPath(), "ExcelToDbf");
+            var tempDir = ownershipDirectory ?? Path.Combine(Path.GetTempPath(), "ExcelToDbf");
             Directory.CreateDirectory(tempDir);
 
             var filename = Path.ChangeExtension(Path.GetRandomFileName(), ".xls");
             var outputFilename = Path.Combine(tempDir, filename);
 
-            Run(inputFilename, outputFilename, delimiter).WaitForExit();
             var result = new ConvResult {Filename = outputFilename};
-            if (File.Exists(outputFilename)) result.Success = true;
+            using (var process = Run(inputFilename, outputFilename, delimiter, ownershipDirectory))
+            {
+                var error = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+                if (process.ExitCode != 0) throw new IOException("Ошибка чтения CSV: " + error);
+                result.Success = File.Exists(outputFilename);
+            }
             return result;
         }
 
-        internal static Process Run(string inputPath, string outputPath, string delimiter=";")
+        internal static Process Run(string inputPath, string outputPath, string delimiter=";", string ownershipDirectory = null)
         {
             var startInfo = new ProcessStartInfo
             {
                 FileName = Exe,
-                Arguments = $"\"{inputPath}\" \"{outputPath}\" {delimiter}"
+                Arguments = $"\"{inputPath}\" \"{outputPath}\" {delimiter}" + (ownershipDirectory == null ? "" : " \"" + ownershipDirectory + "\""),
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true
             };
-            return Process.Start(startInfo);
+            var process = Process.Start(startInfo);
+            RecordOwner(ownershipDirectory, process);
+            return process;
         }
 
-        internal static void SaveAs(string path, string output, string delimiter)
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr handle, out uint processId);
+
+        private static void RecordOwner(string directory, Process process)
+        {
+            if (directory == null) return;
+            File.WriteAllText(Path.Combine(directory, "owner-" + process.Id + ".txt"), process.Id + "|" +
+                process.StartTime.ToUniversalTime().Ticks + "|" + process.ProcessName);
+        }
+
+        internal static void SaveAs(string path, string output, string delimiter, string ownershipDirectory)
         {
             Excel.Application app = null;
             Excel.Workbook wb = null;
+            Excel.Workbooks books = null;
             try
             {
                 app = new Excel.Application();
-                wb = app.Workbooks.Open(
+                GetWindowThreadProcessId(new IntPtr(app.Hwnd), out var pid);
+                using (var process = Process.GetProcessById((int)pid)) RecordOwner(ownershipDirectory, process);
+                app.Visible = false;
+                app.DisplayAlerts = false;
+                app.AskToUpdateLinks = false;
+                app.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityForceDisable;
+                books = app.Workbooks;
+                wb = books.Open(
                     path,
                     Format: Excel.XlFileFormat.xlCSV,
-                    Delimiter: delimiter
+                    Delimiter: delimiter, ReadOnly: true, UpdateLinks: 0
                 );
                 wb.SaveAs(output, Excel.XlFileFormat.xlExcel8);
                 app.Visible = false;
             }
             finally
             {
-                wb?.Close();
-                app?.Quit();
+                try { wb?.Close(false); }
+                finally
+                {
+                    if (wb != null) Marshal.ReleaseComObject(wb);
+                    if (books != null) Marshal.ReleaseComObject(books);
+                    try { app?.Quit(); }
+                    finally { if (app != null) Marshal.ReleaseComObject(app); }
+                }
             }
         }
 

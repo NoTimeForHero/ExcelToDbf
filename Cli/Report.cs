@@ -16,6 +16,9 @@ namespace ExcelToDbf.Cli
         public string Field { get; set; }
         public object Actual { get; set; }
         public string ScriptStack { get; set; }
+        public string ScriptFile { get; set; }
+        public int? ScriptLine { get; set; }
+        public int? ScriptColumn { get; set; }
     }
 
     internal sealed class Report
@@ -30,7 +33,8 @@ namespace ExcelToDbf.Cli
         [JsonIgnore] public int ExitCode { get; set; }
         internal static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
         {
-            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            ContractResolver = new DefaultContractResolver
+            { NamingStrategy = new CamelCaseNamingStrategy { ProcessDictionaryKeys = false } },
             NullValueHandling = NullValueHandling.Ignore,
             Formatting = Formatting.Indented
         };
@@ -40,8 +44,13 @@ namespace ExcelToDbf.Cli
         {
             var processing = error as ProcessingException;
             var report = new Report { Command = command, Status = "failed", ExitCode = processing != null ? 1 : exitCode };
-            var script = error;
-            while (script.InnerException != null) script = script.InnerException;
+            Jint.Runtime.JavaScriptException script = null;
+            Esprima.ParserException syntax = null;
+            for (var current = error; current != null; current = current.InnerException)
+            {
+                if (current is Jint.Runtime.JavaScriptException js) script = js;
+                if (current is Esprima.ParserException parser) syntax = parser;
+            }
             report.Errors.Add(new Diagnostic
             {
                 Code = processing?.Code ?? (exitCode == 2 ? "INVALID_ARGUMENTS" : "EXECUTION_FAILED"),
@@ -51,7 +60,10 @@ namespace ExcelToDbf.Cli
                 SourceRow = processing?.SourceRow,
                 Field = processing?.Field,
                 Actual = processing?.Actual,
-                ScriptStack = script is Jint.Runtime.JavaScriptException js ? js.JavaScriptStackTrace : null
+                ScriptStack = script?.JavaScriptStackTrace,
+                ScriptFile = script?.Location.Source,
+                ScriptLine = script != null && script.Location.Start.Line > 0 ? script.Location.Start.Line : syntax?.LineNumber,
+                ScriptColumn = script != null && script.Location.Start.Line > 0 ? script.Location.Start.Column + 1 : syntax?.Column
             });
             return report;
         }

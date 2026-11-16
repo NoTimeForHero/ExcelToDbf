@@ -62,9 +62,59 @@ try {
         $floating = (Resolve-Path -LiteralPath (Join-Path $TestData 'Example4.xlsx')).Path
         $report = Invoke-Cli @('match', $floating, '--config', $Config)
         Assert-True ($report.data.search.matchedForms.Count -eq 1) 'Floating header was not recognized'
-        [IO.File]::WriteAllText($invalid, $source + '`n'.Replace('`n', "`n") + 'app.forms.forEach(function(f) { f.rules = function() { assert("a", "b"); }; });')
+        [IO.File]::WriteAllText($invalid, $source + "`n" + 'app.forms.forEach(function(f) { f.rules = function() { assert("a", "b"); }; });')
         $report = Invoke-Cli @('match', $example, '--config', $invalid) 1
         Assert-True ($report.errors[0].code -eq 'NO_FORM') 'Expected no-form diagnostic'
+        $report = Invoke-Cli @('validate', $example, '--config', $Config)
+        Assert-True ($report.data.dbf.records -eq 498) 'Incorrect DBF record count'
+        Assert-True ($report.data.dbf.numericTotals.SUMMA -eq 54856.94) 'Incorrect DBF numeric total'
+        Assert-True ($report.data.dbf.sample[0].DATEOPL -eq '2005-09-01') 'Incorrect date read-back'
+        $outputDbf = Join-Path $scratch 'result.dbf'
+        $report = Invoke-Cli @('convert', $example, '--config', $Config, '--output', $outputDbf)
+        Assert-True (Test-Path -LiteralPath $outputDbf) 'Output was not published'
+        $hash = (Get-FileHash -LiteralPath $outputDbf).Hash
+        $report = Invoke-Cli @('convert', $example, '--config', $Config, '--output', $outputDbf) 1
+        Assert-True ($report.errors[0].code -eq 'OUTPUT_EXISTS') 'Overwrite was not refused'
+        Assert-True ((Get-FileHash -LiteralPath $outputDbf).Hash -eq $hash) 'Existing output was changed'
+        $badData = (Resolve-Path -LiteralPath (Join-Path $TestData 'Example3-error.xlsx')).Path
+        $report = Invoke-Cli @('validate', $badData, '--config', $Config) 1
+        Assert-True ($report.errors[0].code -eq 'INVALID_NUMBER') 'Expected invalid number'
+        Assert-True ($report.errors[0].sourceRow -eq 9) 'Incorrect source row in error'
+        Assert-True ($report.errors[0].field -eq 'SUMMA') 'Incorrect source field in error'
+        [IO.File]::WriteAllText($invalid, $source + "`n" + 'app.forms[0].afterWrite = function() { error("after-write-failure"); };')
+        $report = Invoke-Cli @('convert', $example, '--config', $invalid, '--output', $outputDbf, '--overwrite') 1
+        Assert-True ($report.errors[0].stage -eq 'afterWrite') 'Expected afterWrite failure'
+        Assert-True ((Get-FileHash -LiteralPath $outputDbf).Hash -eq $hash) 'Failed conversion damaged previous output'
+        [IO.File]::WriteAllText($invalid, $source + "`n" + 'app.forms[0].write = function(line) { throw new Error("script-error"); };')
+        $report = Invoke-Cli @('validate', $example, '--config', $invalid) 1
+        Assert-True ($report.errors[0].stage -eq 'write') 'Expected JS write failure'
+        Assert-True ($report.errors[0].sourceRow -eq 8) 'Incorrect JS source row'
+        Assert-True ($report.errors[0].scriptStack -ne $null) 'Missing JS stack'
+        [IO.File]::WriteAllText($invalid, $source + "`n" + 'app.forms[0].dbfFields[2].length = "2";')
+        $report = Invoke-Cli @('validate', $example, '--config', $invalid)
+        Assert-True ($report.warnings[0].code -eq 'STRING_TRUNCATED') 'String truncation was not reported'
+        Assert-True ($report.data.dataWarningCount -eq 498) 'Warnings were not counted over the full file'
+        $report = Invoke-Cli @('validate', $example, '--config', $invalid, '--strict') 1
+        Assert-True ($report.errors[0].code -eq 'STRING_TRUNCATED') 'Strict mode accepted data loss'
+        [IO.File]::WriteAllText($invalid, $source + "`n" + 'app.forms[0].afterWrite = function() { while (true) {} };')
+        $report = Invoke-Cli @('validate', $example, '--config', $invalid, '--timeout', '3') 3
+        Assert-True ($report.errors[0].code -eq 'TIMEOUT') 'Infinite afterWrite was not terminated'
+        $csv = Join-Path $scratch 'sample.csv'
+        [IO.File]::WriteAllText($csv, "A;B`r`none;two")
+        $report = Invoke-Cli @('inspect', $csv, '--range', 'A1:B2')
+        Assert-True ($report.data.cells[3].ruleValue -eq 'two') 'Legacy CSV helper lost its delimiter'
+        $userExcel = $null
+        try {
+            $userExcel = New-Object -ComObject Excel.Application
+            $userExcel.Visible = $false
+            $report = Invoke-Cli @('doctor')
+            Assert-True ($userExcel.Version -ne $null) 'CLI terminated another Excel instance'
+            $report = Invoke-Cli @('validate', $example, '--config', $invalid, '--timeout', '3') 3
+            Assert-True ($userExcel.Version -ne $null) 'Timeout terminated another Excel instance'
+        }
+        finally {
+            if ($userExcel) { $userExcel.Quit(); [void][Runtime.InteropServices.Marshal]::ReleaseComObject($userExcel) }
+        }
     }
     Write-Output ("CLI smoke: {0} checks passed" -f $script:checks)
 }

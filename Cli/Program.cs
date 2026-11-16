@@ -62,13 +62,19 @@ namespace ExcelToDbf.Cli
             logging.AddRule(LogLevel.Info, LogLevel.Fatal, new ConsoleTarget("stderr") { StdErr = true, Layout = "${level}: ${message}" });
             LogManager.Configuration = logging;
             WorkerRequest request = null;
+            Options options = null;
             Report report;
             try
             {
                 request = JsonConvert.DeserializeObject<WorkerRequest>(Console.In.ReadToEnd());
-                report = Commands.Run(Options.Parse(request.Args), request.SessionDirectory);
+                options = Options.Parse(request.Args);
+                report = Commands.Run(options, request.SessionDirectory);
             }
-            catch (Exception error) { report = Report.Failure(request?.Args?.FirstOrDefault() ?? "unknown", error); }
+            catch (Exception error)
+            {
+                report = Report.Failure(request?.Args?.FirstOrDefault() ?? "unknown", error);
+                if (options != null) report.Data = new { input = options.Input, config = options.Command == "inspect" ? null : options.Config };
+            }
             Console.WriteLine(report.ToJson());
             return report.ExitCode;
         }
@@ -94,6 +100,17 @@ namespace ExcelToDbf.Cli
                         StandardErrorEncoding = Encoding.UTF8
                     };
                     child.Start();
+                    var cancelled = false;
+                    ConsoleCancelEventHandler onCancel = (sender, ev) =>
+                    {
+                        ev.Cancel = true;
+                        cancelled = true;
+                        try { if (!child.HasExited) child.Kill(); }
+                        catch (InvalidOperationException) { }
+                    };
+                    Console.CancelKeyPress += onCancel;
+                    try
+                    {
                     var stdout = child.StandardOutput.ReadToEndAsync();
                     var stderr = Task.Run(async () =>
                     {
@@ -113,16 +130,35 @@ namespace ExcelToDbf.Cli
                             Errors = { new Diagnostic { Code = "TIMEOUT", Stage = "runtime", Message = "Превышен --timeout; рабочий процесс остановлен" } }
                         };
                     }
+                    if (cancelled) return new Report
+                    {
+                        Command = options.Command, Status = "failed", ExitCode = 3,
+                        Errors = { new Diagnostic { Code = "CANCELLED", Stage = "runtime", Message = "Операция отменена" } }
+                    };
                     stderr.GetAwaiter().GetResult();
                     var result = JsonConvert.DeserializeObject<Report>(stdout.GetAwaiter().GetResult());
                     if (result == null) throw new IOException("Рабочий процесс не вернул JSON");
                     result.ExitCode = child.ExitCode;
                     return result;
+                    }
+                    finally
+                    {
+                        Console.CancelKeyPress -= onCancel;
+                        if (!child.HasExited) { child.Kill(); child.WaitForExit(5000); }
+                    }
                 }
             }
             catch (Exception error) { Ownership.StopOwnedProcesses(session); return Report.Failure(options.Command, error); }
             finally
             {
+                Ownership.StopOwnedProcesses(session);
+                var publishMarker = Path.Combine(session, "publish-path.txt");
+                if (File.Exists(publishMarker))
+                {
+                    var staging = File.ReadAllText(publishMarker);
+                    if (Path.GetFileName(staging).EndsWith("." + Path.GetFileName(session) + ".tmp", StringComparison.Ordinal) && File.Exists(staging))
+                        File.Delete(staging);
+                }
                 foreach (var file in Directory.GetFiles(session)) File.Delete(file);
                 Directory.Delete(session);
             }

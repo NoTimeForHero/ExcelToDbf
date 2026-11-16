@@ -30,6 +30,7 @@ namespace ExcelToDbf.Core.Services
         public int SheetRows { get; private set; }
         public int SheetColumns { get; private set; }
         public string UsedAddress { get; private set; }
+        public string OwnershipDirectory { get; set; }
 
         public ExcelService(ConfigProvider pvConfig, ILogger logger)
             : this(pvConfig, logger, null) { }
@@ -68,7 +69,7 @@ namespace ExcelToDbf.Core.Services
             path = Path.GetFullPath(path);
             if (string.Equals(Path.GetExtension(path), ".csv", StringComparison.OrdinalIgnoreCase))
             {
-                var converted = CSV_Converter.Runner.Open(path, ";");
+                var converted = CSV_Converter.Runner.Open(path, ";", OwnershipDirectory);
                 temporaryFiles.Add(converted.Filename);
                 if (!converted.Success) throw new IOException("Ошибка конвертации CSV в Excel");
                 path = converted.Filename;

@@ -18,6 +18,7 @@ namespace ExcelToDbf.Cli
         {
             if (!File.Exists(options.Input)) throw new FileNotFoundException("Excel-файл не найден", options.Input);
             var excel = new ExcelService(config, LogManager.GetLogger("Excel"), pid => Ownership.Register(session, pid));
+            excel.OwnershipDirectory = session;
             try { excel.OpenWorksheet(options.Input); return excel; }
             catch { excel.Dispose(); throw; }
         }

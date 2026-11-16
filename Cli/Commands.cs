@@ -29,6 +29,7 @@ namespace ExcelToDbf.Cli
         {
             if (options.Command == "inspect") return FileCommands.Inspect(options, session);
             if (options.Command == "match") return FileCommands.Match(options, session);
+            if (options.Command == "validate" || options.Command == "convert") return ConversionCommands.Run(options, session);
             if (options.Command == "doctor")
             {
                 var provider = new ConfigProvider(null) { Config = new Config() };
