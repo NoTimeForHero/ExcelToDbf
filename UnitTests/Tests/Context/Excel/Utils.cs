@@ -42,7 +42,7 @@ namespace UnitTests.Tests.Context.Excel
                 as ScriptFunctionInstance,
         };
 
-        protected static ExcelContext Prepare(DocForm[] forms) => new ExcelContext(logger, new ToolsConfig(forms), engine).Connect(worksheet.getCellValue, null);
+        protected static ExcelContext Prepare(DocForm[] forms) => new ExcelContext(logger, new ToolsConfig(forms), engine).Connect(worksheet.getCellValue, worksheet.FindRange);
         protected static ExcelContext Prepare(DocForm form) => Prepare(new[] { form });
     }
 
@@ -64,6 +64,15 @@ namespace UnitTests.Tests.Context.Excel
 
     public class ToolsWorksheet
     {
+        public Cell? FindRange(int startY, int endY, int startX, int endX, object expect)
+        {
+            for (var y = startY; y <= endY; y++)
+                for (var x = startX; x <= endX; x++)
+                    if (Values.TryGetValue(new Point(y, x), out var value) && value == (string)expect)
+                        return new Cell(y, x, value);
+            return null;
+        }
+
         public readonly Dictionary<Point, string> Values = new Dictionary<Point, string>
         {
             { new Point(1, 1), "Привет" },

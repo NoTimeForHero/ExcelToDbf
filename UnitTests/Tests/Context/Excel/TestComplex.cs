@@ -48,7 +48,7 @@ namespace UnitTests.Tests.Context.Excel.Excel
             var config = new ToolsConfig(forms);
             config.RawData.System.FastSearch = fastSearch;
             // config.Data.System.FastSearch = fastSearch;
-            var context = new ExcelContext(logger, config, engine).Connect(worksheet.getCellValue, null);
+            var context = new ExcelContext(logger, config, engine).Connect(worksheet.getCellValue, worksheet.FindRange);
             var res = context.SearchForm(testModel);
             Assert.AreEqual(formsExpected, res.Report.Keys.Count);
             Assert.AreEqual(keysExpected, res.Report[form1].Count);
