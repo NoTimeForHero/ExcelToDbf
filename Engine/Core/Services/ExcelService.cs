@@ -171,7 +171,9 @@ namespace ExcelToDbf.Core.Services
 
         private static void Release(object value)
         {
-            if (value != null && Marshal.IsComObject(value)) Marshal.FinalReleaseComObject(value);
+            // Several Excel getters may return the same RCW (e.g. the selected sheet).
+            // Release the reference acquired by this getter, not all aliases at once.
+            if (value != null && Marshal.IsComObject(value)) Marshal.ReleaseComObject(value);
         }
 
         private void CloseWorkbook()

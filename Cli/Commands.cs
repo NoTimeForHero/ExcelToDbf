@@ -27,6 +27,8 @@ namespace ExcelToDbf.Cli
 
         public static Report Run(Options options, string session)
         {
+            if (options.Command == "inspect") return FileCommands.Inspect(options, session);
+            if (options.Command == "match") return FileCommands.Match(options, session);
             if (options.Command == "doctor")
             {
                 var provider = new ConfigProvider(null) { Config = new Config() };

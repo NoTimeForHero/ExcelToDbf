@@ -84,6 +84,11 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
                     result.ShortCircuitedForms.Add(form);
                     logger.Info($"Форма \"{form.Name}\" не подходит по условию!");
                 }
+                catch (Exception error)
+                {
+                    throw new ExcelToDbf.Processing.ProcessingException("RULES_FAILED", "rules", error.Message, error)
+                    { Form = form.Name };
+                }
 
                 var isMatches = matches.Count > 0 && matches.All(x => x.Matches);
                 if (isMatches)

@@ -1,6 +1,7 @@
 param(
     [string]$Cli = "$PSScriptRoot\..\Cli\bin\Debug\ExcelToDbf.Cli.exe",
     [string]$Config = "$PSScriptRoot\..\App\config.js",
+    [string]$TestData = "$PSScriptRoot\..\App\TestData",
     [switch]$FoundationOnly
 )
 $ErrorActionPreference = 'Stop'
@@ -44,6 +45,27 @@ try {
     Assert-True ($report.errors[0].code -eq 'TIMEOUT') 'Infinite script was not terminated'
     $report = Invoke-Cli @('doctor')
     Assert-True ($report.data.excelVersion -ne $null) 'Excel COM is unavailable'
+    if (-not $FoundationOnly) {
+        $example = (Resolve-Path -LiteralPath (Join-Path $TestData 'Example1.xlsx')).Path
+        $report = Invoke-Cli @('inspect', $example, '--range', 'B2:F8')
+        Assert-True ($report.data.cells.Count -eq 35) 'Incorrect inspected range'
+        Assert-True ($report.data.lastRow -eq 509) 'UsedRange origin was lost'
+        $report = Invoke-Cli @('inspect', $example, '--range', 'A1:XFD1048576') 1
+        Assert-True ($report.errors[0].code -eq 'INVALID_RANGE') 'Unbounded inspect accepted'
+        $fast = Join-Path $scratch 'fast.js'
+        $source = [IO.File]::ReadAllText($Config)
+        [IO.File]::WriteAllText($fast, $source.Replace('fastSearch: false', 'fastSearch: true'))
+        $report = Invoke-Cli @('match', $example, '--config', $fast, '--all-forms')
+        Assert-True ($report.data.search.forms.Count -eq 1) 'Working fast search changed'
+        Assert-True ($report.data.diagnosticSearch.forms.Count -eq 3) 'Diagnostic search did not inspect all forms'
+        Assert-True ($report.data.search.selectedForm -eq $report.data.diagnosticSearch.selectedForm) 'Diagnostic search changed selected form'
+        $floating = (Resolve-Path -LiteralPath (Join-Path $TestData 'Example4.xlsx')).Path
+        $report = Invoke-Cli @('match', $floating, '--config', $Config)
+        Assert-True ($report.data.search.matchedForms.Count -eq 1) 'Floating header was not recognized'
+        [IO.File]::WriteAllText($invalid, $source + '`n'.Replace('`n', "`n") + 'app.forms.forEach(function(f) { f.rules = function() { assert("a", "b"); }; });')
+        $report = Invoke-Cli @('match', $example, '--config', $invalid) 1
+        Assert-True ($report.errors[0].code -eq 'NO_FORM') 'Expected no-form diagnostic'
+    }
     Write-Output ("CLI smoke: {0} checks passed" -f $script:checks)
 }
 finally {

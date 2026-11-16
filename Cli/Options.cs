@@ -61,7 +61,7 @@ namespace ExcelToDbf.Cli
                 var allowed = new List<string> { "--json", "--timeout", "--help" };
                 if (result.Command != "inspect") allowed.Add("--config");
                 if (result.Command == "inspect") allowed.Add("--range");
-                if (result.Command == "match") allowed.Add("--all-forms");
+                if (result.Command == "match") allowed.AddRange(new[] { "--all-forms", "--strict" });
                 if (result.Command == "validate" || result.Command == "convert" || result.Command == "test") allowed.Add("--strict");
                 if (result.Command == "validate" || result.Command == "convert") allowed.Add("--keep-artifacts");
                 if (result.Command == "convert") allowed.AddRange(new[] { "--output", "--overwrite" });
