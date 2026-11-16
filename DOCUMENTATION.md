@@ -1,5 +1,5 @@
 # Документация к проекту
-> Историческая документация прежнего XML-формата. Текущий конфиг — JavaScript. Используйте [JS API](distribution/docs/rules-api.md), [CLI](distribution/docs/cli.md) и [формат DBF](distribution/docs/dbf-format.md). Миграция XML в текущую задачу не входит.
+> Историческая документация прежнего XML-формата. Текущий конфиг — JavaScript. Используйте [JS API](distribution/docs/rules-api.md), [CLI](distribution/docs/cli.md) и [формат DBF](distribution/docs/dbf-format.md). Для переноса XML версии 2.6.2 см. [инструкцию по миграции](distribution/docs/xml-migration-2.6.2.md).
 
 Данная страница находится в процессе наполнения.
 Если у вас остались вопросы или предложения, пожалуйста, выскажите их в Issues.
