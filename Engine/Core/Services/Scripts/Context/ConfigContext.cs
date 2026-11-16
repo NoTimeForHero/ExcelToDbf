@@ -15,6 +15,7 @@ using Jint.Native.Object;
 using Newtonsoft.Json;
 using NLog;
 using JintSerializer = Jint.Native.Json.JsonSerializer;
+using Unity;
 
 namespace ExcelToDbf.Core.Services.Scripts.Context
 {
@@ -31,10 +32,16 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
         public DocForm[] Forms { get; private set; }
         private readonly ILogger logger;
         private readonly JintSerializer parser;
+        public string ConfigPath { get; }
 
-        public ConfigContext(ILogger logger, Engine engine) : base(engine)
+        [InjectionConstructor]
+        public ConfigContext(ILogger logger, Engine engine)
+            : this(logger, engine, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.SettingsFile)) { }
+
+        public ConfigContext(ILogger logger, Engine engine, string configPath) : base(engine)
         {
             this.logger = logger;
+            ConfigPath = Path.GetFullPath(configPath);
             parser = new JintSerializer(engine);
             Data = new ConfigProvider(ReloadConfig);
             ReloadConfig();
@@ -42,8 +49,8 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
 
         public void ReloadConfig()
         {
-            var code = File.ReadAllText(Constants.SettingsFile);
-            engine.Execute("app = {}").Execute(code);
+            var code = File.ReadAllText(ConfigPath);
+            engine.Execute("app = {}").Execute(code, ConfigPath);
 
             Data.Config = parser.Deserialize<Config>(engine.Evaluate("app.settings"));
 

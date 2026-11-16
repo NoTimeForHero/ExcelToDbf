@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 
 namespace ExcelToDbf.Utils.Extensions
 {
-    internal static class BasicExtensions
+    public static class BasicExtensions
     {
         public static Task Delay(this Random rnd, int min = 1000, int max = 5000)
             => Task.Delay(rnd.Next(min, max));
@@ -43,14 +43,15 @@ namespace ExcelToDbf.Utils.Extensions
 
         // https://stackoverflow.com/a/51241629
         public static T[] GetRow<T>(this T[,] matrix, int rowNumber) =>
-            Enumerable.Range(0, matrix.GetLength(1))
+            Enumerable.Range(0, matrix.GetLength(1) + 1)
                 .Select(x => x < 1 ? default : matrix[rowNumber, x])
                 .ToArray();
 
         public static IEnumerable<T[]> AsRowArray<T>(this T[,] matrix)
         {
-            var len = matrix.GetLength(0);
-            for (int i = 1; i <= len; i++)
+            var first = matrix.GetLowerBound(0);
+            var last = matrix.GetUpperBound(0);
+            for (int i = first; i <= last; i++)
             {
                 yield return matrix.GetRow(i);
             }

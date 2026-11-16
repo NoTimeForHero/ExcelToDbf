@@ -14,5 +14,7 @@ namespace ExcelToDbf.Core.Models
 
         [JsonConverter(typeof(DocFormDictionaryKeyConverter))]
         public Dictionary<DocForm, List<SearchMatch>> Report { get; set; } = new Dictionary<DocForm, List<SearchMatch>>();
+        public List<DocForm> MatchedForms { get; } = new List<DocForm>();
+        public List<DocForm> ShortCircuitedForms { get; } = new List<DocForm>();
     }
 }

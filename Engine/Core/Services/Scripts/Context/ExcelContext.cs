@@ -38,8 +38,8 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
 
         public ExcelContext Connect(ExcelService.HandlerCellGetter getter, ExcelService.HandlerRangeFinder getter2)
         {
-            cellValueGetter = getter;
-            rangeFinderGetter = getter2;
+            if (getter != null) cellValueGetter = getter;
+            if (getter2 != null) rangeFinderGetter = getter2;
             currentContext = new ObjectInstance(engine);
             engine.SetValue("context", currentContext);
             return this;
@@ -60,8 +60,11 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
         public SearchFormResult SearchForm(FileModel file)
         {
             var result = new SearchFormResult();
+            ObjectInstance selectedContext = null;
             foreach (var form in config.Forms)
             {
+                currentContext = new ObjectInstance(engine);
+                engine.SetValue("context", currentContext);
                 logger.Info($"Проверяем форму: {form.Name}");
 
                 var matches = new List<SearchMatch>();
@@ -78,17 +81,25 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
                 }
                 catch (StopFunctionException)
                 {
+                    result.ShortCircuitedForms.Add(form);
                     logger.Info($"Форма \"{form.Name}\" не подходит по условию!");
                 }
 
-                var isMatches = matches.All(x => x.Matches);
+                var isMatches = matches.Count > 0 && matches.All(x => x.Matches);
                 if (isMatches)
                 {
                     logger.Info($"Форма \"{form.Name}\" подходит для документа \"{file.FileName}\"!");
-                    if (result.Result == null) result.Result = form;
-                    if (config.Data.Config.System.FastSearch) return result;
+                    result.MatchedForms.Add(form);
+                    if (result.Result == null)
+                    {
+                        result.Result = form;
+                        selectedContext = currentContext;
+                    }
+                    if (config.Data.Config.System.FastSearch) break;
                 }
             }
+            currentContext = selectedContext ?? new ObjectInstance(engine);
+            engine.SetValue("context", currentContext);
             return result;
         }
 
@@ -102,7 +113,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
                     comparer = x => expString == x;
                     break;
                 case Regex expRegex:
-                    comparer = x => expRegex.IsMatch(x);
+                    comparer = x => x != null && expRegex.IsMatch(x);
                     break;
                 default:
                     throw new InvalidOperationException($"Unknown assert 'Expect' type: {rawExpect?.GetType().FullName}");
@@ -117,7 +128,7 @@ namespace ExcelToDbf.Core.Services.Scripts.Context
                     match = SearchMatch.Make(expect, cell.Value, comparer(cell.Value)).With(cell.Y, cell.X);
                     break;
                 default:
-                    throw new InvalidOperationException($"Unknown assert 'Got' type: {got.GetType().FullName}");
+                    throw new InvalidOperationException($"Unknown assert 'Got' type: {got?.GetType().FullName ?? "null"}");
             }
             logger.Trace(match.ToString());
             matches.Add(match);

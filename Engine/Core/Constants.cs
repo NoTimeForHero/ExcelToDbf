@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace ExcelToDbf.Core
 {
-    internal static class Constants
+    public static class Constants
     {
         public static readonly string ApplicationTitle = "Конвертирование Excel документов в DBF";
-        public static readonly string SettingsFile = "config.js";
+        public static readonly string SettingsFile = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.js");
         public static readonly string PreloadFile = "Preload.json";
         public static readonly bool ExcelDebug = false;
         public static readonly string LastLaunchFile = "LastLaunch.json";

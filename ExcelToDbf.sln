@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSV_Converter", "Test1\CSV_
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App", "App\App.csproj", "{F511D67A-46C5-4499-B547-789965AA6B68}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelToDbf.Engine", "Engine\ExcelToDbf.Engine.csproj", "{E605A820-E6A8-4CF7-95DA-E150BD4A4B16}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,14 @@ Global
 		{F511D67A-46C5-4499-B547-789965AA6B68}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F511D67A-46C5-4499-B547-789965AA6B68}.Release|x86.ActiveCfg = Release|Any CPU
 		{F511D67A-46C5-4499-B547-789965AA6B68}.Release|x86.Build.0 = Release|Any CPU
+		{E605A820-E6A8-4CF7-95DA-E150BD4A4B16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E605A820-E6A8-4CF7-95DA-E150BD4A4B16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E605A820-E6A8-4CF7-95DA-E150BD4A4B16}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E605A820-E6A8-4CF7-95DA-E150BD4A4B16}.Debug|x86.Build.0 = Debug|Any CPU
+		{E605A820-E6A8-4CF7-95DA-E150BD4A4B16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E605A820-E6A8-4CF7-95DA-E150BD4A4B16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E605A820-E6A8-4CF7-95DA-E150BD4A4B16}.Release|x86.ActiveCfg = Release|Any CPU
+		{E605A820-E6A8-4CF7-95DA-E150BD4A4B16}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

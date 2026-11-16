@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using ExcelToDbf.Core.Services.Scripts;
 using ExcelToDbf.Core.Services.Scripts.Context;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
 using Unity;
 
 namespace ExcelToDbf.Core
@@ -36,8 +35,12 @@ namespace ExcelToDbf.Core
 
     public class ConfigProvider : ReactiveObject
     {
-        [Reactive]
-        public Config Config { get; set; }
+        private Config config;
+        public Config Config
+        {
+            get => config;
+            set => this.RaiseAndSetIfChanged(ref config, value);
+        }
 
         private readonly IUnityContainer container;
 

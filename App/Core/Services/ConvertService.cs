@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace ExcelToDbf.Core.Services
         private readonly ScriptEngine engine;
         private readonly DBFService database;
         private readonly Random random = new Random(100);
-        private readonly Lazy<ExcelService> lazyExcel;
+        private ExcelService activeExcel;
         private readonly ConfigProvider pvConfig;
 
         public ConvertService(ILogger logger, IUnityContainer container)
@@ -30,7 +30,6 @@ namespace ExcelToDbf.Core.Services
             pvConfig = container.Resolve<ConfigProvider>();
             engine = container.Resolve<ScriptEngine>();
             database = container.Resolve<DBFService>();
-            lazyExcel = new Lazy<ExcelService>(() => container.Resolve<ExcelService>());
         }
 
         public ConvertProgress Progress { get; } = new ConvertProgress();
@@ -43,8 +42,23 @@ namespace ExcelToDbf.Core.Services
             logger.Debug($"Файлы: " +
                          files.Select(x => $"\"{x.FileName}\"").JoinString(", ")
                          );
-            var task = Task.Factory.StartNew(() => RunInternal(files), TaskCreationOptions.LongRunning).Unwrap();
-            return task;
+            var completion = new TaskCompletionSource<List<Result>>();
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    List<Result> results;
+                    using (activeExcel = new ExcelService(pvConfig, logger))
+                        results = RunInternal(files).GetAwaiter().GetResult();
+                    completion.SetResult(results);
+                }
+                catch (Exception error) { completion.TrySetException(error); }
+                finally { activeExcel = null; }
+            });
+            thread.IsBackground = true;
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            return completion.Task;
 
         }
 
@@ -88,7 +102,7 @@ namespace ExcelToDbf.Core.Services
             Progress.LocalText = $"Поиск подходящих форм для файла: {file.FileName}";
             Progress.ForceUpdate();
 
-            var excel = lazyExcel.Value;
+            var excel = activeExcel;
             excel.OpenWorksheet(file.FullPath);
 
             var context = engine.Resolve<ExcelContext>().Connect(excel.GetCellValue, excel.FindRange);
@@ -103,43 +117,10 @@ namespace ExcelToDbf.Core.Services
                 return Task.CompletedTask;
             }
 
-            using (var dbfFile = database.Make(form, outputFile))
-            {
-                dbfFile.WriteHeaders();
-
-                var totalRows = excel.SheetRows;
-                Progress.DocumentTotal = totalRows;
-                int startY = form.Settings.StartY;
-                if (context.TryGetContextValue<int>("startY", out var newStartY))
-                {
-                    logger.Debug($"Значение startY взято из JS контекста: {newStartY}");
-                    startY = newStartY;
-                }
-
-                if (startY < 1) throw new ArgumentException($"Недопустимое значение StartY: {startY}", nameof(startY));
-                int currentRow = startY;
-                context.CallHook(form, DocForm.HookType.Before);
-                try
-                {
-                    foreach (var range in excel.IterateRanges(startY, form.Settings.EndX))
-                    {
-                        foreach (var record in range.AsRowArray())
-                        {
-                            currentRow++;
-                            Progress.SetProgress(currentRow, totalRows, $"Обработка массива строк");
-                            var transformed = context.Transform(form, record);
-                            dbfFile.WriteRecord(transformed, currentRow);
-                        }
-                    }
-                }
-                catch (StopFunctionException)
-                {
-                    logger.Info($"Обработка файла была завершена JS условием на {currentRow} строке!");
-                }
-                result.RecordsWritten = dbfFile.RecordsWritten;
-                context.CallHook(form, DocForm.HookType.After);
-                result.Status = Result.ResultType.Converted;
-            }
+            var details = ExcelToDbf.Processing.ConversionPipeline.Write(excel, context, database, form, outputFile,
+                (current, total) => Progress.SetProgress(current, total, "Обработка строк"));
+            result.RecordsWritten = details.RecordsWritten;
+            result.Status = Result.ResultType.Converted;
             result.OutputFilename = outputFile;
             return Task.CompletedTask;
         }

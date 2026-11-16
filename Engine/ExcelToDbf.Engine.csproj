@@ -1,0 +1,49 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">AnyCPU</Platform>
+    <ProjectGuid>{E605A820-E6A8-4CF7-95DA-E150BD4A4B16}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ExcelToDbf</RootNamespace>
+    <AssemblyName>ExcelToDbf.Engine</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <LangVersion>7.3</LangVersion>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <Deterministic>true</Deterministic>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <ItemGroup>
+<Reference Include="DynamicData, Version=7.9.0.0, Culture=neutral, processorArchitecture=MSIL"><HintPath>..\packages\DynamicData.7.9.5\lib\net462\DynamicData.dll</HintPath></Reference>
+<Reference Include="Esprima, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL"><HintPath>..\packages\Esprima.3.0.0-beta-9\lib\net462\Esprima.dll</HintPath></Reference>
+<Reference Include="Jint, Version=3.0.0.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL"><HintPath>..\packages\Jint.3.0.0-beta-2042\lib\net462\Jint.dll</HintPath></Reference>
+<Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL"><SpecificVersion>False</SpecificVersion><EmbedInteropTypes>True</EmbedInteropTypes><HintPath>..\..\..\..\..\..\..\Windows\assembly\GAC_MSIL\Microsoft.Office.Interop.Excel\15.0.0.0__71e9bce111e9429c\Microsoft.Office.Interop.Excel.dll</HintPath></Reference>
+<Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL"><HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath></Reference>
+<Reference Include="NickBuhro.Translit, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"><HintPath>..\packages\NickBuhro.Translit.1.0.0\lib\net45\NickBuhro.Translit.dll</HintPath></Reference>
+<Reference Include="NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL"><HintPath>..\packages\NLog.5.0.5\lib\net46\NLog.dll</HintPath></Reference>
+<Reference Include="ReactiveUI, Version=18.3.0.0, Culture=neutral, processorArchitecture=MSIL"><HintPath>..\packages\ReactiveUI.18.3.1\lib\net472\ReactiveUI.dll</HintPath></Reference>
+<Reference Include="SocialExplorer.FastDBF"><HintPath>..\External\SocialExplorer.FastDBF.dll</HintPath></Reference>
+<Reference Include="Splat, Version=14.4.0.0, Culture=neutral, processorArchitecture=MSIL"><HintPath>..\packages\Splat.14.4.1\lib\netstandard2.0\Splat.dll</HintPath></Reference>
+<Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"><HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath></Reference>
+<Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"><HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath></Reference>
+<Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"><HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath></Reference>
+<Reference Include="System.Reactive, Version=5.0.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL"><HintPath>..\packages\System.Reactive.5.0.0\lib\net472\System.Reactive.dll</HintPath></Reference>
+<Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"><HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath></Reference>
+<Reference Include="Unity.Abstractions, Version=5.11.7.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL"><HintPath>..\packages\Unity.Abstractions.5.11.7\lib\net47\Unity.Abstractions.dll</HintPath></Reference>
+<Reference Include="Unity.Container, Version=5.11.11.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL"><HintPath>..\packages\Unity.Container.5.11.11\lib\net47\Unity.Container.dll</HintPath></Reference>
+<Reference Include="Unity.NLog, Version=5.11.1.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL"><HintPath>..\packages\Unity.NLog.5.11.1\lib\net47\Unity.NLog.dll</HintPath></Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="Microsoft.CSharp" />
+    <Compile Include="**\*.cs" Exclude="bin\**;obj\**" />
+    <ProjectReference Include="..\Test1\CSV_Converter.csproj">
+      <Project>{63A01389-CFE5-41AA-AE5E-DE817CA43FF8}</Project>
+      <Name>CSV_Converter</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

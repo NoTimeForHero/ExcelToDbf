@@ -13,7 +13,7 @@ using SocialExplorer.IO.FastDBF;
 
 namespace ExcelToDbf.Core.Services
 {
-    internal class DBFService
+    public class DBFService
     {
         protected readonly ConfigProvider pvConfig;
         protected readonly ILogger logger;

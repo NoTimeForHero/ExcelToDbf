@@ -8,7 +8,6 @@ using DynamicData.Binding;
 using ExcelToDbf.Utils;
 using Newtonsoft.Json;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
 
 namespace ExcelToDbf.Core.Models
 {
@@ -20,7 +19,11 @@ namespace ExcelToDbf.Core.Models
         public long Size { get; set; }
         public DateTime Created { get; set; }
 
-        [Reactive]
-        public bool MustConvert { get; set; }
+        private bool mustConvert;
+        public bool MustConvert
+        {
+            get => mustConvert;
+            set => this.RaiseAndSetIfChanged(ref mustConvert, value);
+        }
     }
 }
