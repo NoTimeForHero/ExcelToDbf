@@ -425,7 +425,10 @@
     <Copy SourceFiles="@(CliRuntimeLibraries);@(CsvRuntime)" DestinationFolder="$(TargetDir)DLL" SkipUnchangedFiles="true" />
     <Move SourceFiles="@(NativeRuntime)" DestinationFiles="@(NativeRuntime->'$(TargetDir)DLL\runtimes\%(RecursiveDir)%(Filename)%(Extension)')" />
     <RemoveDir Directories="$(TargetDir)runtimes" Condition="Exists('$(TargetDir)runtimes')" />
-    <Copy SourceFiles="$(CliOutput)ExcelToDbf.Cli.exe;$(CliOutput)ExcelToDbf.Cli.exe.config" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(CliOutput)ExcelToDbf.Cli.exe;$(CliOutput)ExcelToDbf.Cli.exe.config" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" Condition="'$(Configuration)' != 'Release'" />
+    <Copy SourceFiles="$(CliOutput)ExcelToDbf.Cli.exe;$(CliOutput)ExcelToDbf.Cli.exe.config" DestinationFolder="$(TargetDir)DLL" SkipUnchangedFiles="true" Condition="'$(Configuration)' == 'Release'" />
+    <Copy SourceFiles="$(CliOutput)ExcelToDbf.Cli.pdb" DestinationFolder="$(TargetDir)DLL" SkipUnchangedFiles="true" Condition="'$(Configuration)' == 'Release' and Exists('$(CliOutput)ExcelToDbf.Cli.pdb')" />
+    <Delete Files="$(TargetDir)ExcelToDbf.Cli.exe;$(TargetDir)ExcelToDbf.Cli.exe.config;$(TargetDir)ExcelToDbf.Cli.pdb" Condition="'$(Configuration)' == 'Release'" />
     <ItemGroup>
       <ExtraBuildMetadata Include="$(TargetDir)*.xml;$(TargetDir)*.pdb"
         Exclude="$(TargetDir)$(TargetName).xml;$(TargetDir)$(TargetName).pdb;$(TargetDir)ExcelToDbf.Cli.xml;$(TargetDir)ExcelToDbf.Cli.pdb;$(TargetDir)ExcelToDbf.Engine.xml;$(TargetDir)ExcelToDbf.Engine.pdb" />

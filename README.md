@@ -7,12 +7,12 @@
 При запуске процесса, программа пытается найти подходящую форму из списка для каждого документа в указанной директории.  
 В `App/TestData` лежат примеры и `cases.json` с регрессионными ожиданиями. Они копируются в готовую поставку.
 
-Рядом с GUI поставляется `ExcelToDbf.Cli.exe` для работы из PowerShell и LLM без исходников и рефлексии. Начните с [AGENTS.md](distribution/AGENTS.md), [справочника CLI](distribution/docs/cli.md), [JS API](distribution/docs/rules-api.md) и [описания DBF](distribution/docs/dbf-format.md).
+В Release-поставке GUI в папке `DLL` находится `ExcelToDbf.Cli.exe` для работы из PowerShell и LLM без исходников и рефлексии. Начните с [AGENTS.md](distribution/AGENTS.md), [справочника CLI](distribution/docs/cli.md), [JS API](distribution/docs/rules-api.md) и [описания DBF](distribution/docs/dbf-format.md).
 
 ```powershell
-.\ExcelToDbf.Cli.exe doctor --json
-.\ExcelToDbf.Cli.exe check-config --config .\config.js --json
-.\ExcelToDbf.Cli.exe test --manifest .\TestData\cases.json --config .\config.example.js --json
+.\DLL\ExcelToDbf.Cli.exe doctor --json
+.\DLL\ExcelToDbf.Cli.exe check-config --config .\config.js --json
+.\DLL\ExcelToDbf.Cli.exe test --manifest .\TestData\cases.json --config .\config.example.js --json
 ```
 
 Для добавления новой формы используйте копию конфига и полный `validate`. Примерный конфиг обновляется как `config.example.js`; существующий рабочий `config.js` при сборке сохраняется. Миграция старых XML-конфигов выполняется отдельно.

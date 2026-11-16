@@ -18,8 +18,8 @@ namespace ExcelToDbf.Cli
                 usage = "ExcelToDbf.Cli.exe <command> [file] [options]",
                 commands = new[] { "doctor", "check-config", "inspect", "match", "validate", "convert", "test" },
                 options = "--json --config <path> --timeout <seconds> --help; inspect: --range A1:M30; match: --all-forms; validate/convert: --strict --keep-artifacts <directory>; convert: --output <path> --overwrite; test: --manifest <path>",
-                instructions = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AGENTS.md"),
-                cliReference = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "docs", "cli.md"),
+                instructions = Path.Combine(DistributionDirectory.Root, "AGENTS.md"),
+                cliReference = Path.Combine(DistributionDirectory.Root, "docs", "cli.md"),
                 version = typeof(Commands).Assembly.GetName().Version.ToString(),
                 rulesApiVersion = 1, schemaVersion = 1
             }
@@ -42,7 +42,7 @@ namespace ExcelToDbf.Cli
                         Command = options.Command,
                         Data = new { excelVersion = excel.Version, processArchitecture = Environment.Is64BitProcess ? "x64" : "x86",
                             applicationDirectory = AppDomain.CurrentDomain.BaseDirectory, temporaryDirectory = session,
-                            instructions = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AGENTS.md") }
+                            instructions = Path.Combine(DistributionDirectory.Root, "AGENTS.md") }
                     };
                 }
             }

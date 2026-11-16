@@ -18,12 +18,20 @@ $root = Join-Path $repo ('artifacts\package-smoke-' + [guid]::NewGuid().ToString
 $package = Join-Path $root ('portable package ' + [string][char]0x0424)
 $caller = Join-Path $root 'different working directory'
 New-Item -ItemType Directory -Path $package,$caller -Force | Out-Null
-foreach ($name in @('ExcelToDbf.exe','ExcelToDbf.exe.config','ExcelToDbf.Cli.exe','ExcelToDbf.Cli.exe.config','config.example.js','AGENTS.md','DLL','docs','TestData')) {
+foreach ($name in @('ExcelToDbf.exe','ExcelToDbf.exe.config','config.example.js','AGENTS.md','DLL','docs','TestData')) {
     Copy-Item -LiteralPath (Join-Path $source $name) -Destination $package -Recurse
+}
+if ($Configuration -eq 'Debug') {
+    foreach ($name in @('ExcelToDbf.Cli.exe','ExcelToDbf.Cli.exe.config')) { Copy-Item -LiteralPath (Join-Path $source $name) -Destination $package }
+} else {
+    foreach ($name in @('ExcelToDbf.Cli.exe','ExcelToDbf.Cli.exe.config','ExcelToDbf.Cli.pdb')) {
+        if (Test-Path -LiteralPath (Join-Path $source $name)) { throw "Unexpected CLI file in package root: $name" }
+        if (-not (Test-Path -LiteralPath (Join-Path $package "DLL\$name"))) { throw "Missing CLI file in DLL: $name" }
+    }
 }
 Copy-Item -LiteralPath (Join-Path $package 'config.example.js') -Destination (Join-Path $package 'config.js')
 [IO.File]::WriteAllText((Join-Path $caller 'config.js'), 'while(true) {}')
-$cli = Join-Path $package 'ExcelToDbf.Cli.exe'
+$cli = Join-Path $package $(if ($Configuration -eq 'Release') { 'DLL\ExcelToDbf.Cli.exe' } else { 'ExcelToDbf.Cli.exe' })
 Push-Location $caller
 try {
     try {
@@ -32,9 +40,11 @@ try {
         $defaultExit = $LASTEXITCODE
     }
     finally { $ErrorActionPreference = 'Stop' }
-    if ($defaultExit -ne 0) { throw 'Default config was not resolved beside EXE' }
+    if ($defaultExit -ne 0) { throw 'Default config was not resolved in package root' }
     $report = ($output -join "`n") | ConvertFrom-Json
     if ($report.data.config -ne (Join-Path $package 'config.js')) { throw 'Unexpected default config path' }
+    $help = (& $cli --help --json | Out-String) | ConvertFrom-Json
+    if ($help.data.instructions -ne (Join-Path $package 'AGENTS.md') -or $help.data.cliReference -ne (Join-Path $package 'docs\cli.md')) { throw 'Unexpected documentation paths' }
     & (Join-Path $repo 'tests\cli-smoke.ps1') -Cli $cli -Config (Join-Path $package 'config.example.js') -TestData (Join-Path $package 'TestData')
     foreach ($document in Get-ChildItem -LiteralPath $package -Recurse -File -Filter *.md) {
         $text = [IO.File]::ReadAllText($document.FullName)

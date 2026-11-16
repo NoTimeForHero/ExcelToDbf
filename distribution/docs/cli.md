@@ -2,19 +2,21 @@
 
 Среда: Windows, установленный Microsoft Excel и .NET Framework 4.7.2. CSV дополнительно использует поставляемый `CSV_Converter.exe` на .NET Framework 3.5. `doctor` проверяет реальное создание и закрытие Excel; успешный `check-config` Excel не требует.
 
+Команды ниже выполняются из корня Release-поставки GUI. В Debug-поставке и самостоятельной сборке CLI EXE находится в корне: используй `.\ExcelToDbf.Cli.exe`.
+
 ## Быстрый запуск из PowerShell
 
 ```powershell
-.\ExcelToDbf.Cli.exe doctor --json
+.\DLL\ExcelToDbf.Cli.exe doctor --json
 New-Item -ItemType Directory -Path .\work -Force
 Copy-Item -LiteralPath .\config.js -Destination .\work\candidate.js
-.\ExcelToDbf.Cli.exe inspect .\incoming\new.xlsx --range A1:M30 --json
+.\DLL\ExcelToDbf.Cli.exe inspect .\incoming\new.xlsx --range A1:M30 --json
 # Отредактировать work\candidate.js по rules-api.md.
-.\ExcelToDbf.Cli.exe check-config --config .\work\candidate.js --json
-.\ExcelToDbf.Cli.exe match .\incoming\new.xlsx --config .\work\candidate.js --json
-.\ExcelToDbf.Cli.exe validate .\incoming\new.xlsx --config .\work\candidate.js --json
-.\ExcelToDbf.Cli.exe test --manifest .\TestData\cases.json --config .\work\candidate.js --json
-.\ExcelToDbf.Cli.exe convert .\incoming\new.xlsx --config .\work\candidate.js --output .\work\result.dbf --json
+.\DLL\ExcelToDbf.Cli.exe check-config --config .\work\candidate.js --json
+.\DLL\ExcelToDbf.Cli.exe match .\incoming\new.xlsx --config .\work\candidate.js --json
+.\DLL\ExcelToDbf.Cli.exe validate .\incoming\new.xlsx --config .\work\candidate.js --json
+.\DLL\ExcelToDbf.Cli.exe test --manifest .\TestData\cases.json --config .\work\candidate.js --json
+.\DLL\ExcelToDbf.Cli.exe convert .\incoming\new.xlsx --config .\work\candidate.js --output .\work\result.dbf --json
 ```
 
 Manifest примера подходит только к примерному конфигу. Для фирмы используй её набор данных. После каждой команды проверяй `$LASTEXITCODE`; следующий шаг выполняй после разбора предыдущего результата.
@@ -22,7 +24,7 @@ Manifest примера подходит только к примерному к
 Для запуска эталонных сценариев поставки:
 
 ```powershell
-.\ExcelToDbf.Cli.exe test --manifest .\TestData\cases.json --config .\config.example.js --json
+.\DLL\ExcelToDbf.Cli.exe test --manifest .\TestData\cases.json --config .\config.example.js --json
 ```
 
 ## Общие аргументы и пути
@@ -39,7 +41,7 @@ Windows PowerShell 5.1 представляет native stderr как ErrorRecord
 - `--help` работает у любой команды без выполнения операции.
 - `--json` оставляет в stdout ровно один JSON-документ. Логи, сообщения `log()` и название выполняемого теста идут в stderr. Потоки не объединять перед разбором JSON.
 - `--timeout N` задаёт предел операции в секундах, от 1 до 86400; по умолчанию 120. Для `test` это предел всего набора. По тайм-ауту рабочий процесс и зарегистрированные принадлежащие операции процессы останавливаются.
-- `--config path` выбирает локальный JS-конфиг; поддерживается во всех рабочих командах, кроме `inspect`. Без аргумента используется `config.js` рядом с EXE.
+- `--config path` выбирает локальный JS-конфиг; поддерживается во всех рабочих командах, кроме `inspect`. Без аргумента используется `config.js` в корне поставки (для самостоятельной сборки — рядом с EXE).
 - Явные относительные пути считаются от рабочей директории вызывающего процесса. Путь конфига по умолчанию не зависит от неё. В JSON возвращаются абсолютные пути.
 - CLI работает локально, не запускает GUI, предзагрузку конфигурации и автообновление. Запуск не заменяет рабочий конфиг.
 - Сборка сохраняет существующий локальный `config.js` и отдельно обновляет `config.example.js`. При ручном обновлении поставки также сохраняй конфиги фирм и предыдущие версии.

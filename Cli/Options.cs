@@ -15,7 +15,7 @@ namespace ExcelToDbf.Cli
         public readonly Dictionary<string, string> Values = new Dictionary<string, string>();
         public bool Has(string option) => Values.ContainsKey(option);
         public string Get(string option, string fallback = null) => Values.TryGetValue(option, out var value) ? value : fallback;
-        public string Config => Path.GetFullPath(Get("--config", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.js")));
+        public string Config => Path.GetFullPath(Get("--config", Path.Combine(DistributionDirectory.Root, "config.js")));
 
         public static Options Parse(string[] args)
         {
