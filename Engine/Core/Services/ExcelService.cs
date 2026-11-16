@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using ExcelToDbf.Core.Models;
 using Microsoft.Office.Interop.Excel;
@@ -30,13 +32,27 @@ namespace ExcelToDbf.Core.Services
         public string UsedAddress { get; private set; }
 
         public ExcelService(ConfigProvider pvConfig, ILogger logger)
+            : this(pvConfig, logger, null) { }
+
+        public ExcelService(ConfigProvider pvConfig, ILogger logger, Action<int> onStarted)
         {
             config = pvConfig;
+            var existing = Process.GetProcessesByName("EXCEL").Select(process =>
+            {
+                using (process) return process.Id;
+            }).ToArray();
             app = new Application();
             try
             {
                 GetWindowThreadProcessId(new IntPtr(app.Hwnd), out var pid);
                 ProcessId = (int)pid;
+                if (existing.Contains(ProcessId))
+                {
+                    Release(app);
+                    app = null;
+                    throw new InvalidOperationException("Excel не создал отдельный процесс для операции");
+                }
+                onStarted?.Invoke(ProcessId);
                 app.Visible = false;
                 app.DisplayAlerts = false;
                 app.AskToUpdateLinks = false;

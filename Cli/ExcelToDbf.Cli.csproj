@@ -1,0 +1,35 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">AnyCPU</Platform>
+    <ProjectGuid>{96875C32-BC2A-4DB9-A00E-A0C1C0DC27D5}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ExcelToDbf.Cli</RootNamespace>
+    <AssemblyName>ExcelToDbf.Cli</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <LangVersion>7.3</LangVersion>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="*.cs" />
+    <None Include="App.config" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Memory"><HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath></Reference>
+    <Reference Include="System.Buffers"><HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath></Reference>
+    <Reference Include="System.Numerics.Vectors"><HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath></Reference>
+    <Reference Include="NLog"><HintPath>..\packages\NLog.5.0.5\lib\net46\NLog.dll</HintPath></Reference>
+    <Reference Include="Jint"><HintPath>..\packages\Jint.3.0.0-beta-2042\lib\net462\Jint.dll</HintPath></Reference>
+    <Reference Include="Esprima"><HintPath>..\packages\Esprima.3.0.0-beta-9\lib\net462\Esprima.dll</HintPath></Reference>
+    <ProjectReference Include="..\Engine\ExcelToDbf.Engine.csproj">
+      <Project>{E605A820-E6A8-4CF7-95DA-E150BD4A4B16}</Project>
+      <Name>ExcelToDbf.Engine</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
