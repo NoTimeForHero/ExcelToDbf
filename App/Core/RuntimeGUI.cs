@@ -1,20 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using ExcelToDbf.Core.Models;
 using ExcelToDbf.Core.Services;
-using ExcelToDbf.Core.Services.Scripts;
-using ExcelToDbf.Core.Services.Scripts.Context;
 using ExcelToDbf.Core.ViewModels;
 using ExcelToDbf.Core.Views;
-using ExcelToDbf.Utils;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using NLog;
 using ReactiveUI;
 using Unity;
@@ -26,7 +17,7 @@ namespace ExcelToDbf.Core
         private readonly IUnityContainer container;
         private readonly MainViewModel model;
         private readonly ConvertService converter;
-        private readonly ILogger logger;
+        private readonly LastLaunchService lastLaunch;
         private UIState currentState;
 
         private enum UIState
@@ -39,7 +30,7 @@ namespace ExcelToDbf.Core
         public RuntimeGUI(IUnityContainer container, ILogger logger)
         {
             this.container = container;
-            this.logger = logger;
+            lastLaunch = new LastLaunchService(logger);
             model = container.Resolve<MainViewModel>();
             converter = container.Resolve<ConvertService>();
             currentState = UIState.SelectFiles;
@@ -49,10 +40,16 @@ namespace ExcelToDbf.Core
         {
             UpdateUI(UIState.SelectFiles);
 
-            if (FileStorage.Load<LastLaunch>(Constants.LastLaunchFile, out var lastLaunch))
+            var session = lastLaunch.Load();
+            var fileSelector = container.Resolve<FileSelectorVM>();
+            if (Directory.Exists(session.Path))
             {
-                container.Resolve<ConvertResultVM>().Results = lastLaunch.Results;
-                container.Resolve<FileSelectorVM>().Path = lastLaunch.Path;
+                fileSelector.Path = session.Path;
+            }
+
+            if (session.Results?.Count > 0)
+            {
+                container.Resolve<ConvertResultVM>().Results = session.Results;
                 UpdateUI(UIState.DisplayLogs);
             }
 
@@ -75,7 +72,9 @@ namespace ExcelToDbf.Core
                         throw new NotImplementedException(currentState.ToString());
                 }
             });
-            container.Resolve<MainView>().ShowDialog();
+            var view = container.Resolve<MainView>();
+            lastLaunch.TrackWindow(view, () => fileSelector.Path);
+            view.ShowDialog();
         }
 
         private async Task Convert()
@@ -94,12 +93,7 @@ namespace ExcelToDbf.Core
             var results = await converter.Run(files);
             container.Resolve<ConvertResultVM>().Results = results;
 
-            var lastLaunch = new LastLaunch
-            {
-                Path = container.Resolve<FileSelectorVM>().Path,
-                Results = results
-            };
-            FileStorage.Save(Constants.LastLaunchFile, lastLaunch);
+            lastLaunch.SaveResults(container.Resolve<FileSelectorVM>().Path, results);
 
             UpdateUI(UIState.DisplayLogs);
         }
